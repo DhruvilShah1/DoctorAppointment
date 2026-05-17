@@ -5,9 +5,14 @@ const medicineSchema = new mongoose.Schema({
   strength: { type: String },
   days: { type: Number },
   medicineChecker: { type: Boolean, default: false },
+
+  
+
+
   timing: {
     morning: { type: Boolean, default: false },
     afternoon: { type: Boolean, default: false },
+
     night: { type: Boolean, default: false },
   },
 });
