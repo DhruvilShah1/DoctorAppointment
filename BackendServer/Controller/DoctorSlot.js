@@ -2,7 +2,7 @@ import { Rewind } from "lucide-react";
 import Appointment from "../Model/Appointment.js";
 import DoctorProfile from "../Model/DoctorProfile.js";
 import DoctorSchedule from "../Model/DoctorSchedule.js";
-import { getIO } from "../socket/socket.js";
+import { getIO } from "../../FrontEnd/src/socket/socket.js";
 
 
 const DoctorControllerSchedule = {

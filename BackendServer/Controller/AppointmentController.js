@@ -1,7 +1,7 @@
 import Appointment from "../Model/Appointment.js";
 import DoctorSchedule from "../Model/DoctorSchedule.js";
 import Prescription from "../Model/Prescription.js";
-import { getIO } from "../socket/socket.js";
+import { getIO } from "../../FrontEnd/src/socket/socket.js";
 
 
 const AppointmentController = {

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { socket } from "../../../BackendServer/socket/FrontendSocketConnection";
 import { useAuth } from "../../AuthProvider";
 
 import {
@@ -11,6 +10,7 @@ import {
   UserRound,
   Sparkles,
 } from "lucide-react";
+import { socket } from "../../socket/FrontendSocketConnection";
 
 const UserQueue = ({
   queueList,

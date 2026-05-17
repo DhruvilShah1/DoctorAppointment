@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../AuthProvider";
-import { socket } from "../../../BackendServer/socket/FrontendSocketConnection";
 import { useNavigate } from "react-router-dom";
+import { socket } from "../../socket/FrontendSocketConnection";
 
 const UserAppointmentShow = () => {
   const { user } = useAuth();
@@ -9,12 +9,6 @@ const UserAppointmentShow = () => {
   localStorage.setItem("test", "hello");
 
   const navigate = useNavigate()
-
-
-
-
-
-
   const [doctors, setDoctors] = useState([]);
   const [accesstoken, setaccesstoken] = useState();
   const [slotQueueData , setslotQueueData] = useState();

@@ -4,9 +4,10 @@ import { Server } from "socket.io";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-import router from './BackendServer/Routes/api.js';
-import { initSocket } from "./BackendServer/socket/socket.js";
-import { connectDB } from "./BackendServer/Config/Connection.js";
+import router from '../BackendServer/Routes/api.js';
+
+import { initSocket } from "./src/socket/socket.js";
+import { connectDB } from "../BackendServer/Config/Connection.js";
 
 const app = express();
 const server = http.createServer(app);

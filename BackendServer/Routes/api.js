@@ -1,4 +1,4 @@
-import express from "express"
+import express from "express";
 import RegisterAndLoginController from "../Controller/RegisterAndLoginController.js";
 import DoctorControllerSchedule from "../Controller/DoctorSlot.js";
 import verifyToken from "../Middleware/verifyToken.js"

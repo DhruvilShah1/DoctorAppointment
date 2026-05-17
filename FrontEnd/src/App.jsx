@@ -11,7 +11,6 @@ import DoctorDashboard from './LoginRegister/Doctor/DoctorDashboard'
 import UserAppointmentShow from './LoginRegister/User/UserAppointmentShow'
 import ScheduleDoctor from './LoginRegister/Doctor/ScheduleDoctor'
 import UserQueue from './LoginRegister/User/UserQueue'
-import { socket } from '../BackendServer/socket/FrontendSocketConnection'
 import { useAuth } from './AuthProvider'
 import { toast } from 'react-toastify'
 import DoctorProfileEditor from './LoginRegister/Doctor/DoctorProfileEditor'
@@ -21,6 +20,7 @@ import QRScanner from './pharmacy-side-portal/QRScanner'
 import PharmacySidebar from './pharmacy-side-portal/PharmacySidebar'
 import PharmacyDashboard from './pharmacy-side-portal/PharmacyDashboard'
 import DoctorPrescriptionTable from './LoginRegister/Doctor/DoctorPrescriptionTable'
+import { socket } from './socket/FrontendSocketConnection';
 
 const App = () => {
   
