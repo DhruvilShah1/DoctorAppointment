@@ -1,13 +1,18 @@
+import "dotenv/config";
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import dotenv from "dotenv";
+
 import cookieParser from "cookie-parser";
 
 import router from '../BackendServer/Routes/api.js';
 
 import { initSocket } from "./socket/socket.js";
 import { connectDB } from "../BackendServer/Config/Connection.js";
+
+dotenv.config({ path: "./.env" });
 
 const app = express();
 const server = http.createServer(app);
