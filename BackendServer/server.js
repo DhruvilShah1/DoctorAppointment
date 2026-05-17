@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 
 import router from '../BackendServer/Routes/api.js';
 
-import { initSocket } from "./src/socket/socket.js";
+import { initSocket } from "./socket/socket.js";
 import { connectDB } from "../BackendServer/Config/Connection.js";
 
 const app = express();
