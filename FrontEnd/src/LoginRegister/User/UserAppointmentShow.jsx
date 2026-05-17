@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../AuthProvider";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +21,7 @@ const UserAppointmentShow = () => {
 
   const fetchDoctors = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/get/all`);
+      const res = await fetch(`${BASE_URL}/api/get/all`);
       const data = await res.json();
       console.log(data);
       
@@ -64,7 +65,7 @@ useEffect(()=>{
   
         try {
       const refreshRes = await fetch(
-        `http://localhost:5000/api/refresh-token`,
+        `${BASE_URL}/api/refresh-token`,
         {
           method: "POST",
           credentials: "include",
@@ -82,7 +83,7 @@ useEffect(()=>{
       setaccesstoken(newToken);
   
   
-       const res = await fetch(`http://localhost:5000/api/take/appointments`, {
+       const res = await fetch(`${BASE_URL}/api/take/appointments`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -177,7 +178,7 @@ const bookSlot = async () => {
 
   try {
     const refreshRes = await fetch(
-      `http://localhost:5000/api/refresh-token`,
+      `${BASE_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -197,7 +198,7 @@ const bookSlot = async () => {
     console.log("NEW TOKEN:", newToken);
     console.log("Selected Slot:", selectedSlot);
 
-    const res = await fetch(`http://localhost:5000/api/add/patient`, {
+    const res = await fetch(`${BASE_URL}/api/add/patient`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -234,7 +235,7 @@ const changeQueue = async (doctorId , startSlot , date) => {
 
   
 
-      const res = await fetch(`http://localhost:5000/api/take/queue/number`, {
+      const res = await fetch(`${BASE_URL}/api/take/queue/number`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

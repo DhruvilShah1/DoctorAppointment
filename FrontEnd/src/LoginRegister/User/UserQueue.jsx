@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../AuthProvider";
 
@@ -34,7 +35,7 @@ const UserQueue = ({
     
           try {
         const refreshRes = await fetch(
-          `http://localhost:5000/api/refresh-token`,
+          `${BASE_URL}/api/refresh-token`,
           {
             method: "POST",
             credentials: "include",
@@ -50,7 +51,7 @@ const UserQueue = ({
         const newToken = refreshData.newAccessToken;
     
     
-         const res = await fetch(`http://localhost:5000/api/today/appointment`, {
+         const res = await fetch(`${BASE_URL}/api/today/appointment`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

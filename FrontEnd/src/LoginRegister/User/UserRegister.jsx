@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import BASE_URL from "../../config/api";
 
 const UserRegister = () => {
 
@@ -13,7 +14,7 @@ const UserRegister = () => {
         console.log(Form);
         
 
-        fetch(`http://localhost:5000/api/register/user`, {
+        fetch(`${BASE_URL}/api/register/user`, {
             method : "POST" , 
              headers: {
     "Content-Type": "application/json",

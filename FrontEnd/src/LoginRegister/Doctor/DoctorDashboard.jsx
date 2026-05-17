@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useAuth } from "../../AuthProvider";
@@ -98,7 +99,7 @@ const DoctorDashboard = () => {
         if (!doctor?.id) return;
 
         const res = await fetch(
-          `http://localhost:5000/api/doctor/${doctor.id}`
+          `${BASE_URL}/api/doctor/${doctor.id}`
         );
 
         const data = await res.json();
@@ -221,7 +222,7 @@ const DoctorDashboard = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/create/slot`,
+        `${BASE_URL}/api/create/slot`,
         {
           method: "POST",
           headers: {

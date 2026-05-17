@@ -1,3 +1,4 @@
+import BASE_URL from "./config/api";
 import React, { useEffect, useState } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
@@ -11,7 +12,7 @@ const ProtectedRoute = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/refresh-token`,
+        const res = await fetch(`${BASE_URL}/api/refresh-token`,
           {
             method: "POST",
             credentials: "include",
@@ -28,7 +29,7 @@ const ProtectedRoute = () => {
 
         setAccessToken(accessToken);
 
-        const userRes = await fetch(`http://localhost:5000/api/me`, {
+        const userRes = await fetch(`${BASE_URL}/api/me`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },

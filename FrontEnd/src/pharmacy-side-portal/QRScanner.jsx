@@ -1,3 +1,4 @@
+import BASE_URL from "../config/api";
 import React, { useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { Camera, ScanLine, XCircle } from "lucide-react";
@@ -38,7 +39,7 @@ const QRScanner = ({ setData }) => {
 
               // 🔥 API CALL
               const res = await fetch(
-                `http://localhost:5000/api/verify/prescription`,
+                `${BASE_URL}/api/verify/prescription`,
                 {
                   method: "POST",
                   headers: {

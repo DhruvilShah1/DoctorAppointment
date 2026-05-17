@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../AuthProvider";
@@ -48,7 +49,7 @@ const ScheduleDoctor = () => {
 
   const refreshToken = async () => {
     const res = await fetch(
-      `http://localhost:5000/api/refresh-token`,
+      `${BASE_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -86,7 +87,7 @@ const ScheduleDoctor = () => {
       const token = await refreshToken();
 
       const [totalRes, slotRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/total/patient/day`, {
+        fetch(`${BASE_URL}/api/total/patient/day`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -97,7 +98,7 @@ const ScheduleDoctor = () => {
           }),
         }),
 
-        fetch(`http://localhost:5000/api/get/slots`, {
+        fetch(`${BASE_URL}/api/get/slots`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -134,7 +135,7 @@ const ScheduleDoctor = () => {
   const loadPatients = async (slot) => {
     try {
       const res = await authFetch(
-        `http://localhost:5000/api/take/patient`,
+        `${BASE_URL}/api/take/patient`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -188,7 +189,7 @@ const ScheduleDoctor = () => {
 
     try {
       const res = await authFetch(
-        `http://localhost:5000/api/start/queue`,
+        `${BASE_URL}/api/start/queue`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -272,7 +273,7 @@ const ScheduleDoctor = () => {
 
     try {
       const res = await authFetch(
-        `http://localhost:5000/api/update/patient/status`,
+        `${BASE_URL}/api/update/patient/status`,
         {
           method: "PATCH",
           body: JSON.stringify({
@@ -335,7 +336,7 @@ const ScheduleDoctor = () => {
   const finishSlot = async () => {
     try {
       const res = await authFetch(
-        `http://localhost:5000/api/finsh/slot`,
+        `${BASE_URL}/api/finsh/slot`,
         {
           method: "POST",
           body: JSON.stringify({

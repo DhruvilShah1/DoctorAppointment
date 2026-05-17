@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import {
   CalendarDays,
@@ -23,7 +24,7 @@ const UserRecord = () => {
     try {
       setLoading(true);
 
-      const refreshRes = await fetch(`http://localhost:5000/api/refresh-token`, {
+      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`, {
           method: "POST",
           credentials: "include",
         }
@@ -37,7 +38,7 @@ const UserRecord = () => {
 
       const token = refreshData.newAccessToken;
 
-      const res = await fetch(`http://localhost:5000/api/finishAppointment`, {
+      const res = await fetch(`${BASE_URL}/api/finishAppointment`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -12,7 +13,7 @@ const ViewDoctorProfile = () => {
   const getProfile = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/doctor/profile/${doctorId}`
+        `${BASE_URL}/api/doctor/profile/${doctorId}`
       );
 
       const result = await res.json();

@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useRef, useState } from "react";
 import { X, Plus, Trash2, Save, Printer, Sparkles } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
@@ -93,14 +94,14 @@ const handleSave = async () => {
     }
 
     const refreshRes = await fetch(
-      `http://localhost:5000/api/refresh-token`,
+      `${BASE_URL}/api/refresh-token`,
       { method: "POST", credentials: "include" }
     );
 
     const refreshData = await refreshRes.json();
 
     const res = await fetch(
-      `http://localhost:5000/api/create/prescription`,
+      `${BASE_URL}/api/create/prescription`,
       {
         method: "POST",
         headers: {

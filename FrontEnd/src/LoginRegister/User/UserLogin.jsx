@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import BASE_URL from "../../config/api";
 
 const UserLogin = () => {
 
@@ -18,7 +19,7 @@ const UserLogin = () => {
             console.log(Form);
             
     
-fetch('http://localhost:5000/api/login/user', {
+fetch(`${BASE_URL}/api/login/user`, {
                 method : "POST" , 
                  headers: {
         "Content-Type": "application/json",

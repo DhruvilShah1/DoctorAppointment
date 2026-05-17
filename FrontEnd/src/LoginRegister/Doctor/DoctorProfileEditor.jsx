@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useState, useEffect } from 'react';
 import { User, Camera, Phone, MapPin, Mail, Plus, X, Save } from 'lucide-react';
 import { useAuth } from '../../AuthProvider';
@@ -54,7 +55,7 @@ const DoctorProfileEditor = () => {
 
      try {
     const refreshRes = await fetch(
-      `http://localhost:5000/api/refresh-token`,
+      `${BASE_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -69,7 +70,7 @@ const DoctorProfileEditor = () => {
 
     const newToken = refreshData.newAccessToken;
 
-    const createRes = await fetch(`http://localhost:5000/api/get/doctor/profile`,
+    const createRes = await fetch(`${BASE_URL}/api/get/doctor/profile`,
       {
         method: "GET",
         headers: {
@@ -132,7 +133,7 @@ setSpecialties(data.specialties || []);
 
   try {
     const refreshRes = await fetch(
-      `http://localhost:5000/api/refresh-token`,
+      `${BASE_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -147,7 +148,7 @@ setSpecialties(data.specialties || []);
 
     const newToken = refreshData.newAccessToken;
 
-    const createRes = await fetch(`http://localhost:5000/api/create/doctor/profile`,
+    const createRes = await fetch(`${BASE_URL}/api/create/doctor/profile`,
       {
         method: "POST",
         headers: {
