@@ -18,7 +18,7 @@ const UserLogin = () => {
             console.log(Form);
             
     
-            fetch('http://localhost:5000/api/login/user', {
+fetch('http://localhost:5000/api/login/user', {
                 method : "POST" , 
                  headers: {
         "Content-Type": "application/json",
