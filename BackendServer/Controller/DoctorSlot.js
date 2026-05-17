@@ -1,0 +1,347 @@
+import { Rewind } from "lucide-react";
+import Appointment from "../Model/Appointment.js";
+import DoctorProfile from "../Model/DoctorProfile.js";
+import DoctorSchedule from "../Model/DoctorSchedule.js";
+import { getIO } from "../socket/socket.js";
+
+
+const DoctorControllerSchedule = {
+
+  createSlot: async (req, res) => {
+    try {
+      const {
+        doctorId,
+        date,
+        isOff,
+        start,
+        maxPerSlot,
+        end,
+        slots,
+        breaks,
+      } = req.body;
+
+      if (!doctorId || !date) {
+        return res.status(400).json({
+          success: false,
+          message: "doctorId and date are required",
+        });
+      }
+
+      let existing = await DoctorSchedule.findOne({ doctorId, date });
+
+
+
+      const checkProfileCreated = await DoctorProfile.findOne({doctorId})
+
+      if(!checkProfileCreated){
+        return res.status(400).json({
+          message : "Please Complete the Profile Then after you created profile"
+        })
+      }
+
+      if (existing) {
+
+        return res.status(200).json({
+          success: true,
+          message: "Slot Already Done",
+          data: existing,
+        });
+      }
+
+      const io = getIO();
+      const newSlot = new DoctorSchedule({
+        doctorId,
+        date,
+        isOff: isOff || false,
+        start: isOff ? undefined : start,
+        end: isOff ? undefined : end,
+        maxPerSlot,
+        slotDuration: isOff ? [] : slots || [],
+        breaks: isOff ? [] : breaks || [],
+        saved: true,
+      });
+
+          io.emit("DoctorSlotAdded", newSlot);
+
+
+
+      await newSlot.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "Slot created successfully",
+        data: newSlot,
+      });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  },
+
+  getSlots: async (req, res) => {
+    try {
+      const { doctorId } = req.params;
+
+      if (!doctorId) {
+        return res.status(400).json({
+          success: false,
+          message: "doctorId is required",
+        });
+      }
+
+      const slots = await DoctorSchedule.find({ doctorId }).sort({ date: 1 });
+
+      return res.status(200).json({
+        success: true,
+        data: slots,
+      });
+
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  },
+
+ getAll: async (req, res) => {
+  try {
+    const data = await DoctorSchedule.find()
+      .populate("doctorId", "name email role")
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+
+  } catch (error) {
+    console.error("🔥 GET ALL ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+},
+
+
+AddPatient: async (req, res) => {
+  try {
+    const { doctorId, date, slotStart } = req.body;
+    const patientId = req.user.id;
+
+    const schedule = await DoctorSchedule.findOne({
+      doctorId,
+      date,
+    });
+
+    if (!schedule) {
+      return res.status(404).json({
+        message: "Doctor schedule not found",
+      });
+    }
+
+    const slotExists = (schedule.slotDuration || []).find(
+      (s) => s.start === slotStart
+    );
+
+    if (!slotExists) {
+      return res.status(404).json({
+        message: "Slot not available in schedule",
+      });
+    }
+
+    let appointment = await Appointment.findOne({
+      doctorId,
+      date,
+    });
+
+    if (!appointment) {
+      const io = getIO();
+      appointment = await Appointment.create({
+        doctorId,
+        date,
+        slots: (schedule.slotDuration || []).map((s) => ({
+          start: s.start,
+          maxPatients: s.maxPatients || 1,
+          patientList: [],
+        })),
+      });
+
+      io.to(patientId).emit('appointmentBooking', appointment)
+
+    }
+
+    // 4️⃣ FIND SLOT
+    const slot = appointment.slots.find(
+      (s) => s.start === slotStart
+    );
+
+    if (!slot) {
+      return res.status(404).json({
+        message: "Slot not found in appointment",
+      });
+    }
+
+    // 5️⃣ CHECK ALREADY BOOKED (ANY SLOT)
+    const alreadyBooked = appointment.slots.some((s) =>
+      (s.patientList || []).some(
+        (p) => p.patientId.toString() === patientId
+      )
+    );
+
+    if (alreadyBooked) {
+      return res.status(400).json({
+        message: "You already booked a slot today",
+      });
+    }
+
+    // 6️⃣ CHECK SLOT CAPACITY
+    if ((slot.patientList || []).length >= 10) {
+      return res.status(400).json({
+        message: "Slot is full",
+      });
+    }
+
+    //  QUEUE NUMBER
+    const queueNumber = slot.patientList.length + 1;
+
+    //  ADD PATIENT
+    slot.patientList.push({
+      patientId,
+      queueNumber,
+      status: "waiting",
+    });
+
+    // 9️⃣ SAVE
+    await appointment.save();
+
+    return res.json({
+      success: true,
+      message: "Appointment booked successfully",
+      queueNumber,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+},
+
+queueNumber : async (req, res) => {
+
+  const {doctorId , startSlot , date}  = req.body;
+
+  
+
+  const schedule = await Appointment.findOne({
+      doctorId,
+      date,
+    });
+
+
+       if (!schedule) {
+      return res.status(404).json({
+        message: "Schedule not found",
+      });
+    }
+
+    
+    const slot = schedule.slots.find(
+      (s) => s.start == startSlot
+    );
+
+    
+
+    if (!slot) {
+      return res.status(404).json({
+        message: "Slot not found",
+      });
+    }
+
+     if (!slot.patientList) {
+      return res.json({
+        queueNumber : 0
+      })
+    }
+
+    const totalPaitent = slot.patientList.length ; 
+    console.log(totalPaitent);
+    
+
+    return res.json({
+       queueNumber : totalPaitent
+    })
+},
+
+
+upcomingAppointments: async (req, res) => {
+  try {
+    const patientId = req.user.id;
+
+    const schedules = await Appointment.find({
+      "slots.patientList.patientId": patientId,
+    })
+      .populate("doctorId", "name email")
+      .lean();
+
+    const result = [];
+
+    schedules.forEach((doc) => {
+      (doc.slots || []).forEach((slot) => {
+        (slot.patientList || []).forEach((p) => {
+          if (p.patientId.toString() === patientId) {
+            result.push({
+              doctorId: doc.doctorId?._id,
+              doctorName: doc.doctorId?.name,
+              doctorEmail: doc.doctorId?.email,
+
+              date: doc.date,
+              slotStart: slot.start,
+
+              queueNumber: p.queueNumber,
+              status: p.status,
+              bookedAt: p.bookedAt,
+            });
+          }
+        });
+      });
+    });
+
+    if (result.length === 0) {
+      return res.json({
+        message: "No Upcoming Appointments",
+      });
+    }
+
+    // optional sorting
+    result.sort((a, b) => {
+      if (new Date(a.date) - new Date(b.date) !== 0) {
+        return new Date(a.date) - new Date(b.date);
+      }
+      return a.slotStart.localeCompare(b.slotStart);
+    });
+
+    res.json({
+      success: true,
+      count: result.length,
+      data: result,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+}
+};
+
+export default DoctorControllerSchedule;
