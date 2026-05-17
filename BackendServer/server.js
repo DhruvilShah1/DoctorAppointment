@@ -14,7 +14,9 @@ const server = http.createServer(app);
 
 connectDB();
 
-const allowedOrigins = ["http://localhost:5173", "https://doctorappointment-lj0a.onrender.com"];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:5173"];
 
 app.use(cors({
   origin: allowedOrigins,

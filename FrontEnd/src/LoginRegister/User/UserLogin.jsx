@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import BASE_URL from "../../config/api";
+import { useAuth } from "../../AuthProvider";
 
 const UserLogin = () => {
 
 
   const navigate = useNavigate();
+  const { setUser } = useAuth();
     const [Form , setForm] = useState({
         email : "" , password : ""
     })
@@ -39,6 +41,7 @@ fetch(`${BASE_URL}/api/login/user`, {
                     return;
                 }
 localStorage.setItem('user', JSON.stringify(data.user));
+       setUser(data.user);
        toast.success(data.message)
 
        const role  = data.user.role ; 

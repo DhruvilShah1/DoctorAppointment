@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import BASE_URL from "../../config/api";
+import { useNavigate } from "react-router-dom";
 
 const UserRegister = () => {
+
+  const navigate = useNavigate();
 
     const [Form , setForm] = useState({
         name : "" , email : "" , password : "" , checked: "" , role : ""
@@ -33,7 +36,7 @@ const UserRegister = () => {
                 return;
             }
    toast.success(data.message)
-
+   navigate("/login")
 
 
 
