@@ -34,7 +34,13 @@ app.use(
 
 app.use(
   "/uploads",
-  express.static("uploads")
+  express.static(
+    path.join(
+      process.cwd(),
+      "BackendServer",
+      "uploads"
+    )
+  )
 );
 
 app.use(express.json());
