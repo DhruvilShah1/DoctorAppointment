@@ -1,72 +1,151 @@
-import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import React, {
+  useState,
+} from "react";
+
+import {
+  NavLink,
+} from "react-router-dom";
+
+import {
+  Menu,
+  X,
+} from "lucide-react";
 
 const UserSidebar = () => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] =
+    useState(false);
 
-  const linkClass = ({ isActive }) =>
-    `p-3 rounded-lg flex items-center gap-2 transition-all ${
+  const linkClass = ({
+    isActive,
+  }) =>
+    `p-3 rounded-xl flex items-center gap-2 transition-all duration-200 ${
       isActive
-        ? "bg-teal-50 text-teal-700 font-semibold"
+        ? "bg-teal-100 text-teal-700 font-semibold"
         : "text-gray-600 hover:bg-gray-100"
     }`;
 
+  const closeSidebar =
+    () => setOpen(false);
+
   return (
     <>
-      {/* ✅ TOP BAR (VISIBLE ON MOBILE ONLY) */}
-      <div className="md:hidden fixed top-0 left-0 w-full bg-white shadow px-4 py-3 flex justify-between items-center z-50">
-        <h1 className="font-bold text-teal-700">VitalCare</h1>
+      {/* MOBILE TOPBAR */}
+      <div className="md:hidden fixed top-0 left-0 w-full bg-white shadow-sm border-b px-4 py-3 flex justify-between items-center z-[60]">
 
-        {/* 🔥 3 DOT BUTTON */}
+        <h1 className="font-bold text-lg text-teal-700">
+          VitalCare
+        </h1>
+
+        {/* 3 DOT BUTTON */}
         <button
-          onClick={() => setOpen(true)}
-          className="text-3xl leading-none"
+          onClick={() =>
+            setOpen(true)
+          }
+          className="p-2 rounded-lg hover:bg-gray-100"
         >
-          ⋮
+          <Menu size={28} />
         </button>
       </div>
 
-      {/* ✅ OVERLAY */}
+      {/* OVERLAY */}
       {open && (
         <div
-          onClick={() => setOpen(false)}
+          onClick={
+            closeSidebar
+          }
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
         />
       )}
 
-      {/* ✅ SIDEBAR */}
+      {/* SIDEBAR */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-white border-r shadow-sm flex flex-col
-          transition-transform duration-300 z-50
-          ${open ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 md:block
+          fixed top-0 left-0 h-screen
+          w-64 bg-white border-r
+          shadow-lg z-50
+          flex flex-col
+          transition-transform duration-300 ease-in-out
+          ${
+            open
+              ? "translate-x-0"
+              : "-translate-x-full"
+          }
+          md:translate-x-0
         `}
       >
-        {/* Logo */}
-        <div className="p-6 font-bold text-xl text-teal-700 mt-10 md:mt-0">
-          VitalCare
+        {/* HEADER */}
+        <div className="flex items-center justify-between p-5 border-b">
+
+          <h1 className="font-bold text-2xl text-teal-700">
+            VitalCare
+          </h1>
+
+          {/* CLOSE BUTTON MOBILE */}
+          <button
+            onClick={
+              closeSidebar
+            }
+            className="md:hidden"
+          >
+            <X size={24} />
+          </button>
         </div>
 
-        {/* Menu */}
-        <nav className="flex flex-col gap-2 px-4">
-          <NavLink to="/dashboard" className={linkClass}>
+        {/* NAVIGATION */}
+        <nav className="flex flex-col gap-2 p-4">
+
+          <NavLink
+            to="/dashboard"
+            className={
+              linkClass
+            }
+            onClick={
+              closeSidebar
+            }
+          >
             Dashboard
           </NavLink>
 
-          <NavLink to="/appointments" className={linkClass}>
+          <NavLink
+            to="/appointments"
+            className={
+              linkClass
+            }
+            onClick={
+              closeSidebar
+            }
+          >
             Appointments
           </NavLink>
 
-          <NavLink to="/queue" className={linkClass}>
+          <NavLink
+            to="/queue"
+            className={
+              linkClass
+            }
+            onClick={
+              closeSidebar
+            }
+          >
             Queue
           </NavLink>
 
-          <NavLink to="/records" className={linkClass}>
+          <NavLink
+            to="/records"
+            className={
+              linkClass
+            }
+            onClick={
+              closeSidebar
+            }
+          >
             Records
           </NavLink>
         </nav>
       </aside>
+
+      {/* CONTENT SPACING */}
+      <div className="md:ml-64 pt-16 md:pt-0" />
     </>
   );
 };
