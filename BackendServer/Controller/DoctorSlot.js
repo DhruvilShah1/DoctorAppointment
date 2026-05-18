@@ -2,87 +2,118 @@ import { Rewind } from "lucide-react";
 import Appointment from "../Model/Appointment.js";
 import DoctorProfile from "../Model/DoctorProfile.js";
 import DoctorSchedule from "../Model/DoctorSchedule.js";
-import { getIO } from "../../FrontEnd/src/socket/socket.js";
-
+import { getIO } from "../socket/socket.js";
 
 const DoctorControllerSchedule = {
 
-  createSlot: async (req, res) => {
-    try {
-      const {
+ createSlot: async (req, res) => {
+  try {
+    const {
+      date,
+      isOff,
+      start,
+      maxPerSlot,
+      end,
+      slots,
+      breaks,
+    } = req.body;
+
+    const doctorId = req.user.id;
+
+    console.log("USER:", req.user);
+    console.log("BODY:", req.body);
+
+    if (!doctorId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "doctorId and date are required",
+      });
+    }
+
+    const existing =
+      await DoctorSchedule.findOne({
+        doctorId,
         date,
-        isOff,
-        start,
-        maxPerSlot,
-        end,
-        slots,
-        breaks,
-      } = req.body;
+      });
 
-      
-      const doctorId = req.user.id;
+    const checkProfileCreated =
+      await DoctorProfile.findOne({
+        doctorId,
+      });
 
-      if (!doctorId || !date) {
-        return res.status(400).json({
-          success: false,
-          message: "doctorId and date are required",
-        });
-      }
+    if (!checkProfileCreated) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Please complete doctor profile first",
+      });
+    }
 
-      let existing = await DoctorSchedule.findOne({ doctorId, date });
+    if (existing) {
+      return res.status(200).json({
+        success: true,
+        message: "Slot Already Done",
+        data: existing,
+      });
+    }
 
-
-
-      const checkProfileCreated = await DoctorProfile.findOne({doctorId})
-
-      if(!checkProfileCreated){
-        return res.status(400).json({
-          message : "Please Complete the Profile Then after you created profile"
-        })
-      }
-
-      if (existing) {
-
-        return res.status(200).json({
-          success: true,
-          message: "Slot Already Done",
-          data: existing,
-        });
-      }
-
-      const io = getIO();
-      const newSlot = new DoctorSchedule({
+    const newSlot =
+      new DoctorSchedule({
         doctorId,
         date,
         isOff: isOff || false,
-        start: isOff ? undefined : start,
-        end: isOff ? undefined : end,
+        start: isOff
+          ? undefined
+          : start,
+        end: isOff
+          ? undefined
+          : end,
         maxPerSlot,
-        slotDuration: isOff ? [] : slots || [],
-        breaks: isOff ? [] : breaks || [],
+        slotDuration: isOff
+          ? []
+          : slots || [],
+        breaks: isOff
+          ? []
+          : breaks || [],
         saved: true,
       });
 
-          io.emit("DoctorSlotAdded", newSlot);
+    // SAVE FIRST
+    await newSlot.save();
 
+    // SOCKET (SAFE)
+    try {
+      const io = getIO();
 
-
-      await newSlot.save();
-
-      return res.status(201).json({
-        success: true,
-        message: "Slot created successfully",
-        data: newSlot,
-      });
-
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        success: false,
-        message: "Server Error",
-      });
+      io.emit(
+        "DoctorSlotAdded",
+        newSlot
+      );
+    } catch (socketError) {
+      console.log(
+        "Socket emit failed:",
+        socketError.message
+      );
     }
-  },
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "Slot created successfully",
+      data: newSlot,
+    });
+  } catch (error) {
+    console.error(
+      "CREATE SLOT ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+},
 
   getSlots: async (req, res) => {
     try {
