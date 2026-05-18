@@ -20,7 +20,7 @@ connectDB();
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
   : [
-      "http://localhost:5173",
+      "https://doctor-appointment-kohl-phi.vercel.app",
       "https://doctorappointment-lj0a.onrender.com",
     ];
 
