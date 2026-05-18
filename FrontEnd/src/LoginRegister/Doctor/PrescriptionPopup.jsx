@@ -67,39 +67,100 @@ morning: false, afternoon: false, night: false
   return new File([u8arr], filename, { type: mime });
 };
 
+
 const handleSave = async () => {
   try {
-    setLoading(true)
+    setLoading(true);
+
     let signatureFile = null;
 
-    if (signatureRef.current && !signatureRef.current.isEmpty()) {
-      const base64 = signatureRef.current.toDataURL("image/png");
-      signatureFile = dataURLtoFile(base64, "signature.png");
+    // Signature convert to file
+    if (
+      signatureRef.current &&
+      !signatureRef.current.isEmpty()
+    ) {
+      const base64 =
+        signatureRef.current.toDataURL("image/png");
+
+      signatureFile = dataURLtoFile(
+        base64,
+        "signature.png"
+      );
     }
 
     const formData = new FormData();
 
-    formData.append("doctorId", doctorData?.id);
-    formData.append('doctorName', doctorData?.name)
-        formData.append("patientName", patientData?.patientId.name);
-
-    formData.append("patientId", patientData?.patientId._id);
-    formData.append("instructions", form.instructions);
-    formData.append("medicines", JSON.stringify(medicines));
-    formData.append("date", date);
-    formData.append("slot", slot.start);
-
-    if (signatureFile) {
-      formData.append("signature", signatureFile); 
-    }
-
-    const refreshRes = await fetch(
-      `${BASE_URL}/api/refresh-token`,
-      { method: "POST", credentials: "include" }
+    // Safe data append
+    formData.append(
+      "doctorId",
+      doctorData?.id || ""
     );
 
-    const refreshData = await refreshRes.json();
+    formData.append(
+      "doctorName",
+      doctorData?.name || ""
+    );
 
+    formData.append(
+      "patientName",
+      patientData?.patientId?.name || ""
+    );
+
+    formData.append(
+      "patientId",
+      patientData?.patientId?._id || ""
+    );
+
+    formData.append(
+      "instructions",
+      form.instructions || ""
+    );
+
+    formData.append(
+      "medicines",
+      JSON.stringify(medicines || [])
+    );
+
+    formData.append(
+      "date",
+      date || ""
+    );
+
+    formData.append(
+      "slot",
+      slot?.start || slot || ""
+    );
+
+    // Signature field name MUST match multer
+    if (signatureFile) {
+      formData.append(
+        "signature",
+        signatureFile
+      );
+    }
+
+    // DEBUG: check formData values
+    for (let pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
+    // refresh token
+    const refreshRes = await fetch(
+      `${BASE_URL}/api/refresh-token`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
+
+    const refreshData =
+      await refreshRes.json();
+
+    if (!refreshData.newAccessToken) {
+      throw new Error("Token refresh failed");
+    }
+
+    // create prescription
     const res = await fetch(
       `${BASE_URL}/api/create/prescription`,
       {
@@ -107,20 +168,36 @@ const handleSave = async () => {
         headers: {
           Authorization: `Bearer ${refreshData.newAccessToken}`,
         },
-        body: formData, 
+        body: formData,
       }
     );
 
     const result = await res.json();
 
+    console.log("RESULT:", result);
+
+    if (!res.ok) {
+      throw new Error(
+        result.message || "Something went wrong"
+      );
+    }
+
     if (result.success) {
       updatePatientStatus("done");
-      alert("Done")
-      setLoading(false)
+
+      alert("Prescription Saved");
+
       onClose();
     }
   } catch (err) {
-    console.log(err);
+    console.error(
+      "Prescription Save Error:",
+      err
+    );
+
+    alert(err.message);
+  } finally {
+    setLoading(false);
   }
 };
 
