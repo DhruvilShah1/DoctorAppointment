@@ -82,10 +82,13 @@ createPrescription: async (
     let signatureUrl = null;
 
     if (req.file) {
-      // Upload signature to ImageKit
+      // Upload Signature to ImageKit
       const uploadedSignature =
         await imagekit.upload({
-          file: req.file.buffer,
+          file:
+            req.file.buffer.toString(
+              "base64"
+            ),
 
           fileName:
             Date.now() +
@@ -99,7 +102,7 @@ createPrescription: async (
       signatureUrl =
         uploadedSignature.url;
 
-      // Convert to Base64 for PDF rendering
+      // Base64 for PDF preview
       signatureBase64 = `data:${
         req.file.mimetype
       };base64,${req.file.buffer.toString(
@@ -161,6 +164,7 @@ createPrescription: async (
 <html>
 <head>
 <meta charset="UTF-8"/>
+
 <style>
 body{
 font-family:Arial,sans-serif;
@@ -194,11 +198,14 @@ width:120px;
 height:120px;
 }
 </style>
+
 </head>
 
 <body>
 
-<h1>VitalCare Prescription</h1>
+<h1>
+VitalCare Prescription
+</h1>
 
 <p>
 <b>Prescription ID:</b>
@@ -225,7 +232,9 @@ ${date}
 ${slot}
 </p>
 
-<h3>Instructions</h3>
+<h3>
+Instructions
+</h3>
 
 <p>
 ${
@@ -234,17 +243,36 @@ ${
 }
 </p>
 
-<h3>Medicines</h3>
+<h3>
+Medicines
+</h3>
 
 <table>
 <thead>
 <tr>
-<th>Medicine</th>
-<th>Strength</th>
-<th>Days</th>
-<th>Morning</th>
-<th>Afternoon</th>
-<th>Night</th>
+<th>
+Medicine
+</th>
+
+<th>
+Strength
+</th>
+
+<th>
+Days
+</th>
+
+<th>
+Morning
+</th>
+
+<th>
+Afternoon
+</th>
+
+<th>
+Night
+</th>
 </tr>
 </thead>
 
@@ -254,6 +282,7 @@ ${parsedMedicines
   .map(
     (m) => `
 <tr>
+
 <td>
 ${m.name}
 </td>
@@ -290,6 +319,7 @@ ${
     : "–"
 }
 </td>
+
 </tr>
 `
   )
@@ -393,7 +423,7 @@ alt="QR"
     await browser.close();
 
     // -------------------------
-    // Upload PDF
+    // Upload PDF to ImageKit
     // -------------------------
 
     const randomFile =
@@ -401,7 +431,10 @@ alt="QR"
 
     const uploadedPDF =
       await imagekit.upload({
-        file: pdfBuffer,
+        file:
+          pdfBuffer.toString(
+            "base64"
+          ),
 
         fileName:
           `${randomFile}.pdf`,
@@ -414,7 +447,7 @@ alt="QR"
       uploadedPDF.url;
 
     // -------------------------
-    // Save DB
+    // Save Prescription
     // -------------------------
 
     const newPrescription =
