@@ -17,16 +17,21 @@ app.set("trust proxy", 1);
 
 connectDB();
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
-  : [
-      "https://doctor-appointment-kohl-phi.vercel.app",
-      "https://doctorappointment-lj0a.onrender.com",
-    ];
+const allowedOrigins =
+  process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(
+        ","
+      )
+    : [
+        "http://localhost:5173",
+        "https://doctor-appointment-kohl-phi.vercel.app",
+        "https://doctorappointment-lj0a.onrender.com",
+      ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin:
+      allowedOrigins,
     credentials: true,
   })
 );
@@ -41,13 +46,26 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST"],
-  },
-});
+const io =
+  new Server(server, {
+    cors: {
+      origin:
+        allowedOrigins,
+
+      methods: [
+        "GET",
+        "POST",
+      ],
+
+      credentials:
+        true,
+    },
+
+    transports: [
+      "websocket",
+      "polling",
+    ],
+  });
 
 initSocket(io);
 
