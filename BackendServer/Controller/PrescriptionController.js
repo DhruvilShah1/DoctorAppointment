@@ -75,33 +75,6 @@ createPrescription: async (
       generate15DigitId();
 
     // -------------------------
-    // Upload Signature
-    // -------------------------
-
-    let signatureUrl = null;
-
-    if (req.file) {
-      const uploadedSignature =
-        await imagekit.upload({
-          file:
-            req.file.buffer.toString(
-              "base64"
-            ),
-
-          fileName:
-            `${Date.now()}-${
-              req.file.originalname
-            }`,
-
-          folder:
-            "/doctor-signatures",
-        });
-
-      signatureUrl =
-        uploadedSignature.url;
-    }
-
-    // -------------------------
     // Parse Medicines
     // -------------------------
 
@@ -115,8 +88,23 @@ createPrescription: async (
               medicines
             )
           : medicines || [];
-    } catch (error) {
+    } catch {
       parsedMedicines = [];
+    }
+
+    // -------------------------
+    // Signature Base64
+    // -------------------------
+
+    let signatureBase64 =
+      null;
+
+    if (req.file) {
+      signatureBase64 = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString(
+        "base64"
+      )}`;
     }
 
     // -------------------------
@@ -136,7 +124,7 @@ createPrescription: async (
       );
 
     // -------------------------
-    // Simple HTML
+    // HTML Template
     // -------------------------
 
     const htmlTemplate = `
@@ -144,24 +132,13 @@ createPrescription: async (
 <html>
 
 <head>
-
 <meta charset="UTF-8"/>
 
 <style>
 
 body{
-font-family:Arial,sans-serif;
+font-family:Arial;
 padding:20px;
-color:#000;
-}
-
-h1{
-text-align:center;
-margin-bottom:20px;
-}
-
-p{
-margin:8px 0;
 }
 
 table{
@@ -172,16 +149,12 @@ margin-top:20px;
 
 th,td{
 border:1px solid #000;
-padding:8px;
+padding:10px;
 text-align:center;
 }
 
 img{
 max-width:150px;
-}
-
-.section{
-margin-top:25px;
 }
 
 </style>
@@ -195,45 +168,33 @@ Prescription
 </h1>
 
 <p>
-<b>
-Prescription ID:
-</b>
+<b>ID:</b>
 ${prescriptionId}
 </p>
 
 <p>
-<b>
-Doctor:
-</b>
+<b>Doctor:</b>
 Dr. ${doctorName}
 </p>
 
 <p>
-<b>
-Patient:
-</b>
+<b>Patient:</b>
 ${patientName}
 </p>
 
 <p>
-<b>
-Date:
-</b>
+<b>Date:</b>
 ${date}
 </p>
 
 <p>
-<b>
-Slot:
-</b>
+<b>Slot:</b>
 ${slot}
 </p>
 
-<div class="section">
-
-<b>
-Instructions:
-</b>
+<h3>
+Instructions
+</h3>
 
 <p>
 ${
@@ -241,10 +202,6 @@ ${
   "No instructions"
 }
 </p>
-
-</div>
-
-<div class="section">
 
 <h3>
 Medicines
@@ -339,20 +296,15 @@ ${
 
 </table>
 
-</div>
-
-<div class="section">
-
 <h3>
 Doctor Signature
 </h3>
 
 ${
-  signatureUrl
+  signatureBase64
     ? `
 <img
-src="${signatureUrl}"
-alt="Signature"
+src="${signatureBase64}"
 />
 `
     : `
@@ -362,12 +314,8 @@ No Signature
 `
 }
 
-</div>
-
-<div class="section">
-
 <h3>
-QR Verification
+QR Code
 </h3>
 
 <img
@@ -375,14 +323,12 @@ src="${qrCode}"
 width="120"
 />
 
-</div>
-
 </body>
 </html>
 `;
 
     // -------------------------
-    // Puppeteer
+    // Launch Browser
     // -------------------------
 
     const browser =
@@ -408,35 +354,55 @@ width="120"
     );
 
     // -------------------------
-    // Generate PDF
+    // Create Upload Folder
     // -------------------------
 
-    const pdfBuffer =
-      await page.pdf({
-        format: "A4",
-        printBackground: true,
-      });
+    const uploadFolder =
+      path.join(
+        process.cwd(),
+        "uploads",
+        "prescriptions"
+      );
+
+    if (
+      !fs.existsSync(
+        uploadFolder
+      )
+    ) {
+      fs.mkdirSync(
+        uploadFolder,
+        {
+          recursive: true,
+        }
+      );
+    }
+
+    // -------------------------
+    // Save PDF
+    // -------------------------
+
+    const fileName = `${prescriptionId}.pdf`;
+
+    const pdfPath =
+      path.join(
+        uploadFolder,
+        fileName
+      );
+
+    await page.pdf({
+      path: pdfPath,
+      format: "A4",
+      printBackground: true,
+    });
 
     await browser.close();
 
     // -------------------------
-    // Upload PDF
+    // URL
     // -------------------------
 
-    const uploadedPDF =
-      await imagekit.upload({
-        file:
-`data:application/pdf;base64,${pdfBuffer.toString("base64")}`,
-
-        fileName:
-          `${prescriptionId}.pdf`,
-
-        folder:
-          "/prescriptions",
-      });
-
     const pdfUrl =
-      uploadedPDF.url;
+      `/uploads/prescriptions/${fileName}`;
 
     // -------------------------
     // Save DB
@@ -455,7 +421,7 @@ width="120"
           instructions,
 
           signature:
-            signatureUrl,
+            signatureBase64,
 
           date,
           slot,
@@ -474,22 +440,16 @@ width="120"
 
     return res.status(201).json({
       success: true,
-
       message:
         "Prescription created successfully",
-
       data:
         newPrescription,
     });
   } catch (error) {
-    console.log(
-      "Prescription Error:",
-      error
-    );
+    console.log(error);
 
     return res.status(500).json({
       success: false,
-
       message:
         error.message,
     });
