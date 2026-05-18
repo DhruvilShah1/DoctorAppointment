@@ -5,10 +5,9 @@ const imagekit = new ImageKit({
     "public_zGZBg7/d9ls/iTlRog0qh++OSbc=",
 
   privateKey:
-    "private_NWIo************************",
+    "private_NWIoRU4rnx0LDV5FGT8bDad/4MA=",
 
-  urlEndpoint:
-    "https://ik.imagekit.io/xqfepk1ftj",
+  urlEndpoint:"https://ik.imagekit.io/xqfepk1ftj"
 });
 
 export default imagekit;
