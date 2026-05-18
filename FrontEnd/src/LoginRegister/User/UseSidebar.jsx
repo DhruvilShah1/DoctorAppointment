@@ -144,8 +144,6 @@ const UserSidebar = () => {
         </nav>
       </aside>
 
-      {/* CONTENT SPACING */}
-      <div className="md:ml-64 pt-16 md:pt-0" />
     </>
   );
 };
