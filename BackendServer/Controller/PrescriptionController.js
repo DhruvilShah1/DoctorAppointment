@@ -14,6 +14,12 @@ const ensureDir = (dir) => {
   }
 };
 
+const generate15DigitId = () => {
+  return Math.floor(
+    100000000000000 + Math.random() * 900000000000000
+  ).toString();
+};
+
 const generateRandomFileName = () => {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
