@@ -11,12 +11,14 @@ import { connectDB } from "../BackendServer/Config/Connection.js";
 
 const app = express();
 const server = http.createServer(app);
+app.use(cookieParser());
+app.set("trust proxy", 1);
 
 connectDB();
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:5173"];
+  : ["http://localhost:5173" , "https://doctorappointment-lj0a.onrender.com"];
 
 app.use(cors({
   origin: allowedOrigins,
@@ -24,7 +26,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', router);

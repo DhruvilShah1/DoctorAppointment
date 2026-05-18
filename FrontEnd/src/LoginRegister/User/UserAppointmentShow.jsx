@@ -61,88 +61,78 @@ useEffect(()=>{
     const [upcomingAppointments ,  SetupcomingAppointments] = useState([]);
 
 
-  const fetchAppointment = async () => {
-  
-        try {
-      const refreshRes = await fetch(
-        `${BASE_URL}/api/refresh-token`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-  
-      const refreshData = await refreshRes.json();
-  
-      if (!refreshRes.ok) {
-        throw new Error("Session expired, please login again");
+ const fetchAppointment = async () => {
+  try {
+    const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`,
+      {
+        method: "POST",
+        credentials: "include",
       }
-  
-      const newToken = refreshData.newAccessToken;
-  
-      setaccesstoken(newToken);
-  
-  
-       const res = await fetch(`${BASE_URL}/api/take/appointments`, {
+    );
+
+    // check refresh success
+    if (!refreshRes.ok) {
+      console.log("Refresh token failed");
+      return;
+    }
+
+    const refreshData = await refreshRes.json();
+    const newToken = refreshData.newAccessToken;
+
+    if (!newToken) {
+      console.log("No access token returned");
+      return;
+    }
+
+    const res = await fetch(
+      `${BASE_URL}/api/take/appointments`,
+      {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${newToken}`, 
+          Authorization: `Bearer ${newToken}`,
         },
-      });
-  
-      const data = await res.json();
-  
-      const appointment = data.data[0];
-  
-  
-  
-  
-      socket.emit("patient:join",{
-        doctorId : appointment.doctorId , 
-        date : appointment.date.split("T")[0] , 
-        slot : appointment.slotStart , 
-        patientId : user.id
+      }
+    );
+
+    const data = await res.json();
+
+    const appointment = data?.data?.[0];
+
+    if (!appointment) return;
+
+    socket.emit("patient:join", {
+      doctorId: appointment.doctorId,
+      date: appointment.date.split("T")[0],
+      slot: appointment.slotStart,
+      patientId: user.id,
+    });
+
+    const formattedDate =
+      appointment?.date?.split("T")[0];
+
+    const roomId = `${appointment?.doctorId}_${formattedDate}_${appointment?.slotStart}`;
+
+    localStorage.setItem("roomId", roomId);
+
+    localStorage.setItem(
+      "appointment",
+      JSON.stringify({
+        doctorId: appointment?.doctorId,
+        date: formattedDate,
+        slot: appointment?.slotStart,
       })
-  
-  if (appointment) {
-  const formattedDate =
-    appointment?.date?.split("T")[0];
+    );
 
-  const roomId =
-    `${appointment?.doctorId}_${formattedDate}_${appointment?.slotStart}`;
+    console.log("Saved:", roomId);
 
-  localStorage.setItem("roomId", roomId);
+    SetupcomingAppointments(data.data);
 
-  localStorage.setItem(
-    "appointment",
-    JSON.stringify({
-      doctorId: appointment?.doctorId,
-      date: formattedDate,
-      slot: appointment?.slotStart,
-    })
-  );
+  } catch (err) {
+    console.log(err);
+  }
+};
 
-  console.log("Saved:", roomId);
-}
-      
-  
-      SetupcomingAppointments(data.data)
-  
-  
-  
-  
-      
-  
-  
-   
-    }catch(err){
-      console.log(err);
-      
-    }
-  
-      
-    }
    
 useEffect(() => {
   if (!user) return;

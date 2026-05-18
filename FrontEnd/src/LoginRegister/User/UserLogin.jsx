@@ -23,10 +23,10 @@ const UserLogin = () => {
     
 fetch(`${BASE_URL}/api/login/user`, {
                 method : "POST" , 
+                 credentials: "include",
                  headers: {
         "Content-Type": "application/json",
       },
-                credentials: 'include',
                 body : JSON.stringify(Form)
             })
             .then(res => res.json())
@@ -40,7 +40,6 @@ fetch(`${BASE_URL}/api/login/user`, {
                     toast.info(data.error)
                     return;
                 }
-localStorage.setItem('user', JSON.stringify(data.user));
        setUser(data.user);
        toast.success(data.message)
 

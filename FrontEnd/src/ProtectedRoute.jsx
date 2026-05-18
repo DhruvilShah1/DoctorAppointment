@@ -1,62 +1,74 @@
-import BASE_URL from "./config/api";
 import React, { useEffect, useState } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
+import BASE_URL from "./config/api";
 
 const ProtectedRoute = () => {
+  const {
+    user,
+    setUser,
+    accessToken,
+    setAccessToken,
+  } = useAuth();
+
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { setUser, setAccessToken } = useAuth();
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const refreshLogin = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/api/refresh-token`, {
-          method: "POST",
-          credentials: "include",
-        });
+        if (user && accessToken) {
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(
+          `${BASE_URL}/api/refresh-token`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
 
         if (!res.ok) {
-          const stored = localStorage.getItem("user");
-          if (stored) {
-            setUser(JSON.parse(stored));
-            setLoading(false);
-            return;
-          }
-          navigate("/login");
+          console.log("Refresh token failed");
+          setLoading(false);
           return;
         }
 
         const data = await res.json();
-        const accessToken = data.accessToken || data.newAccessToken;
-        setAccessToken(accessToken);
 
-        const userRes = await fetch(`${BASE_URL}/api/me`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
+        if (data.ok && data.newAccessToken) {
+          setAccessToken(data.newAccessToken);
 
-        if (!userRes.ok) throw new Error("User fetch failed");
+          // Decode token and restore user
+          const payload = JSON.parse(
+            atob(data.newAccessToken.split(".")[1])
+          );
 
-        const userData = await userRes.json();
-        setUser(userData);
-
-      } catch (err) {
-        const stored = localStorage.getItem("user");
-        if (stored) {
-          setUser(JSON.parse(stored));
-        } else {
-          setUser(null);
-          navigate("/login");
+          setUser({
+            id: payload.id,
+            name: payload.name,
+            email: payload.email,
+            role: payload.role,
+          });
         }
+      } catch (err) {
+        console.log("Protected route auth error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
-  }, [setUser, setAccessToken, navigate]);
+    refreshLogin();
+  }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return <Outlet />;
 };

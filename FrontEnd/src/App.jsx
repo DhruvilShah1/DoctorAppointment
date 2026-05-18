@@ -1,4 +1,5 @@
 import BASE_URL from "./config/api";
+import { getToken } from "./config/token";
 import React, { useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import UserRegister from './LoginRegister/User/UserRegister'
@@ -40,16 +41,7 @@ const App = () => {
 
   const fetchAppointment = async (date, slot) => {
     try {
-      const refreshRes = await fetch(
-        `${BASE_URL}/api/refresh-token`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-
-      const refreshData = await refreshRes.json();
-      const token = refreshData.newAccessToken;
+      const token = await getToken();
 
       const res = await fetch(
         `${BASE_URL}/api/get/full/slot`,
