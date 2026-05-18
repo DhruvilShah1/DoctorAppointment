@@ -10,7 +10,6 @@ const DoctorControllerSchedule = {
   createSlot: async (req, res) => {
     try {
       const {
-        doctorId,
         date,
         isOff,
         start,
@@ -19,6 +18,9 @@ const DoctorControllerSchedule = {
         slots,
         breaks,
       } = req.body;
+
+      
+      const doctorId = req.user.id;
 
       if (!doctorId || !date) {
         return res.status(400).json({

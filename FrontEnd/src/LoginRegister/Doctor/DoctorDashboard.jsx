@@ -81,7 +81,11 @@ const generateSlots = (start, end, breaks = []) => {
 
 const DoctorDashboard = () => {
 
-  const doctor = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user } = useAuth();
+  console.log(user);
+  
+
+  const doctor = user;
 
   const [schedule, setSchedule] = useState(() =>
     DAYS.reduce((acc, day, i) => {

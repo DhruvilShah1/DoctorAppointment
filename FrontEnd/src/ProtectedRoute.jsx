@@ -40,7 +40,6 @@ const ProtectedRoute = () => {
         if (data.ok && data.newAccessToken) {
           setAccessToken(data.newAccessToken);
 
-          // Decode token and restore user
           const payload = JSON.parse(
             atob(data.newAccessToken.split(".")[1])
           );
