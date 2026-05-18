@@ -213,7 +213,7 @@ const DoctorDashboard = () => {
       : generateSlots(d.start, d.end, d.breaks);
 
     const payload = {
-      doctorId: doctor.id,
+      doctorId: doctor?.id,
       date: new Date(d.date),
       isOff: d.isOff,
       start: d.start,
