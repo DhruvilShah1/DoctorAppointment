@@ -57,7 +57,7 @@ const DoctorPrescriptionTable = () => {
 
           const refreshRes =
             await fetch(
-              "${BASE_URL}/api/refresh-token",
+              `${BASE_URL}/api/refresh-token`,
               {
                 method:
                   "POST",
@@ -82,7 +82,7 @@ const DoctorPrescriptionTable = () => {
 
           const res =
             await fetch(
-              "${BASE_URL}/api/get/prescription/doctor",
+              `${BASE_URL}/api/get/prescription/doctor`,
               {
                 method:
                   "GET",
