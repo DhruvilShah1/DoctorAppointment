@@ -37,7 +37,7 @@ const io = new Server(server, {
   },
 });
 
-initSocket(io);
+initSocket(server);
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
