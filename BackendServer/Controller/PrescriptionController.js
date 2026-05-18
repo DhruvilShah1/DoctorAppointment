@@ -75,7 +75,7 @@ createPrescription: async (
       generate15DigitId();
 
     // -------------------------
-    // Signature Upload
+    // Upload Signature
     // -------------------------
 
     let signatureUrl = null;
@@ -108,28 +108,19 @@ createPrescription: async (
     let parsedMedicines = [];
 
     try {
-      if (
+      parsedMedicines =
         typeof medicines ===
         "string"
-      ) {
-        parsedMedicines =
-          JSON.parse(
-            medicines
-          );
-      } else if (
-        Array.isArray(
-          medicines
-        )
-      ) {
-        parsedMedicines =
-          medicines;
-      }
+          ? JSON.parse(
+              medicines
+            )
+          : medicines || [];
     } catch (error) {
       parsedMedicines = [];
     }
 
     // -------------------------
-    // QR Token
+    // QR Code
     // -------------------------
 
     const token = jwt.sign(
@@ -137,23 +128,19 @@ createPrescription: async (
       "VITECARE APPOINTMENT"
     );
 
-    const qrData =
-      JSON.stringify({
-        token,
-      });
-
     const qrCode =
       await QRCode.toDataURL(
-        qrData
+        JSON.stringify({
+          token,
+        })
       );
 
     // -------------------------
-    // HTML Template
+    // Simple HTML
     // -------------------------
 
     const htmlTemplate = `
 <!DOCTYPE html>
-
 <html>
 
 <head>
@@ -164,17 +151,17 @@ createPrescription: async (
 
 body{
 font-family:Arial,sans-serif;
-padding:25px;
-color:#222;
+padding:20px;
+color:#000;
 }
 
 h1{
-color:#2563EB;
-margin-bottom:10px;
+text-align:center;
+margin-bottom:20px;
 }
 
-.info{
-margin-bottom:8px;
+p{
+margin:8px 0;
 }
 
 table{
@@ -184,39 +171,17 @@ margin-top:20px;
 }
 
 th,td{
-border:1px solid #ddd;
-padding:10px;
+border:1px solid #000;
+padding:8px;
 text-align:center;
 }
 
-th{
-background:#2563EB;
-color:white;
+img{
+max-width:150px;
 }
 
-.footer{
-margin-top:40px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-
-.signature img{
-max-width:180px;
-max-height:70px;
-object-fit:contain;
-}
-
-.qr-img{
-width:120px;
-height:120px;
-}
-
-.note{
+.section{
 margin-top:25px;
-padding:12px;
-background:#f5f5f5;
-border-left:4px solid #2563EB;
 }
 
 </style>
@@ -226,54 +191,60 @@ border-left:4px solid #2563EB;
 <body>
 
 <h1>
-VitalCare Prescription
+Prescription
 </h1>
 
-<div class="info">
+<p>
 <b>
 Prescription ID:
 </b>
 ${prescriptionId}
-</div>
+</p>
 
-<div class="info">
+<p>
 <b>
 Doctor:
 </b>
 Dr. ${doctorName}
-</div>
+</p>
 
-<div class="info">
+<p>
 <b>
 Patient:
 </b>
 ${patientName}
-</div>
+</p>
 
-<div class="info">
+<p>
 <b>
 Date:
 </b>
 ${date}
-</div>
+</p>
 
-<div class="info">
+<p>
 <b>
 Slot:
 </b>
 ${slot}
-</div>
+</p>
 
-<div class="note">
+<div class="section">
+
 <b>
 Instructions:
 </b>
-<br/>
+
+<p>
 ${
   instructions ||
-  "No instructions provided."
+  "No instructions"
 }
+</p>
+
 </div>
+
+<div class="section">
 
 <h3>
 Medicines
@@ -318,39 +289,45 @@ ${parsedMedicines
 
 <td>
 ${m.name || "-"}
+
 </td>
 
 <td>
 ${m.strength || "-"}
+
 </td>
 
 <td>
 ${m.days || "-"}
+
 </td>
 
 <td>
 ${
   m.timing?.morning
-    ? "✓"
-    : "–"
+    ? "Yes"
+    : "No"
 }
+
 </td>
 
 <td>
 ${
   m.timing
     ?.afternoon
-    ? "✓"
-    : "–"
+    ? "Yes"
+    : "No"
 }
+
 </td>
 
 <td>
 ${
   m.timing?.night
-    ? "✓"
-    : "–"
+    ? "Yes"
+    : "No"
 }
+
 </td>
 
 </tr>
@@ -362,9 +339,9 @@ ${
 
 </table>
 
-<div class="footer">
+</div>
 
-<div class="signature">
+<div class="section">
 
 <h3>
 Doctor Signature
@@ -375,31 +352,28 @@ ${
     ? `
 <img
 src="${signatureUrl}"
-crossorigin="anonymous"
+alt="Signature"
 />
 `
-    : `<p>No signature uploaded</p>`
-}
-
+    : `
 <p>
-Dr. ${doctorName}
+No Signature
 </p>
+`
+}
 
 </div>
 
-<div>
+<div class="section">
 
 <h3>
-Verify QR
+QR Verification
 </h3>
 
 <img
-class="qr-img"
 src="${qrCode}"
-alt="QR"
+width="120"
 />
-
-</div>
 
 </div>
 
@@ -408,7 +382,7 @@ alt="QR"
 `;
 
     // -------------------------
-    // Launch Browser
+    // Puppeteer
     // -------------------------
 
     const browser =
@@ -425,58 +399,13 @@ alt="QR"
     const page =
       await browser.newPage();
 
-    await page.setViewport({
-      width: 1200,
-      height: 1600,
-    });
-
-    await page.setJavaScriptEnabled(
-      true
-    );
-
     await page.setContent(
       htmlTemplate,
       {
         waitUntil:
-          "domcontentloaded",
+          "networkidle0",
       }
     );
-
-    // Wait for images
-    await page.evaluate(
-      async () => {
-        const images =
-          Array.from(
-            document.images
-          );
-
-        await Promise.all(
-          images.map(
-            (img) => {
-              if (
-                img.complete
-              ) {
-                return Promise.resolve();
-              }
-
-              return new Promise(
-                (
-                  resolve
-                ) => {
-                  img.onload =
-                    resolve;
-
-                  img.onerror =
-                    resolve;
-                }
-              );
-            }
-          )
-        );
-      }
-    );
-
-    await page.waitForNetworkIdle();
 
     // -------------------------
     // Generate PDF
@@ -486,21 +415,18 @@ alt="QR"
       await page.pdf({
         format: "A4",
         printBackground: true,
-        preferCSSPageSize: true,
       });
 
     await browser.close();
 
     // -------------------------
-    // Upload PDF to ImageKit
+    // Upload PDF
     // -------------------------
 
     const uploadedPDF =
       await imagekit.upload({
         file:
-          pdfBuffer.toString(
-            "base64"
-          ),
+`data:application/pdf;base64,${pdfBuffer.toString("base64")}`,
 
         fileName:
           `${prescriptionId}.pdf`,
@@ -513,7 +439,7 @@ alt="QR"
       uploadedPDF.url;
 
     // -------------------------
-    // Save Prescription
+    // Save DB
     // -------------------------
 
     const newPrescription =
@@ -536,10 +462,10 @@ alt="QR"
 
           qrCode,
 
+          pdfUrl,
+
           verificationStatus:
             "pending",
-
-          pdfUrl,
 
           status:
             "issued",
@@ -563,6 +489,7 @@ alt="QR"
 
     return res.status(500).json({
       success: false,
+
       message:
         error.message,
     });
