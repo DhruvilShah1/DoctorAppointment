@@ -32,7 +32,7 @@ app.use(
   })
 );
 
-pp.use(
+app.use(
   "/uploads",
   express.static("uploads")
 );
