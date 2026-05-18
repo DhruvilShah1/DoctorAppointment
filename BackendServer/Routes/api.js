@@ -75,5 +75,26 @@ router.post('/verify/prescription' , PrescriptionController.verifyPrescription);
 router.get('/get/prescription/doctor' , verifyToken , authorizeRoles('doctor') , PrescriptionController.getByDoctorId)
 
 
+router.get("/test", async (
+  req,
+  res
+) => {
+  try {
+    const result =
+      await imagekit.upload({
+        file:
+          "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+        fileName:
+          "test.jpg",
+      });
+
+    res.json(result);
+  } catch (err) {
+    console.log(err);
+
+    res.json(err);
+  }
+});
+
 
 export default router;
