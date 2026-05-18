@@ -78,11 +78,9 @@ createPrescription: async (
     // Signature Upload
     // -------------------------
 
-    let signatureBase64 = null;
     let signatureUrl = null;
 
     if (req.file) {
-      // Upload Signature to ImageKit
       const uploadedSignature =
         await imagekit.upload({
           file:
@@ -91,9 +89,9 @@ createPrescription: async (
             ),
 
           fileName:
-            Date.now() +
-            "-" +
-            req.file.originalname,
+            `${Date.now()}-${
+              req.file.originalname
+            }`,
 
           folder:
             "/doctor-signatures",
@@ -101,13 +99,6 @@ createPrescription: async (
 
       signatureUrl =
         uploadedSignature.url;
-
-      // Base64 for PDF preview
-      signatureBase64 = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString(
-        "base64"
-      )}`;
     }
 
     // -------------------------
@@ -161,14 +152,29 @@ createPrescription: async (
     // -------------------------
 
     const htmlTemplate = `
+<!DOCTYPE html>
+
 <html>
+
 <head>
+
 <meta charset="UTF-8"/>
 
 <style>
+
 body{
 font-family:Arial,sans-serif;
-padding:20px;
+padding:25px;
+color:#222;
+}
+
+h1{
+color:#2563EB;
+margin-bottom:10px;
+}
+
+.info{
+margin-bottom:8px;
 }
 
 table{
@@ -188,15 +194,31 @@ background:#2563EB;
 color:white;
 }
 
-.sig-area img{
+.footer{
+margin-top:40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.signature img{
 max-width:180px;
 max-height:70px;
+object-fit:contain;
 }
 
 .qr-img{
 width:120px;
 height:120px;
 }
+
+.note{
+margin-top:25px;
+padding:12px;
+background:#f5f5f5;
+border-left:4px solid #2563EB;
+}
+
 </style>
 
 </head>
@@ -207,47 +229,58 @@ height:120px;
 VitalCare Prescription
 </h1>
 
-<p>
-<b>Prescription ID:</b>
+<div class="info">
+<b>
+Prescription ID:
+</b>
 ${prescriptionId}
-</p>
+</div>
 
-<p>
-<b>Doctor:</b>
+<div class="info">
+<b>
+Doctor:
+</b>
 Dr. ${doctorName}
-</p>
+</div>
 
-<p>
-<b>Patient:</b>
+<div class="info">
+<b>
+Patient:
+</b>
 ${patientName}
-</p>
+</div>
 
-<p>
-<b>Date:</b>
+<div class="info">
+<b>
+Date:
+</b>
 ${date}
-</p>
+</div>
 
-<p>
-<b>Slot:</b>
+<div class="info">
+<b>
+Slot:
+</b>
 ${slot}
-</p>
+</div>
 
-<h3>
-Instructions
-</h3>
-
-<p>
+<div class="note">
+<b>
+Instructions:
+</b>
+<br/>
 ${
   instructions ||
   "No instructions provided."
 }
-</p>
+</div>
 
 <h3>
 Medicines
 </h3>
 
 <table>
+
 <thead>
 <tr>
 <th>
@@ -284,15 +317,15 @@ ${parsedMedicines
 <tr>
 
 <td>
-${m.name}
+${m.name || "-"}
 </td>
 
 <td>
-${m.strength}
+${m.strength || "-"}
 </td>
 
 <td>
-${m.days}
+${m.days || "-"}
 </td>
 
 <td>
@@ -326,32 +359,27 @@ ${
   .join("")}
 
 </tbody>
+
 </table>
 
-<div
-style="
-margin-top:40px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-"
->
+<div class="footer">
 
-<div>
+<div class="signature">
 
 <h3>
 Doctor Signature
 </h3>
 
-<div class="sig-area">
-
 ${
-  signatureBase64
-    ? `<img src="${signatureBase64}" />`
-    : `<span>No signature</span>`
+  signatureUrl
+    ? `
+<img
+src="${signatureUrl}"
+crossorigin="anonymous"
+/>
+`
+    : `<p>No signature uploaded</p>`
 }
-
-</div>
 
 <p>
 Dr. ${doctorName}
@@ -402,22 +430,63 @@ alt="QR"
       height: 1600,
     });
 
+    await page.setJavaScriptEnabled(
+      true
+    );
+
     await page.setContent(
       htmlTemplate,
       {
         waitUntil:
-          "networkidle0",
+          "domcontentloaded",
       }
     );
 
+    // Wait for images
+    await page.evaluate(
+      async () => {
+        const images =
+          Array.from(
+            document.images
+          );
+
+        await Promise.all(
+          images.map(
+            (img) => {
+              if (
+                img.complete
+              ) {
+                return Promise.resolve();
+              }
+
+              return new Promise(
+                (
+                  resolve
+                ) => {
+                  img.onload =
+                    resolve;
+
+                  img.onerror =
+                    resolve;
+                }
+              );
+            }
+          )
+        );
+      }
+    );
+
+    await page.waitForNetworkIdle();
+
     // -------------------------
-    // Generate PDF Buffer
+    // Generate PDF
     // -------------------------
 
     const pdfBuffer =
       await page.pdf({
         format: "A4",
         printBackground: true,
+        preferCSSPageSize: true,
       });
 
     await browser.close();
@@ -425,9 +494,6 @@ alt="QR"
     // -------------------------
     // Upload PDF to ImageKit
     // -------------------------
-
-    const randomFile =
-      generateRandomFileName();
 
     const uploadedPDF =
       await imagekit.upload({
@@ -437,7 +503,7 @@ alt="QR"
           ),
 
         fileName:
-          `${randomFile}.pdf`,
+          `${prescriptionId}.pdf`,
 
         folder:
           "/prescriptions",
@@ -482,6 +548,7 @@ alt="QR"
 
     return res.status(201).json({
       success: true,
+
       message:
         "Prescription created successfully",
 

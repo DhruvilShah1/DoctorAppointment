@@ -253,7 +253,7 @@ const UserRecord = () => {
 
 <div className="flex gap-3 border p-3 rounded-2xl border-red-600 border-2 border-dashed">
   <a
-    href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
+    href={Prescption}
     target="_blank"
     rel="noreferrer"
     className="btn"
@@ -262,7 +262,7 @@ const UserRecord = () => {
   </a>
 
  <a
-  href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
+  href={Prescption}
   target="_blank"
   rel="noopener noreferrer"
   className="btn primary"
