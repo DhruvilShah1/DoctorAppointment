@@ -32,15 +32,9 @@ app.use(
   })
 );
 
-app.use(
+pp.use(
   "/uploads",
-  express.static(
-    path.join(
-      process.cwd(),
-      "BackendServer",
-      "uploads"
-    )
-  )
+  express.static("uploads")
 );
 
 app.use(express.json());

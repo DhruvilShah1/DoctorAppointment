@@ -253,7 +253,7 @@ const UserRecord = () => {
 
 <div className="flex gap-3 border p-3 rounded-2xl border-red-600 border-2 border-dashed">
   <a
-    href={Prescption}
+    href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
     target="_blank"
     rel="noreferrer"
     className="btn"
@@ -261,13 +261,14 @@ const UserRecord = () => {
     View Medicines 
   </a>
 
-  <a
-    href={Prescption}
-    download
-    className="btn primary "
-  >
-    Download PDF
-  </a>
+ <a
+  href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="btn primary"
+>
+  Download PDF
+</a>
 </div>
                           </span>
 
