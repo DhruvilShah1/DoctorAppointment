@@ -6,9 +6,28 @@ import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
 
-const ensureDir = (dir) => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+const ensureDir = (dirPath) => {
+  try {
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, {
+        recursive: true,
+      });
+
+      console.log(
+        "Folder created:",
+        dirPath
+      );
+    } else {
+      console.log(
+        "Folder already exists:",
+        dirPath
+      );
+    }
+  } catch (error) {
+    console.log(
+      "Folder create error:",
+      error
+    );
   }
 };
 
@@ -277,14 +296,15 @@ const PrescriptionController = {
       `;
 
       // Ensure Folder Exists
-      const uploadFolder =
-        path.join(
-          process.cwd(),
-          "uploads",
-          "prescriptions"
-        );
+      const uploadFolder = path.join(
+  process.cwd(),
+  "uploads",
+  "prescriptions"
+);
 
-      ensureDir(uploadFolder);
+ensureDir(uploadFolder);
+
+console.log(uploadFolder);
 
       // PDF Name
       const randomFile =
@@ -292,16 +312,15 @@ const PrescriptionController = {
 
       const fileName = `${randomFile}.pdf`;
 
-      const pdfPath =
-        path.join(
-          uploadFolder,
-          fileName
-        );
+      const pdfPath = path.join(
+  uploadFolder,
+  `${randomFile}.pdf`
+);
 
-      console.log(
-        "Saving PDF to:",
-        pdfPath
-      );
+console.log(
+  "PDF Save Path:",
+  pdfPath
+);
 
       // Launch Browser
       const browser =
@@ -331,10 +350,10 @@ const PrescriptionController = {
 
       // Create PDF
       await page.pdf({
-        path: pdfPath,
-        format: "A4",
-        printBackground: true,
-      });
+  path: pdfPath,
+  format: "A4",
+  printBackground: true,
+});
 
       await browser.close();
 
@@ -384,9 +403,7 @@ const PrescriptionController = {
       });
     }
   },
-
-  verifyPrescription:
-    async (req, res) => {
+  verifyPrescription:   async (req, res) => {
       try {
         const { token } =
           req.body;
