@@ -8,9 +8,15 @@ const ensureDir = (dir) => {
   }
 };
 
+ensureDir("uploads");
+ensureDir("uploads/signatures");
+ensureDir("uploads/profile");
+ensureDir("uploads/documents");
+ensureDir("uploads/prescriptions");
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    let folder = "uploads/";
+    let folder = "uploads";
 
     if (file.fieldname === "signature") {
       folder = "uploads/signatures";

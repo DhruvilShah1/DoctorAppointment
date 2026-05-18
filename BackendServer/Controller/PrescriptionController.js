@@ -37,12 +37,17 @@ const PrescriptionController = {
       signatureBase64 = `data:image/png;base64,${image.toString("base64")}`;
     }
 
-    let parsedMedicines = medicines;
+     let parsedMedicines = [];
 
-    if (typeof medicines === "string") {
-      parsedMedicines = JSON.parse(medicines);
+    try {
+      if (typeof medicines === "string") {
+        parsedMedicines = JSON.parse(medicines);
+      } else if (Array.isArray(medicines)) {
+        parsedMedicines = medicines;
+      }
+    } catch (err) {
+      parsedMedicines = [];
     }
-
 
     const token = jwt.sign(
   { prescriptionId },
