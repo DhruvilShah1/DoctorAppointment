@@ -173,7 +173,7 @@ const RegisterAndLoginController = {
       error: err.message,
     });
   }
-};
+}
 
 
 };
