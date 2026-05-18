@@ -1,8 +1,7 @@
 import Appointment from "../Model/Appointment.js";
 import DoctorSchedule from "../Model/DoctorSchedule.js";
 import Prescription from "../Model/Prescription.js";
-import { getIO } from "../../FrontEnd/src/socket/socket.js";
-
+import { getIO } from "../socket/socket.js";
 
 const AppointmentController = {
 
@@ -116,13 +115,23 @@ startQueuWithslots: async (req, res) => {
     const { date, slot } = req.body;
     const doctorId = req.user.id;
 
+    console.log("REQ BODY:", req.body);
+    console.log("DOCTOR:", doctorId);
+
+    // IMPORTANT FIX: normalize date
+    const formattedDate = new Date(date)
+      .toISOString()
+      .split("T")[0];
+
     const appointment = await Appointment.findOne({
       doctorId,
-      date,
+      date: formattedDate,
     });
 
     if (!appointment) {
-      return res.status(404).json({ message: "No appointment found" });
+      return res.status(404).json({
+        message: "No appointment found for this date",
+      });
     }
 
     const matchedSlot = appointment.slots.find(
@@ -130,46 +139,59 @@ startQueuWithslots: async (req, res) => {
     );
 
     if (!matchedSlot) {
-      return res.status(404).json({ message: "Slot not found" });
+      return res.status(404).json({
+        message: "Slot not found",
+      });
     }
 
     if (matchedSlot.isCompleted) {
-      return res.status(400).json({ message: "Slot already completed" });
+      return res.status(400).json({
+        message: "Slot already completed",
+      });
     }
 
     if (matchedSlot.isQueueStarted) {
-      return res.status(400).json({ message: "Queue already started" });
+      return res.status(400).json({
+        message: "Queue already started",
+      });
     }
 
     matchedSlot.isQueueStarted = true;
     matchedSlot.startedAt = new Date();
 
-await appointment.save();
+    await appointment.save();
 
-const io = getIO();
+    // SOCKET SAFE CALL
+    let io;
+    try {
+      io = getIO();
+    } catch (err) {
+      console.log("Socket not ready, skipping emit");
+    }
 
-const roomId = `${doctorId}_${date}_${slot}`;
+    if (io) {
+      const roomId = `${doctorId}_${formattedDate}_${slot}`;
 
+      io.to(roomId).emit("queue:started", {
+        message: "Queue has started",
+      });
+    }
 
-io.to(roomId).emit("queue:started", {
-  message: "Queue has started",
-});  
-
-
-return res.status(200).json({
-  success: true , 
+    return res.status(200).json({
+      success: true,
       message: "Queue started successfully",
       slot: matchedSlot,
     });
 
   } catch (error) {
+    console.error("START QUEUE ERROR:", error);
+
     return res.status(500).json({
       message: "Server error",
       error: error.message,
     });
   }
 },
-
 
 getFullSlots: async (req, res) => {
   try {
