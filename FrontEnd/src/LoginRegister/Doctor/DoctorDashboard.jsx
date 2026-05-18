@@ -80,7 +80,6 @@ const generateSlots = (start, end, breaks = []) => {
 };
 
 const DoctorDashboard = () => {
-  const { accessToken } = useAuth();
 
   const doctor = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -221,13 +220,32 @@ const DoctorDashboard = () => {
     };
 
     try {
-      const res = await fetch(
-        `${BASE_URL}/api/create/slot`,
+
+    const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
+
+    if (!refreshRes.ok) {
+      console.log("Refresh token failed");
+      return;
+    }
+
+    const refreshData = await refreshRes.json();
+    const newToken = refreshData.newAccessToken;
+
+
+
+
+
+      const res = await fetch(`${BASE_URL}/api/create/slot`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${newToken}`,
           },
           body: JSON.stringify(payload),
         }

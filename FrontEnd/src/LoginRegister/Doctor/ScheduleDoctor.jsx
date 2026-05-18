@@ -19,8 +19,7 @@ import {
 } from "lucide-react";
 import PrescriptionPopup from "./PrescriptionPopup";
 
-const socket = io(import.meta.env
-    .APP_URL);
+const socket = io(import.meta.env.APP_URL);
 
 const ScheduleDoctor = () => {
   const { user } = useAuth();
@@ -130,12 +129,10 @@ const ScheduleDoctor = () => {
     loadTodayData();
   }, []);
 
-  // ================= LOAD PATIENTS =================
 
   const loadPatients = async (slot) => {
     try {
-      const res = await authFetch(
-        `${BASE_URL}/api/take/patient`,
+      const res = await authFetch(`${BASE_URL}/api/take/patient`,
         {
           method: "POST",
           body: JSON.stringify({

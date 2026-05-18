@@ -9,6 +9,10 @@ const DoctorProfileEditor = () => {
     const { user } = useAuth();
 
 
+    console.log(user);
+    
+
+
 
 
   
@@ -52,8 +56,7 @@ const DoctorProfileEditor = () => {
 
 
   const getProfile = async () => {
-
-     try {
+  try {
     const refreshRes = await fetch(
       `${BASE_URL}/api/refresh-token`,
       {
@@ -62,19 +65,25 @@ const DoctorProfileEditor = () => {
       }
     );
 
-    const refreshData = await refreshRes.json();
-
     if (!refreshRes.ok) {
-      throw new Error("Session expired, please login again");
+      throw new Error(
+        "Session expired, please login again"
+      );
     }
 
-    const newToken = refreshData.newAccessToken;
+    const refreshData =
+      await refreshRes.json();
 
-    const createRes = await fetch(`${BASE_URL}/api/get/doctor/profile`,
+    const newToken =
+      refreshData.newAccessToken;
+
+    const createRes = await fetch(
+      `${BASE_URL}/api/get/doctor/profile`,
       {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":
+            "application/json",
           Authorization: `Bearer ${newToken}`,
         },
       }
@@ -82,28 +91,48 @@ const DoctorProfileEditor = () => {
 
     const data = await createRes.json();
 
-setForm({
-  name: data.name || "",
-  email: data.email || "",
-  phone: data.phone || "",
-  title: data.title || "",
-  experience: data.experience || "",
-  bio: data.bio || "",
-  address: data.address || "",
-});
-
-setSpecialties(data.specialties || []);
-    if (!createRes.ok) {
-      throw new Error(data.message || "Something went wrong");
+    // profile not created yet
+    if (createRes.status === 404) {
+      console.log(
+        "No profile found, using defaults"
+      );
+      return;
     }
 
+    if (!createRes.ok) {
+      throw new Error(
+        data.message ||
+          "Something went wrong"
+      );
+    }
+
+    setForm({
+      name: data.name || user?.name || "",
+      email:
+        data.email ||
+        user?.email ||
+        "",
+      phone: data.phone || "",
+      title: data.title || "",
+      experience:
+        data.experience || "",
+      bio: data.bio || "",
+      address:
+        data.address ||
+        "Khambhat, Gujarat",
+    });
+
+    setSpecialties(
+      data.specialties || []
+    );
 
     setIsDirty(false);
+
   } catch (err) {
     console.error(err);
     toast.error(err.message);
   }
-  }
+};
 
 
   
