@@ -482,16 +482,17 @@ const DoctorPrescriptionTable = () => {
                           }
                         </span>
                       </td>
+                      
 
                       <td className="p-5">
-                         <a
-    href={item.pdfUrl}
-    target="_blank"
-    rel="noreferrer"
-    className="btn"
-  >
-    View  precesption 
-  </a>
+     <a
+  href={`https://doctorappointment-lj0a.onrender.com${item?.pdfUrl}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="btn"
+>
+  View Prescription
+</a>
 
                       </td>
                     </tr>

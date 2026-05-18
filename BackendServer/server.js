@@ -24,7 +24,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "https://doctorappointment-lj0a.onrender.com",
     ];
 
-// Express CORS
 app.use(
   cors({
     origin: allowedOrigins,
@@ -42,7 +41,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-// Socket.IO
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -51,7 +49,6 @@ const io = new Server(server, {
   },
 });
 
-// IMPORTANT
 initSocket(io);
 
 io.on("connection", (socket) => {

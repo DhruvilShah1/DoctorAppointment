@@ -23,6 +23,7 @@ import PharmacySidebar from './pharmacy-side-portal/PharmacySidebar'
 import PharmacyDashboard from './pharmacy-side-portal/PharmacyDashboard'
 import DoctorPrescriptionTable from './LoginRegister/Doctor/DoctorPrescriptionTable'
 import { socket } from './socket/FrontendSocketConnection';
+import Unauthorized from "./Unauthorized";
 
 const App = () => {
   
@@ -147,6 +148,8 @@ useEffect(() => {
         <Routes>
       <Route path="/" element={<UserRegister />} />
             <Route path="/login" element={<UserLogin />} />
+
+            <Route path="/unauthorized" element={<Unauthorized/>}/>
 
 
            <Route element={<ProtectedRoute />}>
