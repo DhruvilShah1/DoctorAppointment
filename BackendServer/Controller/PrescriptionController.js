@@ -1,9 +1,11 @@
 import Prescription from "../Model/Prescription.js";
 import QRCode from "qrcode";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
-import cloudinary from "../Config/cloudinary.js";
+import imagekit from "../Config/imagekit.js";
 
 const ensureDir = (dirPath) => {
   try {
@@ -72,7 +74,10 @@ createPrescription: async (
     const prescriptionId =
       generate15DigitId();
 
- 
+    // -------------------------
+    // Parse Medicines
+    // -------------------------
+
     let parsedMedicines = [];
 
     try {
@@ -87,6 +92,10 @@ createPrescription: async (
       parsedMedicines = [];
     }
 
+    // -------------------------
+    // Signature Base64
+    // -------------------------
+
     let signatureBase64 =
       null;
 
@@ -98,7 +107,10 @@ createPrescription: async (
       )}`;
     }
 
-   
+    // -------------------------
+    // QR Code
+    // -------------------------
+
     const token = jwt.sign(
       { prescriptionId },
       "VITECARE APPOINTMENT"
@@ -110,6 +122,10 @@ createPrescription: async (
           token,
         })
       );
+
+    // -------------------------
+    // HTML Template
+    // -------------------------
 
     const htmlTemplate = `
 <!DOCTYPE html>
@@ -311,20 +327,86 @@ width="120"
 </html>
 `;
 
-    const browser = null; 
+    // -------------------------
+    // Launch Browser
+    // -------------------------
 
-    const htmlBuffer = Buffer.from(htmlTemplate, "utf-8");
-    const base64Html = htmlBuffer.toString("base64");
-    const dataUri = `data:text/html;base64,${base64Html}`;
+    const browser =
+      await puppeteer.launch({
+        args:
+          chromium.args,
 
-    const uploadResult = await cloudinary.uploader.upload(dataUri, {
-      resource_type: "raw",
-      folder: "prescriptions",
-      public_id: prescriptionId,
-      format: "html",
+        executablePath:
+          await chromium.executablePath(),
+
+        headless: true,
+      });
+
+    const page =
+      await browser.newPage();
+
+    await page.setContent(
+      htmlTemplate,
+      {
+        waitUntil:
+          "networkidle0",
+      }
+    );
+
+    // -------------------------
+    // Create Upload Folder
+    // -------------------------
+
+    const uploadFolder =
+      path.join(
+        process.cwd(),
+        "uploads",
+        "prescriptions"
+      );
+
+    if (
+      !fs.existsSync(
+        uploadFolder
+      )
+    ) {
+      fs.mkdirSync(
+        uploadFolder,
+        {
+          recursive: true,
+        }
+      );
+    }
+
+    // -------------------------
+    // Save PDF
+    // -------------------------
+
+    const fileName = `${prescriptionId}.pdf`;
+
+    const pdfPath =
+      path.join(
+        uploadFolder,
+        fileName
+      );
+
+    await page.pdf({
+      path: pdfPath,
+      format: "A4",
+      printBackground: true,
     });
 
-    const pdfUrl = uploadResult.secure_url;
+    await browser.close();
+
+    // -------------------------
+    // URL
+    // -------------------------
+
+    const pdfUrl =
+      `/uploads/prescriptions/${fileName}`;
+
+    // -------------------------
+    // Save DB
+    // -------------------------
 
     const newPrescription =
       await Prescription.create(
