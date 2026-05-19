@@ -1,10 +1,21 @@
-import multer from "multer";
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinary");
 
-const storage =
-  multer.memoryStorage();
+const storage = new CloudinaryStorage({
+  cloudinary,
 
-const upload = multer({
-  storage,
+  params: async (req, file) => {
+    let folder = req.body.folder || "others";
+
+    return {
+      folder: folder, 
+      public_id: `${Date.now()}-${file.originalname}`,
+      resource_type: "raw",
+    };
+  },
 });
 
-export default upload;
+const upload = multer({ storage });
+
+module.exports = upload;
