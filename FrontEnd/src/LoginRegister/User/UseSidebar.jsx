@@ -30,7 +30,7 @@ const UserSidebar = () => {
   return (
     <>
       {/* MOBILE TOPBAR */}
-      <div className="md:hidden fixed top-0 left-0 w-full bg-white shadow-sm border-b px-4 py-3 flex justify-between items-center z-[60]">
+      <div className="md:hidden fixed max-h-full top-0 left-0 w-full bg-white shadow-sm border-b px-4 py-3 flex justify-between items-center z-[60]">
 
         <h1 className="font-bold text-lg text-teal-700">
           VitalCare
