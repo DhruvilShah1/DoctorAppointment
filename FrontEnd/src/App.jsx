@@ -23,6 +23,7 @@ import PharmacyDashboard from './pharmacy-side-portal/PharmacyDashboard'
 import DoctorPrescriptionTable from './LoginRegister/Doctor/DoctorPrescriptionTable'
 import { socket } from './socket/FrontendSocketConnection';
 import Unauthorized from "./Unauthorized";
+import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
 
 const App = () => {
   
@@ -204,6 +205,7 @@ useEffect(() => {
 <Route element={<ProtectedRoute />}>
               <Route element={<RoleMiddleware allowedRoles={['shopper']} />}>
                <Route element={<PharmacySidebar />}>
+               <Route path='/dashboard/pharmacy/profile' element={<PharmacyProfile />} />
   <Route
     path="/dashboard/pharmacy"
     element={<PharmacyDashboard />}

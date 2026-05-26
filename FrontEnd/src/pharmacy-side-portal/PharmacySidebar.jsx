@@ -57,13 +57,24 @@ const PharmacySidebar = () => {
 
         {/* Navigation */}
         <nav className="p-4 flex flex-col gap-2">
+
+<NavLink
+            to="/dashboard/pharmacy/profile"
+            className={linkClass}
+            onClick={() => setOpen(false)}
+          >
+            <LayoutDashboard size={20} />
+            Profile
+          </NavLink>
+
+
           <NavLink
             to="/dashboard/pharmacy"
             className={linkClass}
             onClick={() => setOpen(false)}
           >
             <LayoutDashboard size={20} />
-            Dashboard
+            Order
           </NavLink>
 
           <NavLink
