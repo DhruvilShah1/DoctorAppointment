@@ -13,6 +13,7 @@ const PharmacyProfile = () => {
         gstNumber: '',
         ownerName: '',
         email: '',
+        file: null,
         phoneNumber: '',
         emergencyContact: '',
         city: '',
@@ -24,6 +25,21 @@ const PharmacyProfile = () => {
         categories: [],
         visibility: 'public',
     });
+
+
+    const OpenFile = () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                    setData(prev => ({...prev , file}))
+                console.log('Selected file:', file);
+            }
+        };
+        fileInput.click();
+    }
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 lg:p-8">
@@ -84,7 +100,9 @@ const PharmacyProfile = () => {
                   Pharmacy Logo
                 </label>
 
-                <div className="border-2 border-dashed border-slate-300 rounded-2xl h-36 flex items-center justify-center text-slate-500 hover:border-teal-600 transition cursor-pointer">
+                <div 
+                onClick={OpenFile}
+                className="border-2 border-dashed border-slate-300 rounded-2xl h-36 flex items-center justify-center text-slate-500 hover:border-teal-600 transition cursor-pointer">
                   Upload Logo
                 </div>
               </div>
