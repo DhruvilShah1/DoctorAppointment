@@ -1,54 +1,47 @@
 import { UTApi } from "uploadthing/server";
 
 const utapi = new UTApi({
-  token: "sk_live_9dbd1bf7f0921ddd9cbfdacb254326c2a2552f7c12053e93160186c791594ba7"
+  token: process.env.UPLOADTHING_TOKEN,
 });
 
-export const uploadSignature =
-  async (file) => {
-    try {
-      const response =
-        await utapi.uploadFiles(
-          new File(
-            [file.buffer],
-            file.originalname,
-            {
-              type:
-                file.mimetype,
-            }
-          )
-        );
+export const uploadSignature = async (file) => {
+  try {
+    const utFile = new File([file.buffer], file.originalname, {
+      type: file.mimetype,
+    });
 
-      return response.data.url;
-    } catch (error) {
-      throw new Error(
-        "Signature upload failed"
-      );
+    const response = await utapi.uploadFiles(utFile);
+
+    console.log("Signature upload response:", JSON.stringify(response));
+
+    if (response.error) {
+      throw new Error(response.error.message || "Upload failed");
     }
-  };
 
-export const uploadPdf =
-  async (
-    pdfBuffer,
-    fileName
-  ) => {
-    try {
-      const response =
-        await utapi.uploadFiles(
-          new File(
-            [pdfBuffer],
-            fileName,
-            {
-              type:
-                "application/pdf",
-            }
-          )
-        );
+    return response.data.ufsUrl || response.data.url;
+  } catch (error) {
+    console.error("Signature upload error:", error);
+    throw new Error("Signature upload failed: " + error.message);
+  }
+};
 
-      return response.data.url;
-    } catch (error) {
-      throw new Error(
-        "PDF upload failed"
-      );
+export const uploadPdf = async (buffer, fileName) => {
+  try {
+    const utFile = new File([buffer], fileName, {
+      type: "text/html",
+    });
+
+    const response = await utapi.uploadFiles(utFile);
+
+    console.log("HTML upload response:", JSON.stringify(response));
+
+    if (response.error) {
+      throw new Error(response.error.message || "Upload failed");
     }
-  };
+
+    return response.data.ufsUrl || response.data.url;
+  } catch (error) {
+    console.error("HTML upload error:", error);
+    throw new Error("HTML upload failed: " + error.message);
+  }
+};
