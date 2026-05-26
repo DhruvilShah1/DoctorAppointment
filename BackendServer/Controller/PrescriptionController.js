@@ -5,8 +5,8 @@ import chromium from "@sparticuz/chromium";
 import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
-import imagekit from "../Config/imagekit.js";
 import Appointment from "../Model/Appointment.js";
+import { uploadPdf, uploadSignature } from "../Config/uploadthing.js";
 
 const ensureDir = (dirPath) => {
   try {
@@ -62,10 +62,6 @@ createPrescription: async (
     const prescriptionId =
       generate15DigitId();
 
-    // -------------------------
-    // Parse Medicines
-    // -------------------------
-
     let parsedMedicines = [];
 
     try {
@@ -80,24 +76,15 @@ createPrescription: async (
       parsedMedicines = [];
     }
 
-    // -------------------------
-    // Signature Base64
-    // -------------------------
-
-    let signatureBase64 =
+    let signatureUrl =
       null;
 
     if (req.file) {
-      signatureBase64 = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString(
-        "base64"
-      )}`;
+      signatureUrl =
+        await uploadSignature(
+          req.file
+        );
     }
-
-    // -------------------------
-    // QR Code
-    // -------------------------
 
     const token = jwt.sign(
       { prescriptionId },
@@ -110,12 +97,7 @@ createPrescription: async (
           token,
         })
       );
-
-    // -------------------------
-    // HTML Template
-    // -------------------------
-
-    const htmlTemplate = `
+const htmlTemplate = `
 <!DOCTYPE html>
 <html>
 
@@ -199,29 +181,12 @@ Medicines
 
 <thead>
 <tr>
-<th>
-Medicine
-</th>
-
-<th>
-Strength
-</th>
-
-<th>
-Days
-</th>
-
-<th>
-Morning
-</th>
-
-<th>
-Afternoon
-</th>
-
-<th>
-Night
-</th>
+<th>Medicine</th>
+<th>Strength</th>
+<th>Days</th>
+<th>Morning</th>
+<th>Afternoon</th>
+<th>Night</th>
 </tr>
 </thead>
 
@@ -234,17 +199,14 @@ ${parsedMedicines
 
 <td>
 ${m.name || "-"}
-
 </td>
 
 <td>
 ${m.strength || "-"}
-
 </td>
 
 <td>
 ${m.days || "-"}
-
 </td>
 
 <td>
@@ -253,7 +215,6 @@ ${
     ? "Yes"
     : "No"
 }
-
 </td>
 
 <td>
@@ -263,7 +224,6 @@ ${
     ? "Yes"
     : "No"
 }
-
 </td>
 
 <td>
@@ -272,7 +232,6 @@ ${
     ? "Yes"
     : "No"
 }
-
 </td>
 
 </tr>
@@ -289,10 +248,10 @@ Doctor Signature
 </h3>
 
 ${
-  signatureBase64
+  signatureUrl
     ? `
 <img
-src="${signatureBase64}"
+src="${signatureUrl}"
 />
 `
     : `
@@ -315,10 +274,6 @@ width="120"
 </html>
 `;
 
-    // -------------------------
-    // Launch Browser
-    // -------------------------
-
     const browser =
       await puppeteer.launch({
         args:
@@ -340,61 +295,19 @@ width="120"
           "networkidle0",
       }
     );
-
-    // -------------------------
-    // Create Upload Folder
-    // -------------------------
-
-    const uploadFolder =
-      path.join(
-        process.cwd(),
-        "uploads",
-        "prescriptions"
-      );
-
-    if (
-      !fs.existsSync(
-        uploadFolder
-      )
-    ) {
-      fs.mkdirSync(
-        uploadFolder,
-        {
-          recursive: true,
-        }
-      );
-    }
-
-    // -------------------------
-    // Save PDF
-    // -------------------------
-
-    const fileName = `${prescriptionId}.pdf`;
-
-    const pdfPath =
-      path.join(
-        uploadFolder,
-        fileName
-      );
-
-    await page.pdf({
-      path: pdfPath,
-      format: "A4",
-      printBackground: true,
-    });
+    const pdfBuffer =
+      await page.pdf({
+        format: "A4",
+        printBackground: true,
+      });
 
     await browser.close();
 
-    // -------------------------
-    // URL
-    // -------------------------
-
     const pdfUrl =
-      `/uploads/prescriptions/${fileName}`;
-
-    // -------------------------
-    // Save DB
-    // -------------------------
+      await uploadPdf(
+        pdfBuffer,
+        `${prescriptionId}.pdf`
+      );
 
     const newPrescription =
       await Prescription.create(
@@ -409,7 +322,7 @@ width="120"
           instructions,
 
           signature:
-            signatureBase64,
+            signatureUrl,
 
           date,
           slot,
@@ -426,21 +339,29 @@ width="120"
         }
       );
 
-    return res.status(201).json({
+    return res.status(201)
+    .json({
       success: true,
       message:
         "Prescription created successfully",
       data:
         newPrescription,
     });
+
   } catch (error) {
-    return res.status(500).json({
+
+    console.log(error);
+
+    return res.status(500)
+    .json({
       success: false,
       message:
         error.message,
     });
   }
 },
+
+
   verifyPrescription:   async (req, res) => {
       try {
         const { token } =
