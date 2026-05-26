@@ -106,6 +106,15 @@ const PharmacyProfile = () => {
                   Upload Logo
                 </div>
               </div>
+
+                    {data.file && (
+        <img
+          src={data.file ? URL.createObjectURL(data.file) : ''}
+          alt="preview"
+          className="w-32 h-32 rounded-xl object-cover mt-4"
+        />
+      )}
+
             </section>
 
             {/* Contact */}
