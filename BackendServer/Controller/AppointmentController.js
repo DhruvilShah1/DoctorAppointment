@@ -63,7 +63,7 @@ getSlotsDates: async (req, res) => {
     }
 
     return res.status(200).json({
-      slots: data.slotDuration, // make sure this field exists
+      slots: data.slotDuration, 
     });
 
   } catch (error) {

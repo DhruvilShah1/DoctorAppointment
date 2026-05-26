@@ -77,7 +77,6 @@ const ScheduleDoctor = () => {
     });
   };
 
-  // ================= LOAD SLOT DATA =================
 
   const loadTodayData = async () => {
     try {
@@ -116,6 +115,7 @@ const ScheduleDoctor = () => {
       setSlots(slotData?.slots || []);
 
       setTotalPatients(totalData?.totalPatients || 0);
+
     } catch (err) {
       console.error(err);
 
@@ -158,8 +158,6 @@ const ScheduleDoctor = () => {
     }
   };
 
-  // ================= SLOT SELECT =================
-
   const handleSlotSelect = (slot) => {
     setSelectedSlot(slot);
 
@@ -176,13 +174,20 @@ const ScheduleDoctor = () => {
     loadPatients(slot.start);
   };
 
-  // ================= START QUEUE =================
 
   const startQueue = async () => {
     if (!selectedSlot) {
       toast.error("Please select slot first");
       return;
     }
+
+  if(totalPatients === 0){
+    toast.error("No patients in this slot");
+    return;
+  }
+
+
+    
 
     try {
       const res = await authFetch(
@@ -221,15 +226,9 @@ const ScheduleDoctor = () => {
     }
   };
 
-  // ================= MOVE NEXT =================
-
   const moveNext = (type = "") => {
     let updatedPending = [...pendingPatients];
-
-    // REMOVE CURRENT PATIENT
     updatedPending.shift();
-
-    // NEXT OR SKIPPED -> MOVE LAST
 
     if (
       type === "skipped" ||
