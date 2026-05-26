@@ -218,11 +218,9 @@ const ScheduleDoctor = () => {
     }
 
     // UPDATE STATE
-
     setPendingPatients(updatedPending);
 
     // NEXT PATIENT
-
     if (updatedPending.length > 0) {
       setCurrentPatient(updatedPending[0]);
 
@@ -232,7 +230,6 @@ const ScheduleDoctor = () => {
     }
 
     // ALL COMPLETED
-
     setCurrentPatient({
       completed: true,
     });
@@ -266,7 +263,6 @@ const ScheduleDoctor = () => {
       toast.success(data.message);
 
       // UPDATE PATIENT STATUS
-
       setPatients((prev) =>
         prev.map((p) =>
           p.patientId._id === currentPatient.patientId._id
