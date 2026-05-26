@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { LayoutDashboard, Package, ClipboardList, Menu, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  Menu,
+  X,
+} from "lucide-react";
 
 const PharmacySidebar = () => {
   const [open, setOpen] = useState(false);
@@ -13,7 +18,7 @@ const PharmacySidebar = () => {
     }`;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Mobile Topbar */}
       <div className="md:hidden fixed top-0 left-0 w-full bg-white shadow-md px-4 py-3 flex justify-between items-center z-50">
         <h1 className="font-bold text-xl text-teal-700">
@@ -36,17 +41,20 @@ const PharmacySidebar = () => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sticky Sidebar */}
       <aside
         className={`
-          fixed md:static top-0 left-0 h-screen w-64 bg-white border-r shadow-sm z-50
+          fixed md:sticky top-0 left-0
+          h-screen w-64
+          bg-white border-r shadow-sm z-50
+          flex flex-col
           transform transition-transform duration-300
           ${open ? "translate-x-0" : "-translate-x-full"}
           md:translate-x-0
         `}
       >
         {/* Logo */}
-        <div className="p-6 border-b mt-12 md:mt-0">
+        <div className="p-6 border-b mt-12 md:mt-0 shrink-0">
           <h1 className="text-2xl font-bold text-teal-700">
             VitalCare
           </h1>
@@ -55,10 +63,9 @@ const PharmacySidebar = () => {
           </p>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 flex flex-col gap-2">
-
-<NavLink
+        {/* Sidebar Scroll */}
+        <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+          <NavLink
             to="/dashboard/pharmacy/profile"
             className={linkClass}
             onClick={() => setOpen(false)}
@@ -67,7 +74,6 @@ const PharmacySidebar = () => {
             Profile
           </NavLink>
 
-
           <NavLink
             to="/dashboard/pharmacy/orders"
             className={linkClass}
@@ -75,15 +81,6 @@ const PharmacySidebar = () => {
           >
             <LayoutDashboard size={20} />
             Scanner & Orders
-          </NavLink>
-
-          <NavLink
-            to="/dashboard/pharmacy/orders"
-            className={linkClass}
-            onClick={() => setOpen(false)}
-          >
-            <ClipboardList size={20} />
-            Inventory
           </NavLink>
 
           <NavLink
@@ -97,8 +94,8 @@ const PharmacySidebar = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 md:ml-0 pt-20 md:pt-0 p-4 md:p-8 overflow-auto">
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-y-auto pt-20 md:pt-0 p-4 md:p-8">
         <Outlet />
       </main>
     </div>

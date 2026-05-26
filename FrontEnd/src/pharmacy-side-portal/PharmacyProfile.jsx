@@ -52,14 +52,26 @@ const PharmacyProfile = () => {
               </h2>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <input type='text' label="Pharmacy Name" placeholder="VitalCare Pharmacy" />
-                <input type='text' label="License Number" placeholder="PH-12345" />
-                <input type='text' label="Drug License Number" placeholder="DL-88992" />
-                <input type='text' label="GST Number" placeholder="GST123456" />
+                <input type='text' label="Pharmacy Name"
+                
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="VitalCare Pharmacy" />
+                <input type='text' 
+                                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
+
+                label="License Number" placeholder="PH-12345" />
+                <input type='text' 
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
+
+                label="Drug License Number" placeholder="DL-88992" />
+                <input type='text' 
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
+                label="GST Number" placeholder="GST123456" />
                 <div className="md:col-span-2">
                   <input
                     type='text'
                     value={user?.name}
+                    className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500 bg-gray-100 cursor-not-allowed"
                     label="Owner / Pharmacist Name"
                     placeholder="Dr. John Doe"
                     disabled
@@ -85,12 +97,21 @@ const PharmacyProfile = () => {
               </h2>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <input type='email' label="Email" placeholder="pharmacy@email.com" />
-                <input type='tel' label="Phone Number" placeholder="9876543210" />
-                <input type='tel' label="Emergency Contact" placeholder="9876543210" />
-                <input type='text' label="City" placeholder="Ahmedabad" />
-                <input type='text' label="State" placeholder="Gujarat" />
-                <input type='text' label="Pincode" placeholder="388620" />
+                <input type='email'
+                value={user?.email}
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500 bg-gray-100 cursor-not-allowed"
+                label="Email" placeholder="pharmacy@email.com" />
+                <input type='tel'
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
+                label="Phone Number" placeholder="9876543210" />
+                <input type='tel' 
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"label="Emergency Contact" placeholder="9876543210" />
+                <input type='text'
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500" label="City" placeholder="Ahmedabad" />
+                <input type='text'
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500" label="State" placeholder="Gujarat" />
+                <input type='text'
+                className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500" label="Pincode" placeholder="388620" />
               </div>
 
               <div className="mt-4">
@@ -98,6 +119,7 @@ const PharmacyProfile = () => {
                   Full Address
                 </label>
                 <textarea
+
                   rows={4}
                   placeholder="Enter pharmacy address"
                   className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
@@ -121,52 +143,8 @@ const PharmacyProfile = () => {
 
           {/* Right */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
-            {/* Services */}
-            <section className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-2xl font-semibold mb-5 text-slate-800">
-                Services
-              </h2>
 
-              <div className="flex flex-wrap gap-2 mb-4">
-                {[
-                  'Prescription Medicine',
-                  'OTC Medicines',
-                  'Health Products',
-                  'Medical Equipment',
-                  'Vaccination',
-                ].map((item) => (
-                  <span
-                    key={item}
-                    className="px-4 py-2 rounded-full bg-teal-100 text-teal-700 text-sm font-medium"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </section>
-
-            {/* Categories */}
-            <section className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-2xl font-semibold mb-5 text-slate-800">
-                Medicine Categories
-              </h2>
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {[
-                  'Diabetes',
-                  'Heart Care',
-                  'Skin Care',
-                  'Pain Relief',
-                  'Baby Care',
-                  'Ayurvedic',
-                ].map((cat) => (
-                  <label key={cat} className="flex items-center gap-2">
-                    <input type="checkbox" />
-                    {cat}
-                  </label>
-                ))}
-              </div>
-            </section>
+    
 
             {/* Visibility */}
             <section className="bg-teal-700 text-white rounded-3xl p-6 shadow-lg">
