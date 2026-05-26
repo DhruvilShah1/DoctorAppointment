@@ -1,6 +1,7 @@
 import React from 'react'
 import { useAuth } from '../AuthProvider';
 import { useState } from 'react';
+import { X } from 'lucide-react';
 
 const PharmacyProfile = () => {
 
@@ -108,11 +109,14 @@ const PharmacyProfile = () => {
               </div>
 
                     {data.file && (
-        <img
+       <div className="relative mt-4">
+        <X onClick={() => setData(prev => ({...prev , file : null}))} className="text-red-500 cursor-pointer" size={20} />
+         <img
           src={data.file ? URL.createObjectURL(data.file) : ''}
           alt="preview"
           className="w-32 h-32 rounded-xl object-cover mt-4"
         />
+       </div>
       )}
 
             </section>
