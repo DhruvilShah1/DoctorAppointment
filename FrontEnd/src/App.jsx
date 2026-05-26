@@ -201,16 +201,16 @@ useEffect(() => {
 </Route>
 </Route>
 
-{/* <Route element={<ProtectedRoute />}>
-              <Route element={<RoleMiddleware allowedRoles={['pharmacy']} />}> */}
+<Route element={<ProtectedRoute />}>
+              <Route element={<RoleMiddleware allowedRoles={['shopper']} />}>
                <Route element={<PharmacySidebar />}>
   <Route
     path="/dashboard/pharmacy"
     element={<PharmacyDashboard />}
   />
 </Route>
-              {/* </Route>
-            </Route> */}
+              </Route>
+            </Route>
 
 
          
