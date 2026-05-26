@@ -207,7 +207,7 @@ useEffect(() => {
                <Route element={<PharmacySidebar />}>
                <Route path='/dashboard/pharmacy/profile' element={<PharmacyProfile />} />
   <Route
-    path="/dashboard/pharmacy"
+    path="/dashboard/pharmacy/orders"
     element={<PharmacyDashboard />}
   />
 </Route>

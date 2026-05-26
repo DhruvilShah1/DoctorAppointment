@@ -69,12 +69,12 @@ const PharmacySidebar = () => {
 
 
           <NavLink
-            to="/dashboard/pharmacy"
+            to="/dashboard/pharmacy/orders"
             className={linkClass}
             onClick={() => setOpen(false)}
           >
             <LayoutDashboard size={20} />
-            Order
+            Scanner & Orders
           </NavLink>
 
           <NavLink
@@ -83,7 +83,7 @@ const PharmacySidebar = () => {
             onClick={() => setOpen(false)}
           >
             <ClipboardList size={20} />
-            Orders
+            Inventory
           </NavLink>
 
           <NavLink
