@@ -1,4 +1,5 @@
 import BASE_URL from "../../config/api";
+import { getToken } from "../../config/token";
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../AuthProvider";
@@ -46,27 +47,8 @@ const ScheduleDoctor = () => {
   const today = new Date().toISOString().split("T")[0];
 
 
-  const refreshToken = async () => {
-    const res = await fetch(
-      `${BASE_URL}/api/refresh-token`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error("Session expired");
-    }
-
-    return data.newAccessToken;
-  };
-
   const authFetch = async (url, options = {}) => {
-    const token = await refreshToken();
-
+    const token = await getToken();
     return fetch(url, {
       ...options,
       headers: {
@@ -77,12 +59,10 @@ const ScheduleDoctor = () => {
     });
   };
 
-
   const loadTodayData = async () => {
     try {
       setLoadingSlots(true);
-
-      const token = await refreshToken();
+      const token = await getToken();
 
       const [totalRes, slotRes] = await Promise.all([
         fetch(`${BASE_URL}/api/total/patient/day`, {
@@ -181,7 +161,7 @@ const ScheduleDoctor = () => {
       return;
     }
 
-  if(totalPatients === 0){
+  if (patients.length === 0) {
     toast.error("No patients in this slot");
     return;
   }
