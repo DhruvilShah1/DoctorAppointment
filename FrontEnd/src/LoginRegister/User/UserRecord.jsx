@@ -261,11 +261,8 @@ const UserRecord = () => {
             )}
           </div>
         </div>
-
-        {/* PRESCRIPTION SECTION */}
         {isMe && (
           <>
-            {/* SHOW PDF ONLY WHEN DONE */}
             {p?.status === "done" ? (
               canShowPrescription ? (
                 <div className="bg-white border-2 border-dashed border-teal-300 rounded-2xl p-4">
@@ -276,7 +273,7 @@ const UserRecord = () => {
 
                   <div className="flex flex-col sm:flex-row gap-3">
                     <a
-                      href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
+                      href={`${Prescption}`}
                       target="_blank"
                       rel="noreferrer"
                       className="flex-1 text-center bg-teal-600 hover:bg-teal-700 text-white py-3 px-4 rounded-xl font-semibold transition-all"
@@ -285,7 +282,7 @@ const UserRecord = () => {
                     </a>
 
                     <a
-                      href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
+                      href={`${Prescption}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 text-center border border-teal-600 text-teal-600 hover:bg-teal-50 py-3 px-4 rounded-xl font-semibold transition-all"
