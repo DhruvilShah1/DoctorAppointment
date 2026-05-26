@@ -5,7 +5,6 @@ export const authorizeRoles = (...roles) => {
         message: "Access denied: insufficient permissions",
       });
     }
-    console.log("Role Middlware Run Access Premission Granted");
     
     next();
   };

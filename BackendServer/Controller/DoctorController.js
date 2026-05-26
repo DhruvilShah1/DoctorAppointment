@@ -84,7 +84,6 @@ const DoctorController = {
         profile: newProfile,
       });
     } catch (error) {
-      console.error(error);
       res.status(500).json({
         message: "Server error",
         error: error.message,
@@ -152,7 +151,6 @@ const DoctorController = {
 
   } catch (error) {
 
-    console.log(error);
 
     return res.status(500).json({
       success: false,

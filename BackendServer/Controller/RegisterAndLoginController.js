@@ -93,7 +93,6 @@ const RegisterAndLoginController = {
       maxAge: 15 * 60 * 1000,
     });
 
-    console.log("✅ accessToken cookie created");
 
     // Refresh Token Cookie
     res.cookie("refreshToken", refreshToken, {
@@ -104,7 +103,6 @@ const RegisterAndLoginController = {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    console.log("✅ refreshToken cookie created");
 
     return res.status(200).json({
       ok: true,
@@ -127,14 +125,11 @@ const RegisterAndLoginController = {
 
  refreshToken: (req, res) => {
   try {
-    console.log("ALL COOKIES:", req.cookies);
 
     const token = req.cookies?.refreshToken;
 
-    console.log("REFRESH TOKEN:", token);
 
     if (!token) {
-      console.log("❌ No refresh token found");
 
       return res.status(401).json({
         ok: false,
@@ -147,7 +142,6 @@ const RegisterAndLoginController = {
       process.env.REFRESH_TOKEN_SECRET || "REFRESH_TOKEN"
     );
 
-    console.log("✅ Token decoded:", decoded);
 
     const newAccessToken = jwt.sign(
       {
@@ -166,7 +160,6 @@ const RegisterAndLoginController = {
     });
 
   } catch (err) {
-    console.log("❌ JWT ERROR:", err.message);
 
     return res.status(403).json({
       ok: false,

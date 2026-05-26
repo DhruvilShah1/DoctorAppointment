@@ -115,10 +115,7 @@ startQueuWithslots: async (req, res) => {
     const { date, slot } = req.body;
     const doctorId = req.user.id;
 
-    console.log("REQ BODY:", req.body);
-    console.log("DOCTOR:", doctorId);
 
-    // IMPORTANT FIX: normalize date
     const formattedDate = new Date(date)
       .toISOString()
       .split("T")[0];
@@ -166,7 +163,9 @@ startQueuWithslots: async (req, res) => {
     try {
       io = getIO();
     } catch (err) {
-      console.log("Socket not ready, skipping emit");
+      console.error("Socket not ready, skipping emit");
+
+        
     }
 
     if (io) {
@@ -582,8 +581,6 @@ finishAppointment: async (req, res) => {
 });
 
   } catch (error) {
-    console.error(error);
-
     return res.status(500).json({
       success: false,
       message: "Server Error",

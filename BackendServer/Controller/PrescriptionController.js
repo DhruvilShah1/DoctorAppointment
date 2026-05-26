@@ -13,22 +13,9 @@ const ensureDir = (dirPath) => {
       fs.mkdirSync(dirPath, {
         recursive: true,
       });
-
-      console.log(
-        "Folder created:",
-        dirPath
-      );
-    } else {
-      console.log(
-        "Folder already exists:",
-        dirPath
-      );
     }
   } catch (error) {
-    console.log(
-      "Folder create error:",
-      error
-    );
+    console.error("Error creating directory:", error);
   }
 };
 
@@ -446,8 +433,6 @@ width="120"
         newPrescription,
     });
   } catch (error) {
-    console.log(error);
-
     return res.status(500).json({
       success: false,
       message:

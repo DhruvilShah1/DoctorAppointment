@@ -174,7 +174,7 @@ const UserRegister = () => {
     })
   }
 >
-  <option>Select the Role</option>
+  <option value="">Select the Role</option>
   <option value="user">User</option>
   <option value="doctor">Doctor</option>
 </select>

@@ -9,13 +9,7 @@ const verifyToken = (req, res, next) => {
 
   jwt.verify(token, "ACCESS_TOKEN", (err, user) => {
     if (err) return res.sendStatus(403);
-    if(err){
-        console.log("Authorized user");
-        
-    }else{
-        console.log("Access Granted");
-        
-    }
+  
     req.user = user;
     next();
   });
