@@ -1,6 +1,8 @@
 import Prescription from "../Model/Prescription.js";
 import QRCode from "qrcode";
 import jwt from "jsonwebtoken";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import Appointment from "../Model/Appointment.js";
 import { uploadSignature, uploadPdf } from "../Config/uploadthing.js";
 
@@ -76,9 +78,20 @@ ${signatureUrl ? `<img src="${signatureUrl}" />` : `<p>No Signature</p>`}
 </body>
 </html>`;
 
-      // Upload HTML as file to uploadthing
-      const htmlBuffer = Buffer.from(htmlTemplate, "utf-8");
-      const pdfUrl = await uploadPdf(htmlBuffer, `${prescriptionId}.html`);
+      // Generate PDF using puppeteer
+      const browser = await puppeteer.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: true,
+      });
+
+      const page = await browser.newPage();
+      await page.setContent(htmlTemplate, { waitUntil: "networkidle0" });
+      const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
+      await browser.close();
+
+      // Upload PDF to uploadthing
+      const pdfUrl = await uploadPdf(pdfBuffer, `${prescriptionId}.pdf`);
 
       const newPrescription = await Prescription.create({
         prescriptionId,

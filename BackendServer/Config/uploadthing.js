@@ -28,7 +28,7 @@ export const uploadSignature = async (file) => {
 export const uploadPdf = async (buffer, fileName) => {
   try {
     const utFile = new File([buffer], fileName, {
-      type: "text/html",
+      type: "application/pdf",
     });
 
     const response = await utapi.uploadFiles(utFile);
