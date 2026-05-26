@@ -42,7 +42,21 @@ const App = () => {
 
   const fetchAppointment = async (date, slot) => {
     try {
-      const token = await getToken();
+        const refreshRes = await fetch(
+          `${BASE_URL}/api/refresh-token`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+    
+        const refreshData = await refreshRes.json();
+    
+        if (!refreshRes.ok) {
+          throw new Error("Session expired, please login again");
+        }
+    
+        const token = refreshData.newAccessToken;
 
       const res = await fetch(
         `${BASE_URL}/api/get/full/slot`,
