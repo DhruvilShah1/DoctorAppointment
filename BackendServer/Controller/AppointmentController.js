@@ -549,38 +549,41 @@ finishAppointment: async (req, res) => {
       });
     }
 
-    const filteredAppointments = appointments.map((appointment) => {
-      const filteredSlots = appointment.slots.filter((slot) =>
-        slot.patientList.some(
-          (p) =>
-            p.patientId?._id?.toString() === userId.toString() &&
-            p.status === "done"
-        )
-      );
+    const filteredAppointments = appointments
+      .map((appointment) => {
+        const filteredSlots = appointment.slots.filter((slot) =>
+          slot.patientList.some(
+            (p) =>
+              p.patientId?._id?.toString() === userId.toString() &&
+              ["done", "notcome"].includes(p.status)
+          )
+        );
 
-      return {
-        ...appointment._doc,
-        slots: filteredSlots,
-      };
-    });
+        return {
+          ...appointment._doc,
+          slots: filteredSlots,
+        };
+      })
+      .filter((appointment) => appointment.slots.length > 0);
+
     const slotData = filteredAppointments?.[0]?.slots?.[0];
 
+    const slotStart = slotData?.start;
+    const appointmentDate = filteredAppointments?.[0]?.date;
 
-      const slotStart = slotData.start;
-      const appointmentDate = filteredAppointments?.[0]?.date;
+    const prescription = await Prescription.findOne({
+      patientId: userId,
+      slot: slotStart,
+    }).populate("doctorId", "name email");
 
-     const prescription = await Prescription.findOne({
-        patientId: userId,
-        slot: slotStart,
-      }).populate('doctorId' ,'name email');
-
-  return res.status(200).json({
-  success: true,
-  appointments: filteredAppointments,
-  prescriptionId: prescription?.pdfUrl,
-});
-
+    return res.status(200).json({
+      success: true,
+      appointments: filteredAppointments,
+      prescriptionId: prescription?.pdfUrl || null,
+    });
   } catch (error) {
+    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: "Server Error",

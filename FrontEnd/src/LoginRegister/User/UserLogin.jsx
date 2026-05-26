@@ -49,10 +49,7 @@ fetch(`${BASE_URL}/api/login/user`, {
        }else if (role === 'doctor'){
           navigate('/doctor/profile')
        }
-    
-    
-    
-    
+       
             })
         }
 

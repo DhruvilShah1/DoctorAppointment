@@ -66,7 +66,6 @@ const UserRecord = () => {
     fetchFinishedAppointment();
   }, []);
 
-  // ================= FILTER =================
 
   const filteredRecords = records.filter((record) =>
     record?.doctorId?.name

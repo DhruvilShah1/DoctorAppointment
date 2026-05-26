@@ -128,7 +128,7 @@ reconnectToRoom();
 useEffect(() => {
   const handleFinish = (data) => {
 
-        localStorage.clear();
+  localStorage.clear();
 
     setShowList(false);
     setQueueList([]);
