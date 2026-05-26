@@ -133,7 +133,7 @@ const UserRecord = () => {
           </div>
         </div>
 
-        {/* LOADING */}
+
         {loading ? (
           <div className="text-center py-20 text-gray-500">
             Loading records...

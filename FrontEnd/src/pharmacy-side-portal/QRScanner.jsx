@@ -36,8 +36,6 @@ const QRScanner = ({ setData }) => {
                 toast.error("Invalid QR Token");
                 return;
               }
-
-              // 🔥 API CALL
               const res = await fetch(
                 `${BASE_URL}/api/verify/prescription`,
                 {

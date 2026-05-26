@@ -173,6 +173,8 @@ const UserRegister = () => {
       role: e.target.value, 
     })
   }
+
+  required
 >
   <option value="">Select the Role</option>
   <option value="user">User</option>
@@ -190,7 +192,7 @@ const UserRegister = () => {
                         checked :  e.target.checked
                     })
                 }}
-              
+              required
 
               />
               <span className="text-sm text-gray-600">
