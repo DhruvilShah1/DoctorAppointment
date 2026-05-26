@@ -1,12 +1,9 @@
 import { UTApi } from "uploadthing/server";
 
 const utapi = new UTApi({
-  token:
-    process.env
-      .UPLOADTHING_TOKEN,
+  token:"sk_live_9dbd1bf7f0921ddd9cbfdacb254326c2a2552f7c12053e93160186c791594ba7",
 });
 
-// Upload Signature
 export const uploadSignature =
   async (file) => {
     try {
@@ -22,29 +19,14 @@ export const uploadSignature =
           )
         );
 
-      if (
-        !response?.data?.url
-      ) {
-        throw new Error(
-          "Signature upload failed"
-        );
-      }
-
       return response.data.url;
-
     } catch (error) {
-      console.log(
-        "Signature Upload Error:",
-        error
-      );
-
       throw new Error(
         "Signature upload failed"
       );
     }
   };
 
-// Upload PDF
 export const uploadPdf =
   async (
     pdfBuffer,
@@ -63,22 +45,8 @@ export const uploadPdf =
           )
         );
 
-      if (
-        !response?.data?.url
-      ) {
-        throw new Error(
-          "PDF upload failed"
-        );
-      }
-
       return response.data.url;
-
     } catch (error) {
-      console.log(
-        "PDF Upload Error:",
-        error
-      );
-
       throw new Error(
         "PDF upload failed"
       );
