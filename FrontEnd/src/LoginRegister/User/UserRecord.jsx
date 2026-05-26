@@ -73,8 +73,6 @@ const UserRecord = () => {
       .includes(search.toLowerCase())
   );
 
-  // ================= UI =================
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
 
@@ -199,82 +197,121 @@ const UserRecord = () => {
                 </div>
 
                 {/* PATIENT LIST */}
-                <div className="mt-5 space-y-3">
+              {/* PATIENT LIST */}
+<div className="mt-5 space-y-4">
+  <div className="flex items-center gap-2 mb-2">
+    <UserRound className="text-teal-600" />
+    <h3 className="font-bold text-lg">
+      Patients
+    </h3>
+  </div>
 
-                  <div className="flex items-center gap-2 mb-2">
-                    <UserRound className="text-teal-600" />
-                    <h3 className="font-bold">
-                      Patients
-                    </h3>
+  {appointment?.slots?.[0]?.patientList?.map((p, i) => {
+    const isMe =
+      user?.id === p?.patientId?._id;
+
+    const canShowPrescription =
+      isMe &&
+      p?.status === "done" &&
+      Prescption;
+
+    return (
+      <div
+        key={i}
+        className={`rounded-2xl border p-4 flex flex-col gap-4 transition-all ${
+          isMe
+            ? "bg-teal-50 border-teal-200 shadow-sm"
+            : "bg-slate-50 border-slate-200"
+        }`}
+      >
+        {/* TOP SECTION */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          
+          {/* USER INFO */}
+          <div>
+            <p className="font-semibold text-gray-800 text-base sm:text-lg">
+              {p?.patientId?.name}
+            </p>
+
+            <p className="text-sm text-gray-500">
+              Queue #{p?.queueNumber}
+            </p>
+          </div>
+
+          {/* STATUS */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`px-4 py-1 rounded-full text-xs font-semibold capitalize ${
+                p.status === "done"
+                  ? "bg-green-100 text-green-700"
+                  : p.status === "called"
+                  ? "bg-blue-100 text-blue-700"
+                  : p.status === "notcome"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {p.status}
+            </span>
+
+            {isMe && (
+              <span className="bg-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                YOU
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* PRESCRIPTION SECTION */}
+        {isMe && (
+          <>
+            {/* SHOW PDF ONLY WHEN DONE */}
+            {p?.status === "done" ? (
+              canShowPrescription ? (
+                <div className="bg-white border-2 border-dashed border-teal-300 rounded-2xl p-4">
+                  
+                  <p className="font-semibold text-gray-700 mb-3">
+                    Prescription Available
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <a
+                      href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 text-center bg-teal-600 hover:bg-teal-700 text-white py-3 px-4 rounded-xl font-semibold transition-all"
+                    >
+                      View Medicines
+                    </a>
+
+                    <a
+                      href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 text-center border border-teal-600 text-teal-600 hover:bg-teal-50 py-3 px-4 rounded-xl font-semibold transition-all"
+                    >
+                      Download PDF
+                    </a>
                   </div>
-
-                  {appointment?.slots?.[0]?.patientList?.map((p, i) => {
-
-                    const isMe =
-                      user?.id === p?.patientId?._id;
-
-                    return (
-                      <div
-                        key={i}
-                        className={`flex justify-between items-center p-3 rounded-2xl border ${
-                          isMe
-                            ? "bg-teal-50 border-teal-200"
-                            : "bg-slate-50"
-                        }`}
-                      >
-                        <div>
-                          <p className="font-semibold">
-                            {p?.patientId?.name}
-                          </p>
-
-                          <p className="text-xs text-gray-500">
-                            Queue #{p?.queueNumber}
-                          </p>
-                        </div>
-
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            p.status === "done"
-                              ? "bg-green-100 text-green-600"
-                              : p.status === "called"
-                              ? "bg-blue-100 text-blue-600"
-                              : "bg-red-100 text-red-600"
-                          }`}
-                        >
-                          {p.status}
-                        </span>
-
-                        {isMe && (
-                          <span className=" flex items-center gap-10 text-teal-600 text-xs font-bold ml-2">
-                            YOU
-
-
-<div className="flex gap-3 border p-3 rounded-2xl border-red-600 border-2 border-dashed">
-  <a
-    href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
-    target="_blank"
-    rel="noreferrer"
-    className="btn"
-  >
-    View Medicines 
-  </a>
-
- <a
-    href={`https://doctorappointment-lj0a.onrender.com${Prescption}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="btn primary"
->
-  Download PDF
-</a>
-</div>
-                          </span>
-
-                        )}
-                      </div>
-                    );
-                  })}
                 </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl p-3 text-sm">
+                  No prescription found for this appointment.
+                </div>
+              )
+            ) : p?.status === "notcome" ? (
+              /* MISSED APPOINTMENT MESSAGE */
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-sm">
+                You missed this appointment.  
+                No prescription available.
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+    );
+  })}
+</div>
 
               </div>
             ))}
