@@ -2,7 +2,7 @@ import Prescription from "../Model/Prescription.js";
 import QRCode from "qrcode";
 import jwt from "jsonwebtoken";
 import Appointment from "../Model/Appointment.js";
-import cloudinary from "../Config/cloudinary.js";
+import { uploadSignature, uploadPdf } from "../Config/uploadthing.js";
 
 const generate15DigitId = () => {
   return Math.floor(100000000000000 + Math.random() * 900000000000000).toString();
@@ -23,15 +23,10 @@ const PrescriptionController = {
         parsedMedicines = [];
       }
 
-      // Upload signature to Cloudinary
+      // Upload signature to uploadthing
       let signatureUrl = null;
       if (req.file) {
-        const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-        const result = await cloudinary.uploader.upload(base64, {
-          folder: "signatures",
-          public_id: `sig_${prescriptionId}`,
-        });
-        signatureUrl = result.secure_url;
+        signatureUrl = await uploadSignature(req.file);
       }
 
       const token = jwt.sign({ prescriptionId }, "VITECARE APPOINTMENT");
@@ -81,19 +76,9 @@ ${signatureUrl ? `<img src="${signatureUrl}" />` : `<p>No Signature</p>`}
 </body>
 </html>`;
 
-      // Upload HTML to Cloudinary as raw file
-      const htmlBase64 = Buffer.from(htmlTemplate, "utf-8").toString("base64");
-      const uploadResult = await cloudinary.uploader.upload(
-        `data:text/html;base64,${htmlBase64}`,
-        {
-          resource_type: "raw",
-          folder: "prescriptions",
-          public_id: prescriptionId,
-          format: "html",
-        }
-      );
-
-      const pdfUrl = uploadResult.secure_url;
+      // Upload HTML as file to uploadthing
+      const htmlBuffer = Buffer.from(htmlTemplate, "utf-8");
+      const pdfUrl = await uploadPdf(htmlBuffer, `${prescriptionId}.html`);
 
       const newPrescription = await Prescription.create({
         prescriptionId,
