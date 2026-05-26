@@ -18,7 +18,6 @@ const UserLogin = () => {
       const Login = (e) => {
             e.preventDefault();
     
-            console.log(Form);
             
     
 fetch(`${BASE_URL}/api/login/user`, {

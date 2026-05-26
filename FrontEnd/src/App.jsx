@@ -60,9 +60,6 @@ const App = () => {
 
       setTotal(data.total)
       ssetCompleted(data.completed)
-      console.log("Fetch Appointment");
-      
-      console.log(data);
       const patients = data?.patients || [];
 
       setQueueList(patients);
@@ -72,16 +69,9 @@ const App = () => {
       const current = patients.find((p) => p.status === "current");
       setCurrentNumber(current?.queueNumber || 0);
       setQueueNumber(data?.slot?.currentPatientIndex)
-      
-    console.log("Me");
-      
-      // console.log(me);
-      
-      // setMyData(me || {});
 
     } catch (err) {
-      console.log(err);
-    }
+      console.log("Error fetching appointment data:", err);}
   };
 
   const reconnectToRoom = () => {
@@ -97,7 +87,6 @@ const App = () => {
       patientId: user?.id,
     });
   
-    console.log("Reconnected to room:", savedRoom);
   };
 
 useEffect(() => {

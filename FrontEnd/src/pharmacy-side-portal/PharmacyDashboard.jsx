@@ -17,7 +17,6 @@ const PharmacyDashboard = () => {
 
   useEffect(() => {
     if (data) {
-      console.log("Prescription Loaded:", data);
       setCheckedMedicine([]);
     }
   }, [data]);
@@ -41,8 +40,6 @@ const PharmacyDashboard = () => {
       ),
   }));
 
-
-  console.log(data.medicines);
   
 };
 

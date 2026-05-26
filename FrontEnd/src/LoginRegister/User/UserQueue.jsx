@@ -62,7 +62,6 @@ const UserQueue = ({
         const data = await res.json();
 
         if(data.success){
-          console.log(data);
           setData(data.data)
         }
         
@@ -71,19 +70,11 @@ const UserQueue = ({
     
     
   
-        
-    
-    
-    
-    
-    
-        
-    
+
     
      
       }catch(err){
-        console.log(err);
-        
+        console.log(err);        
       }
     
         

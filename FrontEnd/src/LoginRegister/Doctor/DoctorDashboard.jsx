@@ -82,7 +82,6 @@ const generateSlots = (start, end, breaks = []) => {
 const DoctorDashboard = () => {
 
   const { user } = useAuth();
-  console.log(user);
   
 
   const doctor = user;
@@ -146,7 +145,7 @@ const DoctorDashboard = () => {
 
         setSavedData(formatted);
       } catch (err) {
-        console.error("Fetch error:", err);
+        toast.error("Failed to fetch slots");
       }
     };
 
@@ -233,7 +232,7 @@ const DoctorDashboard = () => {
     );
 
     if (!refreshRes.ok) {
-      console.log("Refresh token failed");
+      toast.error("Refresh token failed");
       return;
     }
 
@@ -280,7 +279,6 @@ const DoctorDashboard = () => {
         },
       }));
     } catch (error) {
-      console.error(error);
       toast.error("Failed to save slot");
     }
   };

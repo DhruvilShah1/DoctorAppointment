@@ -68,11 +68,9 @@ const io =
 initSocket(io);
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
 
   socket.on("PersonalAppointment", (userId) => {
     socket.join(userId);
-    console.log("Personal Appointment:", userId);
   });
 
   socket.on(
@@ -82,11 +80,7 @@ io.on("connection", (socket) => {
         `${doctorId}_${date}_${slot}`;
 
       socket.join(roomId);
-
-      console.log(
-        "✅ Patient joined:",
-        roomId
-      );
+       
     }
   );
 
@@ -96,10 +90,7 @@ io.on("connection", (socket) => {
       const roomId =
         `${doctorId}_${date}_${slot}`;
 
-      console.log(
-        "Queue start emit to:",
-        roomId
-      );
+
 
       io.to(roomId).emit(
         "queue:started",
@@ -131,12 +122,6 @@ io.on("connection", (socket) => {
     }
   );
 
-  socket.on("disconnect", () => {
-    console.log(
-      "Disconnected:",
-      socket.id
-    );
-  });
 });
 
 server.listen(5000, () => {

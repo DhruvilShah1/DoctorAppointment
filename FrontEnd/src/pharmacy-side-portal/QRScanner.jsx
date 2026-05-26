@@ -64,7 +64,6 @@ const QRScanner = ({ setData }) => {
               await html5QrCode.clear();
               setShowScanner(false);
             } catch (error) {
-              console.error(error);
               toast.error("Scanning Error");
               setShowScanner(false);
             }
@@ -72,7 +71,6 @@ const QRScanner = ({ setData }) => {
           () => {}
         );
       } catch (err) {
-        console.error(err);
         toast.error("Camera Error");
         setShowScanner(false);
       }
@@ -85,7 +83,6 @@ const QRScanner = ({ setData }) => {
         await scannerRef.current.stop();
         await scannerRef.current.clear();
       } catch (e) {
-        console.error(e);
         toast.error("Error stopping scanner");}
     }
     setShowScanner(false);

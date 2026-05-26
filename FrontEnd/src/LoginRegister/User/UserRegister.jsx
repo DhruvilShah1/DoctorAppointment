@@ -13,8 +13,6 @@ const UserRegister = () => {
 
     const Register = (e) => {
         e.preventDefault();
-
-        console.log(Form);
         
 
         fetch(`${BASE_URL}/api/register/user`, {
@@ -176,6 +174,7 @@ const UserRegister = () => {
     })
   }
 >
+  <option>Select the Role</option>
   <option value="user">User</option>
   <option value="doctor">Doctor</option>
 </select>

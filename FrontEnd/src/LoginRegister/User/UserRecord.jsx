@@ -53,7 +53,6 @@ const UserRecord = () => {
       if (data.success) {
         setRecords(data.appointments || []);
         setPrescption(data.prescriptionId)
-        console.log(data);
         
       }
     } catch (err) {

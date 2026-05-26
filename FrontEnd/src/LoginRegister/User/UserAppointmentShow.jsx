@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket/FrontendSocketConnection";
+import { toast } from "react-toastify";
 
 const UserAppointmentShow = () => {
   const { user } = useAuth();
@@ -23,11 +24,10 @@ const UserAppointmentShow = () => {
     try {
       const res = await fetch(`${BASE_URL}/api/get/all`);
       const data = await res.json();
-      console.log(data);
       
       setDoctors(data.data || []);
     } catch (err) {
-      console.error(err);
+      toast.error("Failed to fetch doctors");
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const reconnectToRoom = () => {
     patientId: user?.id,
   });
 
-  console.log("Reconnected to room:", savedRoom);
+  toast.info("Reconnected to room:", savedRoom);
 };
 
 useEffect(()=>{
@@ -72,7 +72,7 @@ useEffect(()=>{
 
     // check refresh success
     if (!refreshRes.ok) {
-      console.log("Refresh token failed");
+      toast.error("Refresh token failed");
       return;
     }
 
@@ -80,7 +80,7 @@ useEffect(()=>{
     const newToken = refreshData.newAccessToken;
 
     if (!newToken) {
-      console.log("No access token returned");
+      toast.error("No access token returned");
       return;
     }
 
@@ -124,12 +124,10 @@ useEffect(()=>{
       })
     );
 
-    console.log("Saved:", roomId);
-
     SetupcomingAppointments(data.data);
 
   } catch (err) {
-    console.log(err);
+    toast.error("Failed to fetch appointments" , err.message);
   }
 };
 
@@ -146,11 +144,9 @@ useEffect(() => {
         })
 
   socket.on("connect", () => {
-    console.log("Socket reconnected:", socket.id);
     reconnectToRoom();
   });
 
-  // also run once on load
   reconnectToRoom();
 
   return () => {
@@ -185,8 +181,6 @@ const bookSlot = async () => {
 
     setaccesstoken(newToken);
 
-    console.log("NEW TOKEN:", newToken);
-    console.log("Selected Slot:", selectedSlot);
 
     const res = await fetch(`${BASE_URL}/api/add/patient`, {
       method: "POST",
@@ -201,13 +195,12 @@ const bookSlot = async () => {
 
     if (!res.ok) throw new Error(data.message);
 
-    alert(`✅ Booked! Queue No: ${data.queueNumber}`);
+    toast.success(` Booked! Queue No: ${data.queueNumber}`);
 
     setSelectedSlot(null);
     fetchDoctors();
   } catch (err) {
-    console.error("Booking error:", err);
-    alert(err.message || "Booking failed");
+    toast.error(err.message || "Booking failed");
   } finally {
     setBooking(false);
   }
@@ -220,7 +213,6 @@ const changeQueue = async (doctorId , startSlot , date) => {
     doctorId , startSlot , date
   }
 
-  console.log(startSlot.toString());
   
 
   

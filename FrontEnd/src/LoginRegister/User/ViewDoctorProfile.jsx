@@ -9,7 +9,6 @@ const ViewDoctorProfile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
-  // Fetch Profile
   const getProfile = async () => {
     try {
       const res = await fetch(
@@ -18,13 +17,9 @@ const ViewDoctorProfile = () => {
 
       const result = await res.json();
 
-      console.log(result);
-
-      // Save doctor object
       setData(result.doctor);
 
     } catch (error) {
-      console.log(error);
     } finally {
       setLoading(false);
     }
