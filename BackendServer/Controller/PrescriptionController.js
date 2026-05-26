@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
 import imagekit from "../Config/imagekit.js";
+import Appointment from "../Model/Appointment.js";
 
 const ensureDir = (dirPath) => {
   try {
@@ -514,14 +515,12 @@ getByDoctorId: async (req, res) => {
   try {
     const doctorId = req.user.id;
 
-    // Get prescriptions
     const prescriptions = await Prescription.find({
       doctorId,
     })
       .populate("patientId", "name")
       .sort({ createdAt: -1 });
 
-    // Get appointments of doctor
     const appointments = await Appointment.find({
       doctorId,
     }).populate(

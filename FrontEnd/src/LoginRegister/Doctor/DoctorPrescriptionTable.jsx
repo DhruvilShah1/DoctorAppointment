@@ -100,7 +100,11 @@ const DoctorPrescriptionTable = () => {
 
           if (
             data.success
-          ) {
+          )
+          console.log(data
+          );
+          
+          {
             setPrescriptions(
               data.data ||
                 []
@@ -516,7 +520,6 @@ const DoctorPrescriptionTable = () => {
         </div>
       </div>
 
-      {/* Medicine Popup */}
       {selectedMedicine && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-2xl">
