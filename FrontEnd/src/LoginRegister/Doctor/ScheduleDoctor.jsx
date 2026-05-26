@@ -1,5 +1,4 @@
 import BASE_URL from "../../config/api";
-import { getToken } from "../../config/token";
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../AuthProvider";
