@@ -510,44 +510,75 @@ width="120"
       }
     },
 
-  getByDoctorId:  async (req, res) => {
-      try {
-        const doctorId =
-          req.user.id;
+getByDoctorId: async (req, res) => {
+  try {
+    const doctorId = req.user.id;
 
-        const prescriptions =
-          await Prescription.find(
-            {
-              doctorId,
-            }
-          )
-            .populate(
-              "patientId",
-              "name"
-            )
-            .sort({
-              createdAt:
-                -1,
+    // Get prescriptions
+    const prescriptions = await Prescription.find({
+      doctorId,
+    })
+      .populate("patientId", "name")
+      .sort({ createdAt: -1 });
+
+    // Get appointments of doctor
+    const appointments = await Appointment.find({
+      doctorId,
+    }).populate(
+      "slots.patientList.patientId",
+      "name"
+    );
+
+    // Create list for notcome patients
+    const notComePatients = [];
+
+    appointments.forEach((appointment) => {
+      appointment.slots.forEach((slot) => {
+        slot.patientList.forEach((patient) => {
+          if (patient.status === "notcome") {
+            notComePatients.push({
+              _id: patient._id,
+              patientId: patient.patientId,
+              status: "notcome",
+              slot: slot.start,
+              date: appointment.date,
+              createdAt: appointment.createdAt,
+              isPrescription: false,
             });
+          }
+        });
+      });
+    });
 
-        return res
-          .status(200)
-          .json({
-            success: true,
-            data:
-              prescriptions,
-          });
-      } catch (error) {
-        return res
-          .status(500)
-          .json({
-            success:
-              false,
-            message:
-              error.message,
-          });
-      }
-    },
+    // Format prescription data
+    const prescriptionData =
+      prescriptions.map((item) => ({
+        ...item._doc,
+        status: "done",
+        isPrescription: true,
+      }));
+
+    const finalData = [
+      ...prescriptionData,
+      ...notComePatients,
+    ].sort(
+      (a, b) =>
+        new Date(b.createdAt) -
+        new Date(a.createdAt)
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: finalData,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
+},
 };
 
 export default PrescriptionController;
