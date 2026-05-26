@@ -1,7 +1,7 @@
 import { UTApi } from "uploadthing/server";
 
 const utapi = new UTApi({
-  token: process.env.UPLOADTHING_TOKEN
+  token: "sk_live_9dbd1bf7f0921ddd9cbfdacb254326c2a2552f7c12053e93160186c791594ba7"
 });
 
 export const uploadSignature =
