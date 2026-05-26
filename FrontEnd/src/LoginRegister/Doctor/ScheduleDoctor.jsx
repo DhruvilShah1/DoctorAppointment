@@ -48,7 +48,14 @@ const ScheduleDoctor = () => {
 
 
   const authFetch = async (url, options = {}) => {
-    const token = await getToken();
+
+        const res = await fetch(`${BASE_URL}/api/refresh-token`, {
+      method: "POST",
+      credentials: "include",
+    });
+      const data = await res.json();
+      const token = data.newAccessToken || data.accessToken;
+
     return fetch(url, {
       ...options,
       headers: {
