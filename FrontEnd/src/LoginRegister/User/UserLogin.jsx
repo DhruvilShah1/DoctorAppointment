@@ -50,7 +50,7 @@ fetch(`${BASE_URL}/api/login/user`, {
           navigate('/doctor/profile')
        }
        else if (role === 'shopper'){
-        navigate('/dashboard/pharmacy')
+        navigate('/dashboard/pharmacy/profile')
        }
             })
         }
