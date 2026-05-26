@@ -1,504 +1,197 @@
 import Prescription from "../Model/Prescription.js";
 import QRCode from "qrcode";
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
-import fs from "fs";
-import path from "path";
 import jwt from "jsonwebtoken";
 import Appointment from "../Model/Appointment.js";
-import { uploadPdf, uploadSignature } from "../Config/uploadthing.js";
-
-const ensureDir = (dirPath) => {
-  try {
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, {
-        recursive: true,
-      });
-    }
-  } catch (error) {
-    console.error("Error creating directory:", error);
-  }
-};
+import cloudinary from "../Config/cloudinary.js";
 
 const generate15DigitId = () => {
-  return Math.floor(
-    100000000000000 +
-      Math.random() * 900000000000000
-  ).toString();
-};
-
-const generateRandomFileName = () => {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-  let result = "";
-
-  for (let i = 0; i < 14; i++) {
-    result += chars.charAt(
-      Math.floor(Math.random() * chars.length)
-    );
-  }
-
-  return result;
+  return Math.floor(100000000000000 + Math.random() * 900000000000000).toString();
 };
 
 const PrescriptionController = {
-createPrescription: async (
-  req,
-  res
-) => {
-  try {
-    const {
-      patientId,
-      doctorId,
-      medicines,
-      doctorName,
-      patientName,
-      instructions,
-      date,
-      slot,
-    } = req.body;
 
-    const prescriptionId =
-      generate15DigitId();
-
-    let parsedMedicines = [];
-
+  createPrescription: async (req, res) => {
     try {
-      parsedMedicines =
-        typeof medicines ===
-        "string"
-          ? JSON.parse(
-              medicines
-            )
-          : medicines || [];
-    } catch {
-      parsedMedicines = [];
-    }
+      const { patientId, doctorId, medicines, doctorName, patientName, instructions, date, slot } = req.body;
 
-    let signatureUrl =
-      null;
+      const prescriptionId = generate15DigitId();
 
-    if (req.file) {
-      signatureUrl =
-        await uploadSignature(
-          req.file
-        );
-    }
+      let parsedMedicines = [];
+      try {
+        parsedMedicines = typeof medicines === "string" ? JSON.parse(medicines) : medicines || [];
+      } catch {
+        parsedMedicines = [];
+      }
 
-    const token = jwt.sign(
-      { prescriptionId },
-      "VITECARE APPOINTMENT"
-    );
+      // Upload signature to Cloudinary
+      let signatureUrl = null;
+      if (req.file) {
+        const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+        const result = await cloudinary.uploader.upload(base64, {
+          folder: "signatures",
+          public_id: `sig_${prescriptionId}`,
+        });
+        signatureUrl = result.secure_url;
+      }
 
-    const qrCode =
-      await QRCode.toDataURL(
-        JSON.stringify({
-          token,
-        })
-      );
-const htmlTemplate = `
-<!DOCTYPE html>
+      const token = jwt.sign({ prescriptionId }, "VITECARE APPOINTMENT");
+      const qrCode = await QRCode.toDataURL(JSON.stringify({ token }));
+
+      const htmlTemplate = `<!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="UTF-8"/>
-
 <style>
-
-body{
-font-family:Arial;
-padding:20px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-th,td{
-border:1px solid #000;
-padding:10px;
-text-align:center;
-}
-
-img{
-max-width:150px;
-}
-
+body { font-family: Arial; padding: 20px; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+th, td { border: 1px solid #000; padding: 10px; text-align: center; }
+img { max-width: 150px; }
 </style>
-
 </head>
-
 <body>
-
-<h1>
-Prescription
-</h1>
-
-<p>
-<b>ID:</b>
-${prescriptionId}
-</p>
-
-<p>
-<b>Doctor:</b>
-Dr. ${doctorName}
-</p>
-
-<p>
-<b>Patient:</b>
-${patientName}
-</p>
-
-<p>
-<b>Date:</b>
-${date}
-</p>
-
-<p>
-<b>Slot:</b>
-${slot}
-</p>
-
-<h3>
-Instructions
-</h3>
-
-<p>
-${
-  instructions ||
-  "No instructions"
-}
-</p>
-
-<h3>
-Medicines
-</h3>
-
+<h1>Prescription</h1>
+<p><b>ID:</b> ${prescriptionId}</p>
+<p><b>Doctor:</b> Dr. ${doctorName}</p>
+<p><b>Patient:</b> ${patientName}</p>
+<p><b>Date:</b> ${date}</p>
+<p><b>Slot:</b> ${slot}</p>
+<h3>Instructions</h3>
+<p>${instructions || "No instructions"}</p>
+<h3>Medicines</h3>
 <table>
-
 <thead>
-<tr>
-<th>Medicine</th>
-<th>Strength</th>
-<th>Days</th>
-<th>Morning</th>
-<th>Afternoon</th>
-<th>Night</th>
-</tr>
+<tr><th>Medicine</th><th>Strength</th><th>Days</th><th>Morning</th><th>Afternoon</th><th>Night</th></tr>
 </thead>
-
 <tbody>
-
-${parsedMedicines
-  .map(
-    (m) => `
+${parsedMedicines.map((m) => `
 <tr>
-
-<td>
-${m.name || "-"}
-</td>
-
-<td>
-${m.strength || "-"}
-</td>
-
-<td>
-${m.days || "-"}
-</td>
-
-<td>
-${
-  m.timing?.morning
-    ? "Yes"
-    : "No"
-}
-</td>
-
-<td>
-${
-  m.timing
-    ?.afternoon
-    ? "Yes"
-    : "No"
-}
-</td>
-
-<td>
-${
-  m.timing?.night
-    ? "Yes"
-    : "No"
-}
-</td>
-
-</tr>
-`
-  )
-  .join("")}
-
+<td>${m.name || "-"}</td>
+<td>${m.strength || "-"}</td>
+<td>${m.days || "-"}</td>
+<td>${m.timing?.morning ? "Yes" : "No"}</td>
+<td>${m.timing?.afternoon ? "Yes" : "No"}</td>
+<td>${m.timing?.night ? "Yes" : "No"}</td>
+</tr>`).join("")}
 </tbody>
-
 </table>
-
-<h3>
-Doctor Signature
-</h3>
-
-${
-  signatureUrl
-    ? `
-<img
-src="${signatureUrl}"
-/>
-`
-    : `
-<p>
-No Signature
-</p>
-`
-}
-
-<h3>
-QR Code
-</h3>
-
-<img
-src="${qrCode}"
-width="120"
-/>
-
+<h3>Doctor Signature</h3>
+${signatureUrl ? `<img src="${signatureUrl}" />` : `<p>No Signature</p>`}
+<h3>QR Code</h3>
+<img src="${qrCode}" width="120" />
 </body>
-</html>
-`;
+</html>`;
 
-    const browser =
-      await puppeteer.launch({
-        args:
-          chromium.args,
-
-        executablePath:
-          await chromium.executablePath(),
-
-        headless: true,
-      });
-
-    const page =
-      await browser.newPage();
-
-    await page.setContent(
-      htmlTemplate,
-      {
-        waitUntil:
-          "networkidle0",
-      }
-    );
-    const pdfBuffer =
-      await page.pdf({
-        format: "A4",
-        printBackground: true,
-      });
-
-    await browser.close();
-
-    const pdfUrl =
-      await uploadPdf(
-        pdfBuffer,
-        `${prescriptionId}.pdf`
-      );
-
-    const newPrescription =
-      await Prescription.create(
+      // Upload HTML to Cloudinary as raw file
+      const htmlBase64 = Buffer.from(htmlTemplate, "utf-8").toString("base64");
+      const uploadResult = await cloudinary.uploader.upload(
+        `data:text/html;base64,${htmlBase64}`,
         {
-          prescriptionId,
-          patientId,
-          doctorId,
-
-          medicines:
-            parsedMedicines,
-
-          instructions,
-
-          signature:
-            signatureUrl,
-
-          date,
-          slot,
-
-          qrCode,
-
-          pdfUrl,
-
-          verificationStatus:
-            "pending",
-
-          status:
-            "issued",
+          resource_type: "raw",
+          folder: "prescriptions",
+          public_id: prescriptionId,
+          format: "html",
         }
       );
 
-    return res.status(201)
-    .json({
-      success: true,
-      message:
-        "Prescription created successfully",
-      data:
-        newPrescription,
-    });
+      const pdfUrl = uploadResult.secure_url;
 
-  } catch (error) {
+      const newPrescription = await Prescription.create({
+        prescriptionId,
+        patientId,
+        doctorId,
+        medicines: parsedMedicines,
+        instructions,
+        signature: signatureUrl,
+        date,
+        slot,
+        qrCode,
+        pdfUrl,
+        verificationStatus: "pending",
+        status: "issued",
+      });
 
-    console.log(error);
+      return res.status(201).json({
+        success: true,
+        message: "Prescription created successfully",
+        data: newPrescription,
+      });
 
-    return res.status(500)
-    .json({
-      success: false,
-      message:
-        error.message,
-    });
-  }
-},
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  },
 
+  verifyPrescription: async (req, res) => {
+    try {
+      const { token } = req.body;
 
-  verifyPrescription:   async (req, res) => {
-      try {
-        const { token } =
-          req.body;
-
-        if (!token) {
-          return res
-            .status(400)
-            .json({
-              success:
-                false,
-              message:
-                "Token is required",
-            });
-        }
-
-        const decoded =
-          jwt.verify(
-            token,
-            "VITECARE APPOINTMENT"
-          );
-
-        const prescription =
-          await Prescription.findOne(
-            {
-              prescriptionId:
-                decoded.prescriptionId,
-            }
-          )
-            .populate(
-              "doctorId",
-              "name"
-            )
-            .populate(
-              "patientId",
-              "name"
-            );
-
-        if (
-          !prescription
-        ) {
-          return res
-            .status(404)
-            .json({
-              success:
-                false,
-              message:
-                "Prescription not found",
-            });
-        }
-
-        return res
-          .status(200)
-          .json({
-            success: true,
-            data:
-              prescription,
-          });
-      } catch (error) {
-        return res
-          .status(401)
-          .json({
-            success:
-              false,
-            message:
-              "Invalid token",
-          });
+      if (!token) {
+        return res.status(400).json({ success: false, message: "Token is required" });
       }
-    },
 
-getByDoctorId: async (req, res) => {
-  try {
-    const doctorId = req.user.id;
+      const decoded = jwt.verify(token, "VITECARE APPOINTMENT");
 
-    const prescriptions = await Prescription.find({
-      doctorId,
-    })
-      .populate("patientId", "name")
-      .sort({ createdAt: -1 });
+      const prescription = await Prescription.findOne({ prescriptionId: decoded.prescriptionId })
+        .populate("doctorId", "name")
+        .populate("patientId", "name");
 
-    const appointments = await Appointment.find({
-      doctorId,
-    }).populate(
-      "slots.patientList.patientId",
-      "name"
-    );
+      if (!prescription) {
+        return res.status(404).json({ success: false, message: "Prescription not found" });
+      }
 
-    // Create list for notcome patients
-    const notComePatients = [];
+      return res.status(200).json({ success: true, data: prescription });
+    } catch (error) {
+      return res.status(401).json({ success: false, message: "Invalid token" });
+    }
+  },
 
-    appointments.forEach((appointment) => {
-      appointment.slots.forEach((slot) => {
-        slot.patientList.forEach((patient) => {
-          if (patient.status === "notcome") {
-            notComePatients.push({
-              _id: patient._id,
-              patientId: patient.patientId,
-              status: "notcome",
-              slot: slot.start,
-              date: appointment.date,
-              createdAt: appointment.createdAt,
-              isPrescription: false,
-            });
-          }
+  getByDoctorId: async (req, res) => {
+    try {
+      const doctorId = req.user.id;
+
+      const prescriptions = await Prescription.find({ doctorId })
+        .populate("patientId", "name")
+        .sort({ createdAt: -1 });
+
+      const appointments = await Appointment.find({ doctorId }).populate(
+        "slots.patientList.patientId", "name"
+      );
+
+      const notComePatients = [];
+      appointments.forEach((appointment) => {
+        appointment.slots.forEach((slot) => {
+          slot.patientList.forEach((patient) => {
+            if (patient.status === "notcome") {
+              notComePatients.push({
+                _id: patient._id,
+                patientId: patient.patientId,
+                status: "notcome",
+                slot: slot.start,
+                date: appointment.date,
+                createdAt: appointment.createdAt,
+                isPrescription: false,
+              });
+            }
+          });
         });
       });
-    });
 
-    // Format prescription data
-    const prescriptionData =
-      prescriptions.map((item) => ({
+      const prescriptionData = prescriptions.map((item) => ({
         ...item._doc,
         status: "done",
         isPrescription: true,
       }));
 
-    const finalData = [
-      ...prescriptionData,
-      ...notComePatients,
-    ].sort(
-      (a, b) =>
-        new Date(b.createdAt) -
-        new Date(a.createdAt)
-    );
+      const finalData = [...prescriptionData, ...notComePatients].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
 
-    return res.status(200).json({
-      success: true,
-      data: finalData,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-
-},
+      return res.status(200).json({ success: true, data: finalData });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  },
 };
 
 export default PrescriptionController;
