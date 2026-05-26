@@ -1,5 +1,4 @@
 import BASE_URL from "./config/api";
-import { getToken } from "./config/token";
 import React, { useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import UserRegister from './LoginRegister/User/UserRegister'
