@@ -137,7 +137,13 @@ const PharmacyProfile = () => {
 
                     {data.file && (
        <div className="relative mt-4">
-        <X onClick={() => setData(prev => ({...prev , file : null}))} className="text-red-500 cursor-pointer" size={20} />
+        <X onClick={() =>
+        dispatch({
+          type: 'SET_FIELD',
+          field: 'file',
+           value: null
+        })}          
+          className="text-red-500 cursor-pointer" size={20} />
          <img
           src={data.file ? URL.createObjectURL(data.file) : ''}
           alt="preview"
