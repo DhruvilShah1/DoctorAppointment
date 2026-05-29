@@ -135,7 +135,7 @@ const PharmacyProfile = () => {
                 </div>
               </div>
 
-                    {data.file && (
+                    {state.file && (
        <div className="relative mt-4">
         <X onClick={() =>
         dispatch({
@@ -145,7 +145,7 @@ const PharmacyProfile = () => {
         })}          
           className="text-red-500 cursor-pointer" size={20} />
          <img
-          src={data.file ? URL.createObjectURL(data.file) : ''}
+          src={state.file ? URL.createObjectURL(state.file) : ''}
           alt="preview"
           className="w-32 h-32 rounded-xl object-cover mt-4"
         />
