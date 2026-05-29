@@ -7,8 +7,8 @@ const PharmacyProfile = () => {
 
     const {user}  = useAuth();
 
-    const [data , setData] = useState({
-        pharmacyName: '',
+    let initialData = {
+              pharmacyName: '',
         licenseNumber: '',
         drugLicenseNumber: '',
         gstNumber: '',
@@ -25,8 +25,22 @@ const PharmacyProfile = () => {
         services: [],
         categories: [],
         visibility: 'public',
-    });
+    }
 
+    const reducer = (state , action) => {
+        switch(action.type){
+            case 'SET_FIELD' :
+                return {...state , [action.field] : action.value}
+            case 'reset_form' :
+                return initialData;
+        }    }
+
+
+    const [state , dispatch] = useReducer(reducer , initialData);
+
+
+
+ 
 
     const OpenFile = () => {
         const fileInput = document.createElement('input');
@@ -35,11 +49,15 @@ const PharmacyProfile = () => {
         fileInput.onchange = (e) => {
             const file = e.target.files[0];
             if (file) {
-                    setData(prev => ({...prev , file}))
-                console.log('Selected file:', file);
+              dispatch({ type: 'SET_FIELD', field: 'file', value: file });
+              console.log(file);        
             }
         };
         fileInput.click();
+    }
+
+    const handleSubmit = () => {
+        console.log('Form Data:', state);
     }
 
   return (
@@ -54,7 +72,9 @@ const PharmacyProfile = () => {
             </p>
           </div>
 
-          <button className="px-6 py-3 rounded-2xl bg-teal-700 text-white font-semibold shadow-lg hover:scale-105 transition-all">
+          <button
+          onclick={handleSubmit}
+          className="px-6 py-3 rounded-2xl bg-teal-700 text-white font-semibold shadow-lg hover:scale-105 transition-all">
             Save Changes
           </button>
         </div>
@@ -70,18 +90,25 @@ const PharmacyProfile = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <input type='text' label="Pharmacy Name"
-                
+                value={state.pharmacyName}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'pharmacyName', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
                 placeholder="VitalCare Pharmacy" />
                 <input type='text' 
+                value={state.licenseNumber}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'licenseNumber', value: e.target.value })}
                                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
 
                 label="License Number" placeholder="PH-12345" />
                 <input type='text' 
+                value={state.drugLicenseNumber}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'drugLicenseNumber', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
 
                 label="Drug License Number" placeholder="DL-88992" />
                 <input type='text' 
+                value={state.gstNumber}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'gstNumber', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
                 label="GST Number" placeholder="GST123456" />
                 <div className="md:col-span-2">
@@ -133,15 +160,25 @@ const PharmacyProfile = () => {
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500 bg-gray-100 cursor-not-allowed"
                 label="Email" placeholder="pharmacy@email.com" />
                 <input type='tel'
+                value={state.phoneNumber}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'phoneNumber', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
                 label="Phone Number" placeholder="9876543210" />
                 <input type='tel' 
+                value={state.emergencyContact}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'emergencyContact', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"label="Emergency Contact" placeholder="9876543210" />
                 <input type='text'
+                value={state.city}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'city', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500" label="City" placeholder="Ahmedabad" />
                 <input type='text'
+                value={state.state}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'state', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500" label="State" placeholder="Gujarat" />
                 <input type='text'
+                value={state.pincode}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'pincode', value: e.target.value })}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500" label="Pincode" placeholder="388620" />
               </div>
 
@@ -150,6 +187,8 @@ const PharmacyProfile = () => {
                   Full Address
                 </label>
                 <textarea
+                value={state.address}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'address', value: e.target.value })}
 
                   rows={4}
                   placeholder="Enter pharmacy address"
@@ -165,7 +204,10 @@ const PharmacyProfile = () => {
               </h2>
 
               <textarea
+                value={state.about}
+                onChange={(e) => dispatch({ type: 'SET_FIELD', field: 'about', value: e.target.value })}
                 rows={6}
+                
                 placeholder="Write pharmacy description..."
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500"
               />
@@ -188,7 +230,10 @@ const PharmacyProfile = () => {
                 <span>Public & Online</span>
               </div>
 
-              <button className="w-full bg-white text-teal-700 py-3 rounded-2xl font-semibold hover:scale-[1.02] transition-all">
+              <button 
+              value={state.visibility}
+              onClick={() => dispatch({ type: 'SET_FIELD', field: 'visibility', value: state.visibility === 'public' ? 'private' : 'public' })}
+              className="w-full bg-white text-teal-700 py-3 rounded-2xl font-semibold hover:scale-[1.02] transition-all">
                 Hide Profile
               </button>
             </section>

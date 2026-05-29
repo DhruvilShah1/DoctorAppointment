@@ -102,7 +102,6 @@ const UserQueue = ({
     return () => clearInterval(interval);
   }, []);
 
-  // ================= FIND CURRENT USER =================
 
   useEffect(() => {
     const userId = user?.id || user?._id;
@@ -115,8 +114,6 @@ const UserQueue = ({
 
     setMe(found || null);
   }, [data, user]);
-
-  // ================= CALCULATIONS =================
 
   const progress =
     totalPatient > 0
@@ -136,7 +133,6 @@ const UserQueue = ({
     (p) => p.status === "called"
   );
 
-  // ================= UI =================
 
   return (
     <div className="min-h-screen bg-slate-100">
