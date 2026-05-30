@@ -57,6 +57,7 @@ const PharmacyProfile = () => {
     }
 
     const handleSubmit = () => {
+      alert('Profile saved successfully!');
         console.log('Form Data:', state);
     }
 
