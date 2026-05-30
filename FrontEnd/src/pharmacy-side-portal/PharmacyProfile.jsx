@@ -74,7 +74,7 @@ const PharmacyProfile = () => {
           </div>
 
           <button
-          onclick={handleSubmit}
+          onClick={handleSubmit}
           className="px-6 py-3 rounded-2xl bg-teal-700 text-white font-semibold shadow-lg hover:scale-105 transition-all">
             Save Changes
           </button>
