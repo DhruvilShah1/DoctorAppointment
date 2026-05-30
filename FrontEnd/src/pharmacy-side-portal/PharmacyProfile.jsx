@@ -8,7 +8,7 @@ const PharmacyProfile = () => {
     const {user}  = useAuth();
 
     let initialData = {
-              pharmacyName: '',
+        pharmacyName: '',
         licenseNumber: '',
         drugLicenseNumber: '',
         gstNumber: '',
