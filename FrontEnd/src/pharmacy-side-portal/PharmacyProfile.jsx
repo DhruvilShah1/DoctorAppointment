@@ -12,8 +12,8 @@ const PharmacyProfile = () => {
         licenseNumber: '',
         drugLicenseNumber: '',
         gstNumber: '',
-        ownerName: '',
-        email: '',
+        ownerName: user?.name,
+        email: user?.email,
         file: null,
         phoneNumber: '',
         emergencyContact: '',
@@ -115,7 +115,7 @@ const PharmacyProfile = () => {
                 <div className="md:col-span-2">
                   <input
                     type='text'
-                    value={user?.name}
+                    value={state.ownerName}
                     className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500 bg-gray-100 cursor-not-allowed"
                     label="Owner / Pharmacist Name"
                     placeholder="Dr. John Doe"
@@ -163,7 +163,7 @@ const PharmacyProfile = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <input type='email'
-                value={user?.email}
+                value={state.email}
                 className="w-full rounded-2xl border border-slate-300 p-4 outline-none focus:ring-2 focus:ring-teal-500 bg-gray-100 cursor-not-allowed"
                 label="Email" placeholder="pharmacy@email.com" />
                 <input type='tel'

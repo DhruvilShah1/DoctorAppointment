@@ -67,8 +67,16 @@ const ScheduleDoctor = () => {
 
   const loadTodayData = async () => {
     try {
-      setLoadingSlots(true);
-      const token = await getToken();
+      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`,
+            {
+              method: "POST",
+              credentials: "include",
+            }
+          );
+      
+      
+          const refreshData = await refreshRes.json();
+          const token = refreshData.newAccessToken;
 
       const [totalRes, slotRes] = await Promise.all([
         fetch(`${BASE_URL}/api/total/patient/day`, {
