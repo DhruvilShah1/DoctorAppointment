@@ -9,6 +9,8 @@ const UserLogin = () => {
 
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const [loginBButton , setLoading] = useState(false)
+
     const [Form , setForm] = useState({
         email : "" , password : ""
     })
@@ -36,20 +38,29 @@ fetch(`${BASE_URL}/api/login/user`, {
                 }
     
                  if(data.error){
+                    setLoading(false)
                     toast.info(data.error)
                     return;
                 }
        setUser(data.user);
+                       setLoading(true)
+
        toast.success(data.message)
 
        const role  = data.user.role ; 
+     
 
        if (role === 'user'){
+        setLoading(false)
         navigate('/dashboard')
        }else if (role === 'doctor'){
+                setLoading(false)
+
           navigate('/doctor/profile')
        }
        else if (role === 'shopper'){
+                setLoading(false)
+
         navigate('/dashboard/pharmacy/profile')
        }
             })
@@ -171,9 +182,10 @@ fetch(`${BASE_URL}/api/login/user`, {
             {/* Button */}
             <button
               type="submit"
+              disabled={loginBButton}
               className="w-full bg-[#a43b31] text-white py-4 rounded-full hover:opacity-90"
             >
-              Sign In
+              {loginBButton ? "Signing In..." : "Sign In"}
             </button>
 
           </form>

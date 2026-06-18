@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 const UserRegister = () => {
 
   const navigate = useNavigate();
+  const [loading , setLoading ] = useState(false)
 
     const [Form , setForm] = useState({
         name : "" , email : "" , password : "" , checked: "" , role : ""
@@ -24,16 +25,21 @@ const UserRegister = () => {
         })
         .then(res => res.json())
         .then(data => {
+          
+          setLoading(true)
             if(data.info){
                 toast.info(data.info)
                 return;
             }
 
              if(data.error){
+                        setLoading(false)
+
                 toast.info(data.error)
                 return;
             }
    toast.success(data.message)
+
    navigate("/login")
 
 
@@ -204,9 +210,12 @@ const UserRegister = () => {
             {/* Button */}
             <button
               type="submit"
+              disabled={loading}
               className="w-full bg-[#a43b31] text-white py-4 rounded-full hover:opacity-90"
             >
-              Get Started →
+              {
+                loading ? "Creating Account..." : "Create Account"
+              }
             </button>
           </form>
 
