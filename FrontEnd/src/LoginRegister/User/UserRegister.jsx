@@ -14,7 +14,8 @@ const UserRegister = () => {
 
     const Register = (e) => {
         e.preventDefault();
-        
+                  setLoading(true)
+
 
         fetch(`${BASE_URL}/api/register/user`, {
             method : "POST" , 
@@ -26,18 +27,18 @@ const UserRegister = () => {
         .then(res => res.json())
         .then(data => {
           
-          setLoading(true)
             if(data.info){
                 toast.info(data.info)
                 return;
             }
 
              if(data.error){
-                        setLoading(false)
-
+                 setLoading(false)
                 toast.info(data.error)
                 return;
             }
+                              setLoading(false)
+
    toast.success(data.message)
 
    navigate("/login")
