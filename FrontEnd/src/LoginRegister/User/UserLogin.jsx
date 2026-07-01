@@ -19,7 +19,7 @@ const UserLogin = () => {
 
       const Login = (e) => {
             e.preventDefault();
-                           setLoading(true)
+            setLoading(true)
 
             
     
@@ -35,6 +35,7 @@ fetch(`${BASE_URL}/api/login/user`, {
             .then(data => {
                 if(data.info){
                     toast.info(data.info)
+                    setLoading(false)
                     return;
                 }
     
@@ -43,8 +44,7 @@ fetch(`${BASE_URL}/api/login/user`, {
                     toast.info(data.error)
                     return;
                 }
-                                    setLoading(false)
-
+                              setLoading(false)
        setUser(data.user);
 
        toast.success(data.message)
