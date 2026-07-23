@@ -13,7 +13,7 @@ const UserAppointmentShow = () => {
   const navigate = useNavigate()
   const [doctors, setDoctors] = useState([]);
   const [accesstoken, setaccesstoken] = useState();
-  const [slotQueueData , setslotQueueData] = useState();
+const [slotQueueData, setslotQueueData] = useState({});
   const [appointments  , setappointments ] = useState([]);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
@@ -207,31 +207,31 @@ const bookSlot = async () => {
 };
 
 
-const changeQueue = async (doctorId , startSlot , date) => {
-
-  let slotData = {
-    doctorId , startSlot , date
-  }
-
-  
-
-  
-
-      const res = await fetch(`${BASE_URL}/api/take/queue/number`, {
+const changeQueue = async (doctorId, startSlot, date) => {
+  try {
+    const res = await fetch(`${BASE_URL}/api/take/queue/number`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(slotData),
-    })
-    const data = await res.json()
-    setslotQueueData(data.queueNumber)
+      body: JSON.stringify({
+        doctorId,
+        startSlot,
+        date,
+      }),
+    });
 
-    
-    
+    const data = await res.json();
 
-
-}
+    // Save queue number only for this doctor
+    setslotQueueData((prev) => ({
+      ...prev,
+      [doctorId]: data.queueNumber,
+    }));
+  } catch (err) {
+    toast.error("Failed to fetch queue");
+  }
+};
 
 
 
@@ -333,30 +333,30 @@ const changeQueue = async (doctorId , startSlot , date) => {
                   selectedSlot?.slotStart === slot.start;
 
                 return (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setSelectedSlot({
-                        doctorId: doc.doctorId._id,
-                        patientId: user?.id,
-                        date: doc.date,
-                        slotStart: slot.start,
-                      });
+                 <button
+  key={idx}
+  onClick={() => {
+    setSelectedSlot({
+      doctorId: doc.doctorId._id,
+      patientId: user?.id,
+      date: doc.date,
+      slotStart: slot.start,
+    });
 
-                      changeQueue(
-                        doc.doctorId._id,
-                        slot.start,
-                        doc.date
-                      );
-                    }}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      isSelected
-                        ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg scale-105"
-                        : "bg-white border border-gray-300 text-gray-700 hover:border-purple-400 hover:bg-purple-50"
-                    }`}
-                  >
-                    {slot.start} - {slot.end}
-                  </button>
+    changeQueue(
+      doc.doctorId._id,
+      slot.start,
+      doc.date
+    );
+  }}
+  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+    isSelected
+      ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg scale-105"
+      : "bg-white border border-gray-300 text-gray-700 hover:border-purple-400 hover:bg-purple-50"
+  }`}
+>
+  {slot.start} - {slot.end}
+</button>
                 );
               })
             ) : (
@@ -367,13 +367,15 @@ const changeQueue = async (doctorId , startSlot , date) => {
 
         {/* Footer */}
         <div className="mt-6 flex items-center justify-between">
-          <div className="bg-indigo-50 px-3 py-2 rounded-xl">
-            <p className="text-xs text-gray-500">Total Patients</p>
+         <div className="bg-indigo-50 px-3 py-2 rounded-xl">
+  <p className="text-xs text-gray-500">
+    Total Patients
+  </p>
 
-            <p className="font-bold text-indigo-700 text-lg">
-              {slotQueueData || 0}
-            </p>
-          </div>
+  <p className="font-bold text-indigo-700 text-lg">
+    {slotQueueData[doc.doctorId._id] ?? 0}
+  </p>
+</div>
 
           <button
             onClick={() => navigate(`/profile/${doc.doctorId._id}`)}

@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import BASE_URL from "../../config/api";
 import { useAuth } from "../../AuthProvider";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebook } from "react-icons/fa";
 
 const UserLogin = () => {
 
@@ -202,20 +204,31 @@ fetch(`${BASE_URL}/api/login/user`, {
           {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-3">
 
-            <button className="border py-3 rounded-xl hover:bg-gray-100">
-              Google
-            </button>
+         <button
+  className="cursor-pointer flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white py-3 font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-md active:scale-95"
+>
+  <FcGoogle size={22} />
+  <span>Continue with Google</span>
+</button>
 
-            <button className="border py-3 rounded-xl hover:bg-gray-100">
-              Apple
-            </button>
+    <button
+  disabled
+  className="flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-xl border border-gray-300 bg-gray-100 py-3 font-medium text-gray-400 opacity-70"
+>
+  <FaFacebook size={22} />
+  <span>Continue with Facebook</span>
+</button>
 
           </div>
 
           {/* Footer */}
           <p className="text-center text-gray-500 text-sm">
             Don’t have an account?{" "}
-            <span className="text-[#a43b31] font-semibold cursor-pointer">
+            <span
+            
+            className="text-[#a43b31] font-semibold cursor-pointer"
+            onClick={() => navigate("/")}
+            >
               Register
             </span>
           </p>
