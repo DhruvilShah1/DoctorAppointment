@@ -225,6 +225,7 @@ const UserRegister = () => {
           <p className="mt-8 text-center text-gray-500">
             Already have an account?{" "}
             <span 
+            onClick={()=>navigate("/login")}
             className="text-[#a43b31] font-semibold cursor-pointer"
             >
               Login
