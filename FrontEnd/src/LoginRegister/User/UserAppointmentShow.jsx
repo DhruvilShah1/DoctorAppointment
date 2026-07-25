@@ -51,7 +51,6 @@ const reconnectToRoom = () => {
     patientId: user?.id,
   });
 
-  toast.info("Reconnected to room:", savedRoom);
 };
 
 useEffect(()=>{

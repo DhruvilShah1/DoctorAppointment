@@ -268,6 +268,111 @@ AddPatient: async (req, res) => {
   }
 },
 
+python_booking : async (req, res) => {
+  try {
+    const { doctorId, date, slotStart  ,patientId } = req.body;
+    // const patientId = req.user.id;
+
+    const schedule = await DoctorSchedule.findOne({
+      doctorId,
+      date,
+    });
+
+    if (!schedule) {
+      return res.status(404).json({
+        message: "Doctor schedule not found",
+      });
+    }
+
+    const slotExists = (schedule.slotDuration || []).find(
+      (s) => s.start === slotStart
+    );
+
+    if (!slotExists) {
+      return res.status(404).json({
+        message: "Slot not available in schedule",
+      });
+    }
+
+    let appointment = await Appointment.findOne({
+      doctorId,
+      date,
+    });
+
+    if (!appointment) {
+      const io = getIO();
+      appointment = await Appointment.create({
+        doctorId,
+        date,
+        slots: (schedule.slotDuration || []).map((s) => ({
+          start: s.start,
+          maxPatients: s.maxPatients || 1,
+          patientList: [],
+        })),
+      });
+
+      io.to(patientId).emit('appointmentBooking', appointment)
+
+    }
+
+    // 4️⃣ FIND SLOT
+    const slot = appointment.slots.find(
+      (s) => s.start === slotStart
+    );
+
+    if (!slot) {
+      return res.status(404).json({
+        message: "Slot not found in appointment",
+      });
+    }
+
+    // 5️⃣ CHECK ALREADY BOOKED (ANY SLOT)
+    const alreadyBooked = appointment.slots.some((s) =>
+      (s.patientList || []).some(
+        (p) => p.patientId.toString() === patientId
+      )
+    );
+
+    if (alreadyBooked) {
+      return res.status(400).json({
+        message: "You already booked a slot today",
+      });
+    }
+
+    // 6️⃣ CHECK SLOT CAPACITY
+    if ((slot.patientList || []).length >= 10) {
+      return res.status(400).json({
+        message: "Slot is full",
+      });
+    }
+
+    //  QUEUE NUMBER
+    const queueNumber = slot.patientList.length + 1;
+
+    //  ADD PATIENT
+    slot.patientList.push({
+      patientId,
+      queueNumber,
+      status: "waiting",
+    });
+
+    // 9️⃣ SAVE
+    await appointment.save();
+
+    return res.json({
+      success: true,
+      message: "Appointment booked successfully",
+      queueNumber,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+},
+
 queueNumber : async (req, res) => {
 
   const {doctorId , startSlot , date}  = req.body;

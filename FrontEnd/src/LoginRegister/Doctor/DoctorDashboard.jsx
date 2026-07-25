@@ -221,6 +221,17 @@ const DoctorDashboard = () => {
       breaks: d.breaks,
       slots,
     };
+    
+
+    const appointment_payload = {
+            doctorId: doctor?.id,
+      date: new Date(d.date),
+      isCompleted : false , 
+      startedAt : null , 
+      endedAt : null , 
+      slots : slots
+
+    }
 
     try {
 

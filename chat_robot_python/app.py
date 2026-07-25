@@ -2,33 +2,38 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 from langchain_core.tools import tool
+import json
+from bson import ObjectId
+from datetime import date
+
+## env 
+
+from flask import request, jsonify
+from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
+
 from dotenv import load_dotenv
-import os
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-
+import os
 load_dotenv()
-
 app = Flask(__name__)
 chat_memory = {}
 
 # Allow requests from all origins
-CORS(
-    app,
-    origins=[
-        "http://localhost:5173",
-        "https://doctor-appointment-kohl-phi.vercel.app"
-    ]
-)
-URL = os.getenv("MONGODB_URL")
-google_api_key = os.getenv("google_api_key")
+CORS(app ,
+     origins=[
+         'https://doctor-appointment-kohl-phi.vercel.app' , 'https://doctorappointment-lj0a.onrender.com'
+     ] 
+    )
+URL = "mongodb://dhruvilshah3383_db_user:dhruvil_d_s_p@ac-xce6ln3-shard-00-00.mc0gtil.mongodb.net:27017,ac-xce6ln3-shard-00-01.mc0gtil.mongodb.net:27017,ac-xce6ln3-shard-00-02.mc0gtil.mongodb.net:27017/?ssl=true&replicaSet=atlas-12fmcb-shard-0&authSource=admin&appName=Cluster0"
 
-client = MongoClient(URL)
+client = MongoClient(os.getenv('MONGODB_URL'))
+
 
 db = client['test']
 llm = ChatGoogleGenerativeAI(
     model="gemini-3.1-flash-lite",
-    google_api_key=google_api_key,
+    google_api_key=os.getenv('google_api_key'),
     temperature=0
 )
 MAX_PATIENTS = 10
@@ -97,14 +102,14 @@ def available_slots(time: str, doctor_name: str):
     except ValueError:
         return "Invalid date format. Use YYYY-MM-DD."
 
-    appointment = db["appointments"].find_one(
+    appointment = db["doctorschedules"].find_one(
         {
-            "doctorId": doctor["_id"],
+            "doctorId": doctor["_id"    ],
             "date": selected_date
         },
         {
             "_id": 0,
-            "slots": 1,
+            "slotDuration": 1,
             "date": 1
         }
     )
@@ -114,13 +119,13 @@ def available_slots(time: str, doctor_name: str):
 
     available_slots = []
 
-    for slot in appointment["slots"]:
+    for slot in appointment["slotDuration"]:
         available_slots.append({
             "start": slot["start"],
-            "patients": len(slot['patientList']),
         })
 
-    return available_slots
+    return available_slots  
+import requests
 
 @tool
 def book_slot(
@@ -134,100 +139,50 @@ def book_slot(
 
     date format: YYYY-MM-DD
     """
-
-    # Find doctor
     doctor = db["users"].find_one({"name": doctor_name})
-
     if not doctor:
-        return {
-            "success": False,
-            "message": "Doctor not found."
-        }
+        return "Doctor not found."
 
-    # Convert date
+    payload = {
+        "doctorId": str(doctor["_id"]),
+        "date": date,
+        "slotStart": slot_time,
+        "patientId": patient_id
+    }
+
+
     try:
-        selected_date = datetime.strptime(date, "%Y-%m-%d")
-    except:
-        return {
-            "success": False,
-            "message": "Invalid date format."
-        }
-
-    # Find appointment schedule
-    appointment = db["appointments"].find_one({
-        "doctorId": doctor["_id"],
-        "date": selected_date
-    })
-
-    if not appointment:
-        return {
-            "success": False,
-            "message": "No appointment schedule found."
-        }
-
-    slots = appointment["slots"]
-
-    for slot in slots:
-
-        if slot["start"] != slot_time:
-            continue
-
-        # Slot already completed
-        if slot.get("isCompleted"):
-            return {
-                "success": False,
-                "message": "This slot has already been completed."
-            }
-
-        # Queue full
-        if len(slot["patientList"]) >= MAX_PATIENTS:
-            return {
-                "success": False,
-                "message": "This slot is full."
-            }
-
-        # Already booked
-        for patient in slot["patientList"]:
-            if str(patient["patientId"]) == patient_id:
-                return {
-                    "success": False,
-                    "message": "You have already booked this slot."
-                }
-
-        # Next queue number
-        queue_number = len(slot["patientList"]) + 1
-
-        # Add patient
-        slot["patientList"].append({
-            "patientId": patient_id,
-            "queueNumber": queue_number,
-            "status": "waiting",
-            "bookedAt": datetime.utcnow()
-        })
-
-        # Save
-        db["appointments"].update_one(
-            {"_id": appointment["_id"]},
-            {
-                "$set": {
-                    "slots": slots
-                }
-            }
+        response = requests.post(
+            "https://doctorappointment-lj0a.onrender.com/api/book/slot/python", 
+            json=payload,
+            timeout=10
         )
 
+        response.raise_for_status()
+
+        api_response = response.json()
+
+
+    except requests.RequestException as e:
         return {
-            "success": True,
-            "message": "Appointment booked successfully.",
-            "doctor": doctor_name,
-            "date": date,
-            "slot": slot_time,
-            "queueNumber": queue_number
+            "success": False,
+            "message": "Slot booked, but failed to notify patient service.",
+            "error": str(e)
         }
 
     return {
-        "success": False,
-        "message": "Slot not found."
+        "success": True,
+        "message": "Slot booked successfully.",
+        "booking": {
+            "doctorId": str(doctor["_id"]),
+            "date": date,
+            "slotStart": slot_time,
+            "patientId": patient_id
+        },
+        "patient_service": api_response
     }
+
+
 
 @tool
 def avaliable_appointments_dates(doctor_name: str):
@@ -239,7 +194,7 @@ def avaliable_appointments_dates(doctor_name: str):
     if not doctor:
         return "Doctor not found."
 
-    appointments = db["appointments"].find(
+    appointments = db["doctorschedules"].find(
         {
             "doctorId": doctor["_id"]
         },
@@ -631,10 +586,19 @@ FINAL RULES
 - Always ask for missing information one step at a time.
 """
 )
-import json
 
-from flask import request, jsonify
-from langchain_core.messages import HumanMessage, ToolMessage, AIMessage
+
+class MongoEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        if isinstance(o, (datetime, date)):
+            return o.isoformat()
+        return super().default(o)
+
+
+def mongo_dumps(obj):
+    return json.dumps(obj, cls=MongoEncoder)
 
 TOOLS = {
     "find_doctors_by_specialization": find_doctors_by_specialization,
@@ -675,10 +639,6 @@ def chat():
         chat_memory[session_id]
     )
 
-    print(ai_message)
-
-    # ---------------- TOOL CALL ---------------- #
-
     if ai_message.tool_calls:
 
         tool_call = ai_message.tool_calls[0]
@@ -693,7 +653,7 @@ def chat():
 
         chat_memory[session_id].append(
             ToolMessage(
-                content=json.dumps(result),
+                content=mongo_dumps(result),
                 tool_call_id=tool_call["id"],
             )
         )
@@ -717,7 +677,6 @@ def chat():
                 "data": None
             })
 
-    # ---------------- NO TOOL ---------------- #
 
     chat_memory[session_id].append(
         AIMessage(content=ai_message.content)

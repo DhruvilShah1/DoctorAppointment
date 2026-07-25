@@ -30,6 +30,7 @@ router.post('/create/slot', verifyToken , authorizeRoles('doctor') ,  DoctorCont
 router.get('/doctor/:doctorId', DoctorControllerSchedule.getSlots)
 router.get("/get/all", DoctorControllerSchedule.getAll);
 router.post("/add/patient", verifyToken , authorizeRoles("user") ,  DoctorControllerSchedule.AddPatient);
+router.post('/book/slot/python' , DoctorControllerSchedule.python_booking)
 router.post('/take/queue/number' , DoctorControllerSchedule.queueNumber);
 router.get('/take/appointments', verifyToken , DoctorControllerSchedule.upcomingAppointments);
 
