@@ -5,8 +5,10 @@ import { FiMessageCircle, FiSend, FiX, FiUser } from "react-icons/fi";
 import { BsRobot } from "react-icons/bs";
 
 import dripDrop from "../../assets/drip_drop.mp3";
+import { useAuth } from "../../AuthProvider";
 
 const Chatbot = () => {
+  const {user} = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const [input, setInput] = useState("");
@@ -126,7 +128,7 @@ const Chatbot = () => {
           body: JSON.stringify({
             sessionId: "Dhruvil",
 
-            patient_id: "69ecd902223767380d4d379e",
+            patient_id:user.id ,
 
             message: userText,
           }),

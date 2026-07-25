@@ -2,23 +2,29 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from pymongo import MongoClient
 from langchain_core.tools import tool
+from dotenv import load_dotenv
+import os
+
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+load_dotenv()
 
 app = Flask(__name__)
 chat_memory = {}
 
 # Allow requests from all origins
 CORS(app)
-URL = "mongodb://dhruvilshah3383_db_user:dhruvil_d_s_p@ac-xce6ln3-shard-00-00.mc0gtil.mongodb.net:27017,ac-xce6ln3-shard-00-01.mc0gtil.mongodb.net:27017,ac-xce6ln3-shard-00-02.mc0gtil.mongodb.net:27017/?ssl=true&replicaSet=atlas-12fmcb-shard-0&authSource=admin&appName=Cluster0"
+URL = os.getenv("MONGODB_URL")
+google_api_key = os.getenv("google_api_key")
 
 client = MongoClient(URL)
+print(google_api_key)
 
 
 db = client['test']
 llm = ChatGoogleGenerativeAI(
     model="gemini-3.1-flash-lite",
-    google_api_key="AIzaSyCMs_VR6nBrH5EaWajJYzk2RuzxZt6crt8",
+    google_api_key=google_api_key,
     temperature=0
 )
 MAX_PATIENTS = 10
