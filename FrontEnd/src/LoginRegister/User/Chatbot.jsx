@@ -92,7 +92,7 @@ const Chatbot = () => {
     return result;
   };
 
-  const BASE_URL = "https://doctorappointment-1-wwg3.onrender.com" | "http://127.0.0.1:5000"
+  const BASE_URL = "https://doctorappointment-1-wwg3.onrender.com/" | "http://127.0.0.1:5000"
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -126,10 +126,8 @@ const Chatbot = () => {
           },
 
           body: JSON.stringify({
-            sessionId: "Dhruvil",
-
+            sessionId: user.name,
             patient_id:user.id ,
-
             message: userText,
           }),
         },
