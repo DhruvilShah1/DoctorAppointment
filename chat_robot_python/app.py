@@ -152,12 +152,17 @@ def book_slot(
     }
 
 
+
+
     try:
         response = requests.post(
-            "https://doctorappointment-lj0a.onrender.com/api/book/slot/python", 
-            json=payload,
-            timeout=10
-        )
+                "https://doctorappointment-lj0a.onrender.com/api/book/slot/python",
+                json=payload,
+                timeout=10
+            )
+
+        print("Status:", response.status_code)
+        print("Response:", response.text)
 
         response.raise_for_status()
 
@@ -165,11 +170,11 @@ def book_slot(
 
 
     except requests.RequestException as e:
-        return {
-            "success": False,
-            "message": "Slot booked, but failed to notify patient service.",
-            "error": str(e)
-        }
+            print("ERROR:", e)
+            return {
+                "success": False,
+                "message": str(e)
+            }
 
     return {
         "success": True,
