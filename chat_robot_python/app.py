@@ -632,10 +632,12 @@ def chat():
             system_prompt
         ]
 
-        if patient_id:
-            chat_memory[session_id] = [
-                patient_id
-            ]
+    if patient_id:
+        chat_memory[session_id].append(
+            SystemMessage(
+                content=f"Current patient ID: {patient_id}"
+            )
+        )
 
     chat_memory[session_id].append(
         HumanMessage(content=user_message)
