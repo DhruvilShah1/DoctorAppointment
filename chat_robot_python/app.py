@@ -633,7 +633,9 @@ def chat():
         ]
 
         if patient_id:
-            chat_memory[session_id].append(patient_id)
+            chat_memory[session_id] = [
+                patient_id
+            ]
 
     chat_memory[session_id].append(
         HumanMessage(content=user_message)
