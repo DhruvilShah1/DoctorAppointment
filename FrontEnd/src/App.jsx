@@ -24,6 +24,7 @@ import DoctorPrescriptionTable from './LoginRegister/Doctor/DoctorPrescriptionTa
 import { socket } from './socket/FrontendSocketConnection';
 import Unauthorized from "./Unauthorized";
 import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
+import Chatbot from "./LoginRegister/User/Chatbot";
 
 const App = () => {
   
@@ -218,7 +219,9 @@ useEffect(() => {
          
 
 
+
     </Routes>
+
 
   )
 }

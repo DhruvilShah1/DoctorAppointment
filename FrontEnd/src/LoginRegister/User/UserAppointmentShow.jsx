@@ -224,12 +224,10 @@ const changeQueue = async (doctorId, startSlot, date) => {
     const data = await res.json();
 
     // Save queue number only for this doctor
-   const key = `${doctorId}_${date}_${startSlot}`;
-
-setslotQueueData(prev => ({
-  ...prev,
-  [key]: data.queueNumber,
-}));
+    setslotQueueData((prev) => ({
+      ...prev,
+      [doctorId]: data.queueNumber,
+    }));
   } catch (err) {
     toast.error("Failed to fetch queue");
   }
