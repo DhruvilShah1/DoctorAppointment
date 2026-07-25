@@ -13,13 +13,17 @@ app = Flask(__name__)
 chat_memory = {}
 
 # Allow requests from all origins
-CORS(app)
+CORS(
+    app,
+    origins=[
+        "http://localhost:5173",
+        "https://doctorappointment-1-wwg3.onrender.com"
+    ]
+)
 URL = os.getenv("MONGODB_URL")
 google_api_key = os.getenv("google_api_key")
 
 client = MongoClient(URL)
-print(google_api_key)
-
 
 db = client['test']
 llm = ChatGoogleGenerativeAI(
