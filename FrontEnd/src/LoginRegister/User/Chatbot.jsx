@@ -92,7 +92,7 @@ const Chatbot = () => {
     return result;
   };
 
-  const BASE_URL = "https://doctorappointment-1-wwg3.onrender.com/" | "http://127.0.0.1:5000"
+  const BASE_URL = "https://doctorappointment-1-wwg3.onrender.com/"
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -115,8 +115,7 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/chat`,
+      const response = await fetch(`${BASE_URL}/chat`,
 
         {
           method: "POST",

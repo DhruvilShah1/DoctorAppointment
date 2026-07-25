@@ -20,12 +20,13 @@ app = Flask(__name__)
 chat_memory = {}
 
 # Allow requests from all origins
-CORS(app ,
-     origins=[
-         'https://doctor-appointment-kohl-phi.vercel.app' , 'https://doctorappointment-lj0a.onrender.com'
-     ] 
-    )
-URL = "mongodb://dhruvilshah3383_db_user:dhruvil_d_s_p@ac-xce6ln3-shard-00-00.mc0gtil.mongodb.net:27017,ac-xce6ln3-shard-00-01.mc0gtil.mongodb.net:27017,ac-xce6ln3-shard-00-02.mc0gtil.mongodb.net:27017/?ssl=true&replicaSet=atlas-12fmcb-shard-0&authSource=admin&appName=Cluster0"
+CORS(
+    app,
+    origins=[
+        "https://doctor-appointment-kohl-phi.vercel.app",
+        "https://doctorappointment-lj0a.onrender.com"
+    ]
+)
 
 client = MongoClient(os.getenv('MONGODB_URL'))
 
