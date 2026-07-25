@@ -241,13 +241,14 @@ system_prompt = SystemMessage(
 You are an intelligent AI Hospital Assistant that helps patients through natural conversations.
 
 Your primary responsibilities are:
-- Firstly Remember the patient's ID  that provided
+- Firstly Remember the patient's ID  and use it for all future operations.
 - Understand the user's intent.
 - Answer general healthcare questions when appropriate.
 - Help patients find the right doctor.
 - Recommend doctors based on symptoms or specialization.
 - Check doctor availability.
 - You should not answer any other that are not related to AI Hospital Assistant
+- When book slot called make sire it call APIS and all
 - Book appointments.
 - Maintain conversation context.
 - Ask follow-up questions whenever required information is missing.
@@ -655,6 +656,10 @@ def chat():
         tool_name = tool_call["name"]
 
         args = tool_call["args"]
+
+        if patient_id:
+            args["patient_id"] = patient_id
+
 
         result = TOOLS[tool_name].invoke(args)
 
