@@ -17,7 +17,7 @@ CORS(
     app,
     origins=[
         "http://localhost:5173",
-        "https://doctorappointment-1-wwg3.onrender.com"
+        "https://doctor-appointment-kohl-phi.vercel.app"
     ]
 )
 URL = os.getenv("MONGODB_URL")
