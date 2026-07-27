@@ -4,14 +4,23 @@ import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import session from "express-session";
+import passport from "passport";
+import './Auth/google.js'
 import router from "../BackendServer/Routes/api.js";
 import { initSocket } from "./socket/socket.js";
 import { connectDB } from "../BackendServer/Config/Connection.js";
 
 const app = express();
 const server = http.createServer(app);
+app.use(session({
+  secret: 'MyKEY',
+  resave: false,
+  saveUninitialized: true
+}))
 
+app.use(passport.initialize())
+app.use(passport.session())
 app.use(cookieParser());
 app.set("trust proxy", 1);
 

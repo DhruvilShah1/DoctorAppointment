@@ -1,6 +1,8 @@
 import Users from "../Model/Users.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+
+import passport from "passport";
 import { use } from "react";
 
 const RegisterAndLoginController = {
@@ -121,6 +123,66 @@ const RegisterAndLoginController = {
       error: err.message,
     });
   }
+},
+
+googleAuth: (req, res, next) => {
+  console.log("API calling");
+
+  passport.authenticate("google", {
+    scope: ["profile" , "email"],
+    session: false,
+  })(req, res, next);
+},
+googleAuthCallback : (req, res , next) => {
+  passport.authenticate(
+    "google",
+    { session: false },
+    async (err, user) => {
+      if (err || !user) {
+        return res.redirect("/login");
+      }
+      const accessToken = jwt.sign(
+        {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+        "ACCESS_TOKEN",
+        { expiresIn: "15m" }
+      );
+
+      const refreshToken = jwt.sign(
+        {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+        "REFRESH_TOKEN",
+        { expiresIn: "7d" }
+      );
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: 15 * 60 * 1000,
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      
+
+      return res.redirect("/dashboard");
+    }
+  )(req, res ,next);
 },
 
  refreshToken: (req, res) => {

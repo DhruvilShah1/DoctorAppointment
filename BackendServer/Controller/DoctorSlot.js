@@ -271,7 +271,6 @@ AddPatient: async (req, res) => {
 python_booking : async (req, res) => {
   try {
     const { doctorId, date, slotStart  ,patientId } = req.body;
-    // const patientId = req.user.id;
 
     const schedule = await DoctorSchedule.findOne({
       doctorId,
@@ -306,7 +305,7 @@ python_booking : async (req, res) => {
         date,
         slots: (schedule.slotDuration || []).map((s) => ({
           start: s.start,
-          maxPatients: s.maxPatients || 1,
+          maxPatients: s.maxPatients,
           patientList: [],
         })),
       });

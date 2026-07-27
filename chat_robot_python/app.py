@@ -139,6 +139,7 @@ def book_slot(
     Book a slot for a patient.
 
     date format: YYYY-MM-DD
+    
     """
     doctor = db["users"].find_one({"name": doctor_name})
     if not doctor:
@@ -151,12 +152,8 @@ def book_slot(
         "patientId": patient_id
     }
 
-
-
-
     try:
-        response = requests.post(
-                "https://doctorappointment-lj0a.onrender.com/api/book/slot/python",
+        response = requests.post("https://doctorappointment-lj0a.onrender.com/api/book/slot/python",
                 json=payload,
                 timeout=10
             )

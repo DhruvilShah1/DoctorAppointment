@@ -206,7 +206,9 @@ fetch(`${BASE_URL}/api/login/user`, {
 
          <button
   className="cursor-pointer flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 bg-white py-3 font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:shadow-md active:scale-95"
+  onClick={() => window.location.href = `${BASE_URL}/api/auth/google`}
 >
+
   <FcGoogle size={22} />
   <span>Continue with Google</span>
 </button>

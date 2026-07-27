@@ -25,6 +25,10 @@ router.get("/me", verifyToken, (req, res) => {
   });
 });
 
+// Google Login
+router.get('/auth/google', RegisterAndLoginController.googleAuth)
+router.get('/auth/google/callback', RegisterAndLoginController.googleAuthCallback)
+
 // Doctor 
 router.post('/create/slot', verifyToken , authorizeRoles('doctor') ,  DoctorControllerSchedule.createSlot)
 router.get('/doctor/:doctorId', DoctorControllerSchedule.getSlots)
