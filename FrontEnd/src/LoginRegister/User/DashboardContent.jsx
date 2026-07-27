@@ -41,9 +41,8 @@ const DashboardContent = () => {
           <h1 className="text-5xl lg:text-6xl font-black text-white leading-tight">
             Welcome Back,
             <br />
-            {user?.name} 👋
+           <span className="uppercase">  {user?.name} 👋 </span>
           </h1>
-
           <p className="mt-6 text-lg text-cyan-50 leading-relaxed max-w-3xl">
             Manage appointments, join live queues,
             consult doctors, track your medical

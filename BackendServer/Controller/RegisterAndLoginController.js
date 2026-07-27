@@ -139,7 +139,7 @@ googleAuthCallback : (req, res , next) => {
     { session: false },
     async (err, user) => {
       if (err || !user) {
-        return res.redirect("/login");
+        return res.redirect("https://doctor-appointment-kohl-phi.vercel.app/login");
       }
       const accessToken = jwt.sign(
         {
@@ -180,7 +180,7 @@ googleAuthCallback : (req, res , next) => {
       });
       
 
-      return res.redirect("/dashboard");
+      return res.redirect("https://doctor-appointment-kohl-phi.vercel.app/dashboard");
     }
   )(req, res ,next);
 },
