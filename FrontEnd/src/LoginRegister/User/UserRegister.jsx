@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import BASE_URL from "../../config/api";
 import { useNavigate } from "react-router-dom";
+import { FcGoogle } from "react-icons/fc";
 
 const UserRegister = () => {
 
@@ -103,7 +104,7 @@ const UserRegister = () => {
         <div className="w-full max-w-md">
 
           {/* Heading */}
-          <div className="mb-10">
+          <div className="mb-0">
             <h2 className="text-3xl font-semibold text-[#004349] mb-2">
               Create your account
             </h2>
@@ -170,25 +171,83 @@ const UserRegister = () => {
             </div>
 
 
-            <div>
-              <label className="block mb-2 font-medium">Role</label>
-              <select
-  value={Form.role}
-  onChange={(e) =>
-    setForm({
-      ...Form,
-      role: e.target.value, 
-    })
-  }
+          <div>
+  <label className="block mb-3 font-semibold text-gray-700">
+    Account Type
+  </label>
 
-  required
->
-  <option value="">Select the Role</option>
-  <option value="user">User</option>
-  <option value="doctor">Doctor</option>
-  <option value="shopper">Pharmacy</option>
-</select>
-            </div>
+  <div className="relative">
+
+    <select
+      value={Form.role}
+      onChange={(e) =>
+        setForm({
+          ...Form,
+          role: e.target.value,
+        })
+      }
+      required
+      className="
+        w-full
+        appearance-none
+        bg-white
+        border
+        border-gray-300
+        rounded-2xl
+        px-5
+        py-4
+        text-gray-700
+        font-medium
+        outline-none
+        cursor-pointer
+        
+        focus:border-teal-500
+        focus:ring-4
+        focus:ring-teal-100
+
+        transition-all
+        duration-200
+      "
+    >
+
+      <option value="">
+        Select Account Type
+      </option>
+
+      <option value="user">
+        👤 Patient
+      </option>
+
+      <option value="doctor">
+        🩺 Doctor
+      </option>
+
+      <option value="shopper">
+        💊 Pharmacy
+      </option>
+
+
+    </select>
+
+
+    {/* Custom Arrow */}
+
+    <div
+      className="
+        pointer-events-none
+        absolute
+        right-5
+        top-1/2
+        -translate-y-1/2
+        text-gray-500
+      "
+    >
+      ▼
+    </div>
+
+
+  </div>
+</div>
 
             {/* Terms */}
             <div className="flex items-center gap-2">
@@ -219,6 +278,58 @@ const UserRegister = () => {
               }
             </button>
           </form>
+
+          <div className="
+flex
+items-center
+gap-3
+my-5
+">
+
+<div className="h-px bg-gray-200 flex-1"/>
+
+<span className="text-gray-400 text-sm">
+OR
+</span>
+
+<div className="h-px bg-gray-200 flex-1"/>
+
+
+</div>
+
+          <button
+
+type="button"
+
+onClick={()=>
+window.location.href=`${BASE_URL}/api/auth/google`
+}
+
+
+className="
+w-full
+border
+py-3
+rounded-2xl
+flex
+items-center
+justify-center
+gap-3
+font-semibold
+hover:bg-gray-50
+transition
+"
+>
+
+
+<FcGoogle size={24}/>
+
+
+Continue with Google
+
+
+</button>
+
 
   
           {/* Footer */}

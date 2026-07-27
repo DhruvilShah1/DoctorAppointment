@@ -25,6 +25,7 @@ import { socket } from './socket/FrontendSocketConnection';
 import Unauthorized from "./Unauthorized";
 import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
 import Chatbot from "./LoginRegister/User/Chatbot";
+import UserSetting from "./LoginRegister/User/UserSetting";
 
 const App = () => {
   
@@ -174,6 +175,7 @@ useEffect(() => {
       <Route path='/profile/:doctorId' element={<ViewDoctorProfile/>}/>
 
       <Route path='/records' element={<UserRecord/>}/>
+      <Route path='/setting' element={<UserSetting/>}/>
 
         <Route path="*" element={
           <div>

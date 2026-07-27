@@ -81,7 +81,11 @@ def find_doctors_by_specialization(specialization: str):
 @tool
 def find_doctor(doctor_name : str) :
     """Find doctor by their name."""
-    doctor = db["users"].find_one({"name": doctor_name})
+    doctor = db["users"].find_one({"name": doctor_name , "role" : 'doctor'})
+
+    if not doctor:
+        return "Doctor not found."
+    
     return doctor
 
 from datetime import datetime
@@ -105,7 +109,7 @@ def available_slots(time: str, doctor_name: str):
 
     appointment = db["doctorschedules"].find_one(
         {
-            "doctorId": doctor["_id"    ],
+            "doctorId": doctor["_id"],
             "date": selected_date
         },
         {
@@ -238,6 +242,7 @@ system_prompt = SystemMessage(
 You are an intelligent AI Hospital Assistant that helps patients through natural conversations.
 
 Your primary responsibilities are:
+- First You Check the Databasse of the Doctora are there not 
 - Firstly Remember the patient's ID  and use it for all future operations.
 - Understand the user's intent.
 - Answer general healthcare questions when appropriate.

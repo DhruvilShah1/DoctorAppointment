@@ -94,6 +94,14 @@ const UserSidebar = () => {
           >
             Records
           </NavLink>
+
+          <NavLink
+          to="/setting"
+          className={linkClass}
+          onClick={closeSidebar}
+          >
+            Setting
+          </NavLink>
         </nav>
       </aside>
     </>
