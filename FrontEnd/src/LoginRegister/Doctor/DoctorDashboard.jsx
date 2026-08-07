@@ -1,4 +1,4 @@
-import BASE_URL from "../../config/api.js";
+import BASE_URL from "../config/api.js";
 import React, { useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useAuth } from "../../AuthProvider";

@@ -24,7 +24,7 @@ import { socket } from './socket/FrontendSocketConnection';
 import Unauthorized from "./Unauthorized";
 import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
 import Chatbot from "./LoginRegister/User/Chatbot";
-import BASE_URL from "./config/api.js";
+import BASE_URL from "./LoginRegister/config/api.js";
 import UserSetting from "./LoginRegister/User/UserSetting";
 
 const App = () => {

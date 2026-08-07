@@ -1,4 +1,4 @@
-import BASE_URL from "../config/api.js";
+import BASE_URL from "../LoginRegister/config/api.js";
 import React, { useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
 import { Camera, ScanLine, XCircle } from "lucide-react";

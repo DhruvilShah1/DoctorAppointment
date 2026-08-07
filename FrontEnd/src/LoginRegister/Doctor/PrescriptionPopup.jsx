@@ -1,4 +1,4 @@
-import BASE_URL from "../../config/api.js";
+import BASE_URL from "../config/api.js";
 import React, { useEffect, useRef, useState } from "react";
 import { X, Plus, Trash2, Save, Printer, Sparkles } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
