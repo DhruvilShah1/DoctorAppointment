@@ -1,2 +1,2 @@
-BASE_URL = "https://doctorappointment-lj0a.onrender.com/"
+const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 export default BASE_URL;
