@@ -1,8 +1,8 @@
-import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "../../AuthProvider";
 import { toast } from "react-toastify";
+import env from "react-dotenv";
 
 import {
   CalendarDays,
@@ -48,7 +48,7 @@ const ScheduleDoctor = () => {
 
   const authFetch = async (url, options = {}) => {
 
-        const res = await fetch(`${BASE_URL}/api/refresh-token`, {
+        const res = await fetch(`${env.VITE_BACKEND_URL}/api/refresh-token`, {
       method: "POST",
       credentials: "include",
     });
@@ -67,7 +67,7 @@ const ScheduleDoctor = () => {
 
   const loadTodayData = async () => {
     try {
-      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`,
+      const refreshRes = await fetch(`${env.VITE_BACKEND_URL}/api/refresh-token`,
             {
               method: "POST",
               credentials: "include",
@@ -79,7 +79,7 @@ const ScheduleDoctor = () => {
           const token = refreshData.newAccessToken;
 
       const [totalRes, slotRes] = await Promise.all([
-        fetch(`${BASE_URL}/api/total/patient/day`, {
+        fetch(`${env.VITE_BACKEND_URL}/api/total/patient/day`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -90,7 +90,7 @@ const ScheduleDoctor = () => {
           }),
         }),
 
-        fetch(`${BASE_URL}/api/get/slots`, {
+        fetch(`${env.VITE_BACKEND_URL}/api/get/slots`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -126,7 +126,7 @@ const ScheduleDoctor = () => {
 
   const loadPatients = async (slot) => {
     try {
-      const res = await authFetch(`${BASE_URL}/api/take/patient`,
+      const res = await authFetch(`${env.VITE_BACKEND_URL}/api/take/patient`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -185,7 +185,7 @@ const ScheduleDoctor = () => {
 
     try {
       const res = await authFetch(
-        `${BASE_URL}/api/start/queue`,
+        `${env.VITE_BACKEND_URL}/api/start/queue`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -260,7 +260,7 @@ const ScheduleDoctor = () => {
 
     try {
       const res = await authFetch(
-        `${BASE_URL}/api/update/patient/status`,
+        `${env.VITE_BACKEND_URL}/api/update/patient/status`,
         {
           method: "PATCH",
           body: JSON.stringify({
@@ -322,7 +322,7 @@ const ScheduleDoctor = () => {
   const finishSlot = async () => {
     try {
       const res = await authFetch(
-        `${BASE_URL}/api/finsh/slot`,
+        `${env.VITE_BACKEND_URL}/api/finsh/slot`,
         {
           method: "POST",
           body: JSON.stringify({

@@ -1,8 +1,8 @@
-import BASE_URL from "../../config/api";
 import React, { useState, useEffect } from 'react';
 import { User, Camera, Phone, MapPin, Mail, Plus, X, Save } from 'lucide-react';
 import { useAuth } from '../../AuthProvider';
 import { toast } from 'react-toastify';
+import env from "react-dotenv";
 
 const DoctorProfileEditor = () => {
 
@@ -58,7 +58,7 @@ const DoctorProfileEditor = () => {
   const getProfile = async () => {
   try {
     const refreshRes = await fetch(
-      `${BASE_URL}/api/refresh-token`,
+      `${env.VITE_BACKEND_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -78,7 +78,7 @@ const DoctorProfileEditor = () => {
       refreshData.newAccessToken;
 
     const createRes = await fetch(
-      `${BASE_URL}/api/get/doctor/profile`,
+      `${env.VITE_BACKEND_URL}/api/get/doctor/profile`,
       {
         method: "GET",
         headers: {
@@ -162,7 +162,7 @@ const DoctorProfileEditor = () => {
 
   try {
     const refreshRes = await fetch(
-      `${BASE_URL}/api/refresh-token`,
+      `${env.VITE_BACKEND_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -177,7 +177,7 @@ const DoctorProfileEditor = () => {
 
     const newToken = refreshData.newAccessToken;
 
-    const createRes = await fetch(`${BASE_URL}/api/create/doctor/profile`,
+    const createRes = await fetch(`${env.VITE_BACKEND_URL}/api/create/doctor/profile`,
       {
         method: "POST",
         headers: {

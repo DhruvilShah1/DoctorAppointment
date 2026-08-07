@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { FiMessageCircle, FiSend, FiX, FiUser } from "react-icons/fi";
 
 import { BsRobot } from "react-icons/bs";
+import env from "react-dotenv";
+
 
 import dripDrop from "../../assets/drip_drop.mp3";
 import { useAuth } from "../../AuthProvider";
@@ -92,8 +94,6 @@ const Chatbot = () => {
     return result;
   };
 
-  const BASE_URL = "https://doctorappointment-1-wwg3.onrender.com/"
-
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -115,7 +115,7 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${BASE_URL}/chat`,
+      const response = await fetch(`${env.VITE_BACKEND_URL}/chat`,
 
         {
           method: "POST",

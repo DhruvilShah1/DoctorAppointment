@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import env from "react-dotenv";
 
 const DoctorSidebar = () => {
   const [open, setOpen] = useState(false);

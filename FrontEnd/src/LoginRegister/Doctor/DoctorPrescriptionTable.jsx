@@ -1,9 +1,9 @@
-import BASE_URL from "../../config/api";
 import React, {
   useEffect,
   useMemo,
   useState,
 } from "react";
+import env from "react-dotenv";
 
 import {
   FileText,
@@ -57,7 +57,7 @@ const DoctorPrescriptionTable = () => {
 
           const refreshRes =
             await fetch(
-              `${BASE_URL}/api/refresh-token`,
+              `${env.VITE_BACKEND_URL}/api/refresh-token`,
               {
                 method:
                   "POST",
@@ -82,7 +82,7 @@ const DoctorPrescriptionTable = () => {
 
           const res =
             await fetch(
-              `${BASE_URL}/api/get/prescription/doctor`,
+              `${env.VITE_BACKEND_URL}/api/get/prescription/doctor`,
               {
                 method:
                   "GET",

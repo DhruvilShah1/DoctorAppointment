@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import env from "react-dotenv";
 
 const UserSidebar = () => {
   const [open, setOpen] = useState(false);

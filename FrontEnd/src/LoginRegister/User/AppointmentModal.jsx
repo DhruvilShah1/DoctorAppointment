@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle, XCircle, AlertCircle, Info, X } from "lucide-react";
+import env from "react-dotenv";
 
 const typeStyles = {
   success: {
