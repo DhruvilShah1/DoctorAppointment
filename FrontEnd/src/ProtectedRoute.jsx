@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
-
+import BASE_URL from "./LoginRegister/config/api.js";
 
 const ProtectedRoute = () => {
   const {
@@ -22,7 +22,7 @@ const ProtectedRoute = () => {
         }
 
         const res = await fetch(
-          `${env.VITE_BACKEND_URL}/api/refresh-token`,
+          `${BASE_URL}/api/refresh-token`,
           {
             method: "POST",
             credentials: "include",
