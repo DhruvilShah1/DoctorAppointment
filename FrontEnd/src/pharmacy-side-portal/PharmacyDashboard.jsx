@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";z
+import React, { useState, useEffect } from "react";
 import {
   User,
   Stethoscope,
