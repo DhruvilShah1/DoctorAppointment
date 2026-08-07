@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import BASE_URL from "../../config/api";
 import { useAuth } from "../../AuthProvider";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const UserLogin = () => {
 
@@ -25,7 +25,7 @@ const UserLogin = () => {
 
             
     
-fetch(`${VITE_BACKEND_URL}/api/login/user`, {
+fetch(`${BASE_URL}/api/login/user`, {
                 method : "POST" , 
                  credentials: "include",
                  headers: {
@@ -229,7 +229,7 @@ fetch(`${VITE_BACKEND_URL}/api/login/user`, {
     active:scale-95
     whitespace-nowrap
   "
-  onClick={() => window.location.href = `${VITE_BACKEND_URL}/api/auth/google`}
+  onClick={() => window.location.href = `${BASE_URL}/api/auth/google`}
 >
 
   <FcGoogle 

@@ -1,9 +1,9 @@
+import BASE_URL from "../../config/api";
 import React, {
   useEffect,
   useMemo,
   useState,
 } from "react";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 import {
   FileText,
@@ -57,7 +57,7 @@ const DoctorPrescriptionTable = () => {
 
           const refreshRes =
             await fetch(
-              `${VITE_BACKEND_URL}/api/refresh-token`,
+              `${BASE_URL}/api/refresh-token`,
               {
                 method:
                   "POST",
@@ -82,7 +82,7 @@ const DoctorPrescriptionTable = () => {
 
           const res =
             await fetch(
-              `${VITE_BACKEND_URL}/api/get/prescription/doctor`,
+              `${BASE_URL}/api/get/prescription/doctor`,
               {
                 method:
                   "GET",

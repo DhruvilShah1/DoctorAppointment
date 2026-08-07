@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const UserSidebar = () => {
   const [open, setOpen] = useState(false);

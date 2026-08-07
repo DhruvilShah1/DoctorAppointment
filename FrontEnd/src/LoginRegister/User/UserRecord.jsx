@@ -1,3 +1,4 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useState } from "react";
 import {
   CalendarDays,
@@ -10,7 +11,6 @@ import {
   Activity,
 } from "lucide-react";
 import { useAuth } from "../../AuthProvider";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const UserRecord = () => {
   const [records, setRecords] = useState([]);
@@ -24,7 +24,7 @@ const UserRecord = () => {
     try {
       setLoading(true);
 
-      const refreshRes = await fetch(`${VITE_BACKEND_URL}/api/refresh-token`, {
+      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`, {
           method: "POST",
           credentials: "include",
         }
@@ -38,7 +38,7 @@ const UserRecord = () => {
 
       const token = refreshData.newAccessToken;
 
-      const res = await fetch(`${VITE_BACKEND_URL}/api/finishAppointment`, {
+      const res = await fetch(`${BASE_URL}/api/finishAppointment`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

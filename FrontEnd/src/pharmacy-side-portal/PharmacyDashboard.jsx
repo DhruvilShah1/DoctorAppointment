@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
-
+import React, { useState, useEffect } from "react";z
 import {
   User,
   Stethoscope,

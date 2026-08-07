@@ -1,6 +1,5 @@
 import React from "react";
 import { CheckCircle, XCircle, AlertCircle, Info, X } from "lucide-react";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const typeStyles = {
   success: {

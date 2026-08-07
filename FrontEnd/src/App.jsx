@@ -25,7 +25,7 @@ import Unauthorized from "./Unauthorized";
 import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
 import Chatbot from "./LoginRegister/User/Chatbot";
 import UserSetting from "./LoginRegister/User/UserSetting";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
+import env from "react-dotenv";
 
 const App = () => {
   
@@ -45,7 +45,7 @@ const App = () => {
   const fetchAppointment = async (date, slot) => {
     try {
         const refreshRes = await fetch(
-          `${VITE_BACKEND_URL}/api/refresh-token`,
+          `${env.VITE_BACKEND_URL}/api/refresh-token`,
           {
             method: "POST",
             credentials: "include",
@@ -61,7 +61,7 @@ const App = () => {
         const token = refreshData.newAccessToken;
 
       const res = await fetch(
-        `${VITE_BACKEND_URL}/api/get/full/slot`,
+        `${env.VITE_BACKEND_URL}/api/get/full/slot`,
         {
           method: "POST",
           headers: {

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const DoctorSidebar = () => {
   const [open, setOpen] = useState(false);

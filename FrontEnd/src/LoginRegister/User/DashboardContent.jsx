@@ -1,6 +1,5 @@
 import React from "react";
 import { useAuth } from "../../AuthProvider";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 import {
   ArrowRight,

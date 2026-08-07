@@ -1,7 +1,7 @@
+import BASE_URL from "../../config/api";
 import React, { useEffect, useRef, useState } from "react";
 import { X, Plus, Trash2, Save, Printer, Sparkles } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
-const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 export default function PrescriptionPopup({
   isOpen = true,
@@ -146,7 +146,7 @@ const handleSave = async () => {
 
     // refresh token
     const refreshRes = await fetch(
-      `${VITE_BACKEND_URL}/api/refresh-token`,
+      `${BASE_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -162,7 +162,7 @@ const handleSave = async () => {
 
     // create prescription
     const res = await fetch(
-      `${VITE_BACKEND_URL}/api/create/prescription`,
+      `${BASE_URL}/api/create/prescription`,
       {
         method: "POST",
         headers: {
