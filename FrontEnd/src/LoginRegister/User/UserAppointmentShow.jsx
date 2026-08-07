@@ -1,5 +1,4 @@
-import BASE_URL from "../../config/api";
-import React, { useEffect, useState } from "react";
+import BASE_URL from "../../config/api.js";import React, { useEffect, useState } from "react";
 import { useAuth } from "../../AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket/FrontendSocketConnection";

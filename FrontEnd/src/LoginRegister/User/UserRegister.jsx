@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import BASE_URL from "../../config/api";
+import BASE_URL from "../../config/api.js";
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 

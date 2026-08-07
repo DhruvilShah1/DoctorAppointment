@@ -1,2 +1,2 @@
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
-export default BASE_URL;
+const BASE_URL = "https://doctorappointment-1-wwg3.onrender.com/";
+module.exports = { BASE_URL };

@@ -1,5 +1,4 @@
-import BASE_URL from "../../config/api";
-import React, { useState, useEffect } from 'react';
+import BASE_URL from "../../config/api.js";import React, { useState, useEffect } from 'react';
 import { User, Camera, Phone, MapPin, Mail, Plus, X, Save } from 'lucide-react';
 import { useAuth } from '../../AuthProvider';
 import { toast } from 'react-toastify';
