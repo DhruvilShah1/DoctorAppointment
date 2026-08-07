@@ -1,3 +1,3 @@
-const BASE_URL = "https://doctorappointment-1-wwg3.onrender.com";
+const BASE_URL = "https://doctorappointment-lj0a.onrender.com";
 
 export default BASE_URL;
