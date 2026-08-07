@@ -22,7 +22,7 @@ const ProtectedRoute = () => {
         }
 
         const res = await fetch(
-          `${env.VITE_BACKEND_URL}/api/refresh-token`,
+          `${VITE_BACKEND_URL}/api/refresh-token`,
           {
             method: "POST",
             credentials: "include",

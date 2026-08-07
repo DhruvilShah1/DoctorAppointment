@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../../AuthProvider";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const UserLogin = () => {
 
@@ -25,7 +25,7 @@ const UserLogin = () => {
 
             
     
-fetch(`${env.VITE_BACKEND_URL}/api/login/user`, {
+fetch(`${VITE_BACKEND_URL}/api/login/user`, {
                 method : "POST" , 
                  credentials: "include",
                  headers: {
@@ -229,7 +229,7 @@ fetch(`${env.VITE_BACKEND_URL}/api/login/user`, {
     active:scale-95
     whitespace-nowrap
   "
-  onClick={() => window.location.href = `${env.VITE_BACKEND_URL}/api/auth/google`}
+  onClick={() => window.location.href = `${VITE_BACKEND_URL}/api/auth/google`}
 >
 
   <FcGoogle 

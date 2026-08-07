@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useAuth } from "../../AuthProvider";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 import {
   Clock3,
@@ -102,7 +102,7 @@ const DoctorDashboard = () => {
         if (!doctor?.id) return;
 
         const res = await fetch(
-          `${env.VITE_BACKEND_URL}/api/doctor/${doctor.id}`
+          `${VITE_BACKEND_URL}/api/doctor/${doctor.id}`
         );
 
         const data = await res.json();
@@ -236,7 +236,7 @@ const DoctorDashboard = () => {
 
     try {
 
-    const refreshRes = await fetch(`${env.VITE_BACKEND_URL}/api/refresh-token`,
+    const refreshRes = await fetch(`${VITE_BACKEND_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -255,7 +255,7 @@ const DoctorDashboard = () => {
 
 
 
-      const res = await fetch(`${env.VITE_BACKEND_URL}/api/create/slot`,
+      const res = await fetch(`${VITE_BACKEND_URL}/api/create/slot`,
         {
           method: "POST",
           headers: {

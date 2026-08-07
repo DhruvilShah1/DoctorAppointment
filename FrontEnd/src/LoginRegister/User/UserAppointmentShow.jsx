@@ -3,7 +3,7 @@ import { useAuth } from "../../AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { socket } from "../../socket/FrontendSocketConnection";
 import { toast } from "react-toastify";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const UserAppointmentShow = () => {
   const { user } = useAuth();
@@ -22,7 +22,7 @@ const [slotQueueData, setslotQueueData] = useState({});
 
   const fetchDoctors = async () => {
     try {
-      const res = await fetch(`${env.VITE_BACKEND_URL}/api/get/all`);
+      const res = await fetch(`${VITE_BACKEND_URL}/api/get/all`);
       const data = await res.json();
       
       setDoctors(data.data || []);
@@ -62,7 +62,7 @@ useEffect(()=>{
 
  const fetchAppointment = async () => {
   try {
-    const refreshRes = await fetch(`${env.VITE_BACKEND_URL}/api/refresh-token`,
+    const refreshRes = await fetch(`${VITE_BACKEND_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -84,7 +84,7 @@ useEffect(()=>{
     }
 
     const res = await fetch(
-      `${env.VITE_BACKEND_URL}/api/take/appointments`,
+      `${VITE_BACKEND_URL}/api/take/appointments`,
       {
         method: "GET",
         headers: {
@@ -163,7 +163,7 @@ const bookSlot = async () => {
 
   try {
     const refreshRes = await fetch(
-      `${env.VITE_BACKEND_URL}/api/refresh-token`,
+      `${VITE_BACKEND_URL}/api/refresh-token`,
       {
         method: "POST",
         credentials: "include",
@@ -181,7 +181,7 @@ const bookSlot = async () => {
     setaccesstoken(newToken);
 
 
-    const res = await fetch(`${env.VITE_BACKEND_URL}/api/add/patient`, {
+    const res = await fetch(`${VITE_BACKEND_URL}/api/add/patient`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -208,7 +208,7 @@ const bookSlot = async () => {
 
 const changeQueue = async (doctorId, startSlot, date) => {
   try {
-    const res = await fetch(`${env.VITE_BACKEND_URL}/api/take/queue/number`, {
+    const res = await fetch(`${VITE_BACKEND_URL}/api/take/queue/number`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

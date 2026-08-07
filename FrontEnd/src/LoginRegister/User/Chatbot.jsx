@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { FiMessageCircle, FiSend, FiX, FiUser } from "react-icons/fi";
 
 import { BsRobot } from "react-icons/bs";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 
 import dripDrop from "../../assets/drip_drop.mp3";
@@ -115,7 +115,7 @@ const Chatbot = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${env.VITE_BACKEND_URL}/chat`,
+      const response = await fetch(`${VITE_BACKEND_URL}/chat`,
 
         {
           method: "POST",

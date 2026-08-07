@@ -1,6 +1,6 @@
 import React from "react";
 import { CheckCircle, XCircle, AlertCircle, Info, X } from "lucide-react";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const typeStyles = {
   success: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const ViewDoctorProfile = () => {
   const { doctorId } = useParams();
@@ -12,7 +12,7 @@ const ViewDoctorProfile = () => {
   const getProfile = async () => {
     try {
       const res = await fetch(
-        `${env.VITE_BACKEND_URL}/api/doctor/profile/${doctorId}`
+        `${VITE_BACKEND_URL}/api/doctor/profile/${doctorId}`
       );
 
       const result = await res.json();

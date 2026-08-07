@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const UserRegister = () => {
 
@@ -18,7 +18,7 @@ const UserRegister = () => {
                   setLoading(true)
 
 
-        fetch(`${env.VITE_BACKEND_URL}/api/register/user`, {
+        fetch(`${VITE_BACKEND_URL}/api/register/user`, {
             method : "POST" , 
              headers: {
     "Content-Type": "application/json",
@@ -302,7 +302,7 @@ OR
 type="button"
 
 onClick={()=>
-window.location.href=`${env.VITE_BACKEND_URL}/api/auth/google`
+window.location.href=`${VITE_BACKEND_URL}/api/auth/google`
 }
 
 

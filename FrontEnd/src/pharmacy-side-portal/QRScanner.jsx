@@ -36,7 +36,7 @@ const QRScanner = ({ setData }) => {
                 return;
               }
               const res = await fetch(
-                `${env.VITE_BACKEND_URL}/api/verify/prescription`,
+                `${VITE_BACKEND_URL}/api/verify/prescription`,
                 {
                   method: "POST",
                   headers: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../AuthProvider";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 import {
   Users,
@@ -35,7 +35,7 @@ const UserQueue = ({
     
           try {
         const refreshRes = await fetch(
-          `${env.VITE_BACKEND_URL}/api/refresh-token`,
+          `${VITE_BACKEND_URL}/api/refresh-token`,
           {
             method: "POST",
             credentials: "include",
@@ -51,7 +51,7 @@ const UserQueue = ({
         const newToken = refreshData.newAccessToken;
     
     
-         const res = await fetch(`${env.VITE_BACKEND_URL}/api/today/appointment`, {
+         const res = await fetch(`${VITE_BACKEND_URL}/api/today/appointment`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

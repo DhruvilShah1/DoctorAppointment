@@ -1,5 +1,5 @@
 import React from 'react'
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const UserSetting = () => {
   return (

@@ -2,7 +2,7 @@ import React, { useReducer } from 'react'
 import { useAuth } from '../AuthProvider';
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 const PharmacyProfile = () => {
 

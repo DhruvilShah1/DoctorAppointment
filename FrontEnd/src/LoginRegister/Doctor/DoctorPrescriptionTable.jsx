@@ -3,7 +3,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import env from "react-dotenv";
+const VITE_BACKEND_URL = import.meta.VITE_BACKEND_URL;
 
 import {
   FileText,
@@ -57,7 +57,7 @@ const DoctorPrescriptionTable = () => {
 
           const refreshRes =
             await fetch(
-              `${env.VITE_BACKEND_URL}/api/refresh-token`,
+              `${VITE_BACKEND_URL}/api/refresh-token`,
               {
                 method:
                   "POST",
@@ -82,7 +82,7 @@ const DoctorPrescriptionTable = () => {
 
           const res =
             await fetch(
-              `${env.VITE_BACKEND_URL}/api/get/prescription/doctor`,
+              `${VITE_BACKEND_URL}/api/get/prescription/doctor`,
               {
                 method:
                   "GET",
