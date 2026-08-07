@@ -24,8 +24,8 @@ import { socket } from './socket/FrontendSocketConnection';
 import Unauthorized from "./Unauthorized";
 import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
 import Chatbot from "./LoginRegister/User/Chatbot";
+import BASE_URL from "./config/api.js";
 import UserSetting from "./LoginRegister/User/UserSetting";
-import env from "react-dotenv";
 
 const App = () => {
   
@@ -45,7 +45,7 @@ const App = () => {
   const fetchAppointment = async (date, slot) => {
     try {
         const refreshRes = await fetch(
-          `${env.VITE_BACKEND_URL}/api/refresh-token`,
+          `${BASE_URL}/api/refresh-token`,
           {
             method: "POST",
             credentials: "include",
@@ -61,7 +61,7 @@ const App = () => {
         const token = refreshData.newAccessToken;
 
       const res = await fetch(
-        `${env.VITE_BACKEND_URL}/api/get/full/slot`,
+        `${BASE_URL}/api/get/full/slot`,
         {
           method: "POST",
           headers: {

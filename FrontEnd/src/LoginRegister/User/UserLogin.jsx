@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import BASE_URL from "../../config/api.js";import { useAuth } from "../../AuthProvider";
+import BASE_URL from "../../config/api.js";
+import { useAuth } from "../../AuthProvider";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 

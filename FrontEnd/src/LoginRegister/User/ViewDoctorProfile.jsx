@@ -1,4 +1,5 @@
-import BASE_URL from "../../config/api.js";import React, { useEffect, useState } from "react";
+import BASE_URL from "../../config/api.js";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const ViewDoctorProfile = () => {
