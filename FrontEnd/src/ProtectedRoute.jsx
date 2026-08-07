@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
-import env.VITE_BACKEND_URL from "./config/api";
+
 
 const ProtectedRoute = () => {
   const {
