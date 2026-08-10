@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 import Appointment from "../Model/Appointment.js";
 import DoctorProfile from "../Model/DoctorProfile.js";
 import DoctorSchedule from "../Model/DoctorSchedule.js";
-import { getIO } from "../socket/socket.js";
-
+import { getIO } from "../socket/socket.js"
+import Users from "../Model/Users.js";
 const DoctorControllerSchedule = {
 
  createSlot: async (req, res) => {
@@ -164,7 +164,7 @@ getAll: async (req, res) => {
       // 1. Search doctor NAME from User collection
       // ---------------------------------------------------
 
-      const users = await User.find({
+      const users = await Users.find({
         name: {
           $regex: searchRegex,
         },
@@ -176,7 +176,7 @@ getAll: async (req, res) => {
       // 2. Search SPECIALTIES from doctorprofiles collection
       // ---------------------------------------------------
 
-      const profiles = await doctorprofiles
+      const profiles = await DoctorProfile
         .find({
           specialties: {
             $regex: searchRegex,
