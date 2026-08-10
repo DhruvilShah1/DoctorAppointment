@@ -17,7 +17,7 @@ const UserAppointmentShow = () => {
 
   const [doctorPage, setDoctorPage] = useState(1);
 
-  const DOCTORS_PER_PAGE = 4;
+  const DOCTORS_PER_PAGE = 2;
 
   const [doctorPagination, setDoctorPagination] = useState({
     currentPage: 1,
