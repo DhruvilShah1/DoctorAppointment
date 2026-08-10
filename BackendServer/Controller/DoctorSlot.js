@@ -153,31 +153,61 @@ getAll: async (req, res) => {
 
     let doctorIds = null;
 
-    // ============================================
-    // SEARCH DOCTOR BY NAME OR SPECIALTY
-    // ============================================
+    // =====================================================
+    // SEARCH BY DOCTOR NAME OR SPECIALTIES
+    // =====================================================
+
     if (search) {
       const searchRegex = new RegExp(search, "i");
 
-      const doctors = await User.find({
-        role: "doctor",
-        $or: [
-          {
-            name: {
-              $regex: searchRegex,
-            },
-          },
-          {
-            specialty: {
-              $regex: searchRegex,
-            },
-          },
-        ],
+      // ---------------------------------------------------
+      // 1. Search doctor NAME from User collection
+      // ---------------------------------------------------
+
+      const users = await User.find({
+        name: {
+          $regex: searchRegex,
+        },
       }).select("_id");
 
-      doctorIds = doctors.map((doctor) => doctor._id);
+      const userDoctorIds = users.map((user) => user._id);
 
-      // Search entered but no doctor found
+      // ---------------------------------------------------
+      // 2. Search SPECIALTIES from doctorprofiles collection
+      // ---------------------------------------------------
+
+      const profiles = await doctorprofiles
+        .find({
+          specialties: {
+            $regex: searchRegex,
+          },
+        })
+        .select("doctorId");
+
+      const profileDoctorIds = profiles.map(
+        (profile) => profile.doctorId
+      );
+
+      // ---------------------------------------------------
+      // 3. Combine both results
+      // ---------------------------------------------------
+
+      doctorIds = [
+        ...new Set([
+          ...userDoctorIds.map((id) => id.toString()),
+          ...profileDoctorIds.map((id) => id.toString()),
+        ]),
+      ];
+
+      // Convert strings back to ObjectIds
+      doctorIds = doctorIds.map(
+        (id) => new mongoose.Types.ObjectId(id)
+      );
+
+      // ---------------------------------------------------
+      // No doctor found
+      // ---------------------------------------------------
+
       if (doctorIds.length === 0) {
         return res.status(200).json({
           success: true,
@@ -189,15 +219,15 @@ getAll: async (req, res) => {
             totalSchedules: 0,
             totalPages: 0,
             hasNextPage: false,
-            hasPreviousPage: page > 1,
+            hasPreviousPage: false,
           },
         });
       }
     }
 
-    // ============================================
-    // BUILD QUERY
-    // ============================================
+    // =====================================================
+    // BUILD SCHEDULE QUERY
+    // =====================================================
 
     const query = doctorIds
       ? {
@@ -207,28 +237,29 @@ getAll: async (req, res) => {
         }
       : {};
 
-    // ============================================
+    // =====================================================
     // TOTAL COUNT
-    // ============================================
+    // =====================================================
 
-    const totalSchedules = await DoctorSchedule.countDocuments(query);
+    const totalSchedules =
+      await DoctorSchedule.countDocuments(query);
 
     const totalPages = Math.ceil(totalSchedules / limit);
 
-    // ============================================
-    // FETCH DATA
-    // ============================================
+    // =====================================================
+    // FETCH SCHEDULES
+    // =====================================================
 
     const data = await DoctorSchedule.find(query)
-      .populate("doctorId", "name email role specialty")
+      .populate("doctorId", "name email role")
       .sort({ date: 1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    // ============================================
+    // =====================================================
     // NO SCHEDULE FOUND
-    // ============================================
+    // =====================================================
 
     if (data.length === 0) {
       return res.status(200).json({
@@ -249,13 +280,12 @@ getAll: async (req, res) => {
       });
     }
 
-    // ============================================
+    // =====================================================
     // SUCCESS
-    // ============================================
+    // =====================================================
 
     return res.status(200).json({
       success: true,
-
       data,
 
       pagination: {
@@ -276,6 +306,8 @@ getAll: async (req, res) => {
     });
   }
 },
+
+
 AddPatient: async (req, res) => {
   try {
     const { doctorId, date, slotStart } = req.body;

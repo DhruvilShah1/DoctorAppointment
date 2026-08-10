@@ -114,7 +114,6 @@ const UserAppointmentShow = () => {
 
       setDoctors([]);
 
-      toast.error(err.message || "Failed to fetch doctors");
     } finally {
       setLoading(false);
     }
