@@ -142,26 +142,140 @@ const DoctorControllerSchedule = {
     }
   },
 
- getAll: async (req, res) => {
+getAll: async (req, res) => {
   try {
-    const page = Math.max( parseInt(req.query.page) || 1, 1 ); 
-    const limit = Math.max( parseInt(req.query.limit) || 10, 1 );
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+
+    const search = req.query.search?.trim() || "";
+
     const skip = (page - 1) * limit;
-    const totalSchedules = await DoctorSchedule.countDocuments();
-    const totalPages = Math.ceil( totalSchedules / limit );
 
-   const data = await DoctorSchedule.find() .populate("doctorId", "name email role") .sort({ date: 1 }) .skip(skip) .limit(limit) .lean();
+    let doctorIds = null;
 
-    return res.status(200).json({ success: true, data, pagination: { currentPage: page, limit: limit, totalSchedules: totalSchedules, totalPages: totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1, }})
+    // ============================================
+    // SEARCH DOCTOR BY NAME OR SPECIALTY
+    // ============================================
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
 
+      const doctors = await User.find({
+        role: "doctor",
+        $or: [
+          {
+            name: {
+              $regex: searchRegex,
+            },
+          },
+          {
+            specialty: {
+              $regex: searchRegex,
+            },
+          },
+        ],
+      }).select("_id");
+
+      doctorIds = doctors.map((doctor) => doctor._id);
+
+      // Search entered but no doctor found
+      if (doctorIds.length === 0) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+          message: "No doctors found",
+          pagination: {
+            currentPage: page,
+            limit: limit,
+            totalSchedules: 0,
+            totalPages: 0,
+            hasNextPage: false,
+            hasPreviousPage: page > 1,
+          },
+        });
+      }
+    }
+
+    // ============================================
+    // BUILD QUERY
+    // ============================================
+
+    const query = doctorIds
+      ? {
+          doctorId: {
+            $in: doctorIds,
+          },
+        }
+      : {};
+
+    // ============================================
+    // TOTAL COUNT
+    // ============================================
+
+    const totalSchedules = await DoctorSchedule.countDocuments(query);
+
+    const totalPages = Math.ceil(totalSchedules / limit);
+
+    // ============================================
+    // FETCH DATA
+    // ============================================
+
+    const data = await DoctorSchedule.find(query)
+      .populate("doctorId", "name email role specialty")
+      .sort({ date: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // ============================================
+    // NO SCHEDULE FOUND
+    // ============================================
+
+    if (data.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: search
+          ? "No doctors or schedules found"
+          : "No doctor schedules found",
+
+        pagination: {
+          currentPage: page,
+          limit: limit,
+          totalSchedules: totalSchedules,
+          totalPages: totalPages,
+          hasNextPage: false,
+          hasPreviousPage: page > 1,
+        },
+      });
+    }
+
+    // ============================================
+    // SUCCESS
+    // ============================================
+
+    return res.status(200).json({
+      success: true,
+
+      data,
+
+      pagination: {
+        currentPage: page,
+        limit: limit,
+        totalSchedules: totalSchedules,
+        totalPages: totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    });
   } catch (error) {
     console.error("🔥 GET ALL ERROR:", error);
 
-   return res.status(500).json({ success: false, message: error.message, });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 },
-
-
 AddPatient: async (req, res) => {
   try {
     const { doctorId, date, slotStart } = req.body;
