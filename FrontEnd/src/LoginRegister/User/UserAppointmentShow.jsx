@@ -291,9 +291,9 @@ const changeQueue = async (doctorId, startSlot, date) => {
 
   useEffect(() => {
     if (user?.id) {
-      fetchDoctors();
+      fetchDoctors(doctorPage);
     }
-  }, [user]);
+  }, [user, doctorPage]);
 
   if (loading) {
     return (
@@ -597,138 +597,75 @@ const changeQueue = async (doctorId, startSlot, date) => {
     DOCTOR PAGINATION
 ===================================== */}
 
-{doctorPagination &&
-  doctorPagination.totalPages > 1 && (
-    <div className="col-span-full mt-4 flex flex-col items-center gap-4">
+{doctorPagination && doctorPagination.totalPages > 1 && (
+  <div className="col-span-full mt-8 flex flex-col items-center gap-3">
 
-      {/* PAGE INFO */}
-      <p className="text-sm text-gray-400 font-medium">
-        Page{" "}
+    {/* PAGE INFO */}
+    <p className="text-sm text-gray-400">
+      Showing page{" "}
+      <span className="text-purple-600 font-bold">{doctorPagination.currentPage}</span>
+      {" "}of{" "}
+      <span className="text-purple-600 font-bold">{doctorPagination.totalPages}</span>
+      {" "}·{" "}
+      <span className="text-gray-500">{doctorPagination.totalSchedules} total schedules</span>
+    </p>
 
-        <span className="text-purple-600 font-bold">
-          {doctorPagination.currentPage}
-        </span>
+    {/* BUTTONS */}
+    <div className="flex items-center gap-2">
 
-        {" "}of{" "}
+      {/* PREVIOUS */}
+      <button
+        onClick={() => {
+          setDoctorPage((p) => p - 1);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        disabled={!doctorPagination.hasPreviousPage}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm bg-white border-2 border-gray-200 text-gray-600 shadow-sm hover:border-purple-400 hover:text-purple-600 hover:shadow-md active:scale-95 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:text-gray-600 disabled:hover:shadow-sm"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Prev
+      </button>
 
-        <span className="text-purple-600 font-bold">
-          {doctorPagination.totalPages}
-        </span>
-
-        {" "}&middot;{" "}
-
-        <span>
-          {doctorPagination.totalSchedules}
-        </span>
-
-        {" "}total schedules
-      </p>
-
-      {/* BUTTONS */}
-      <div className="flex items-center gap-2">
-
-        {/* PREVIOUS */}
-        <button
-          onClick={() => {
-            if (doctorPagination.hasPreviousPage) {
-              setDoctorPage((page) => page - 1);
-
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
-            }
-          }}
-          disabled={
-            !doctorPagination.hasPreviousPage
-          }
-          className="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-semibold text-sm bg-white border-2 border-gray-200 text-gray-600 shadow-sm hover:border-purple-400 hover:text-purple-600 hover:shadow-md active:scale-95 transition-all duration-200 disabled:opacity-35 disabled:cursor-not-allowed"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
+      {/* PAGE NUMBERS */}
+      <div className="flex items-center gap-1">
+        {Array.from({ length: doctorPagination.totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => {
+              setDoctorPage(page);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className={`w-9 h-9 rounded-xl text-sm font-bold transition-all duration-200 ${
+              page === doctorPage
+                ? "bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg scale-110"
+                : "bg-white border-2 border-gray-200 text-gray-500 hover:border-purple-400 hover:text-purple-600 hover:shadow-md"
+            }`}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-
-          Previous
-        </button>
-
-        {/* PAGE NUMBERS */}
-        <div className="flex items-center gap-1">
-
-          {Array.from(
-            {
-              length: doctorPagination.totalPages,
-            },
-            (_, i) => i + 1
-          ).map((page) => (
-            <button
-              key={page}
-              onClick={() => {
-                setDoctorPage(page);
-
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth",
-                });
-              }}
-              className={`w-10 h-10 rounded-xl text-sm font-bold transition-all duration-200 ${
-                page === doctorPage
-                  ? "bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg scale-110"
-                  : "bg-white border-2 border-gray-200 text-gray-500 hover:border-purple-400 hover:text-purple-600 hover:shadow-md"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-
-        </div>
-
-        {/* NEXT */}
-        <button
-          onClick={() => {
-            if (doctorPagination.hasNextPage) {
-              setDoctorPage((page) => page + 1);
-
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              });
-            }
-          }}
-          disabled={
-            !doctorPagination.hasNextPage
-          }
-          className="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-semibold text-sm bg-white border-2 border-gray-200 text-gray-600 shadow-sm hover:border-purple-400 hover:text-purple-600 hover:shadow-md active:scale-95 transition-all duration-200 disabled:opacity-35 disabled:cursor-not-allowed"
-        >
-          Next
-
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-
+            {page}
+          </button>
+        ))}
       </div>
+
+      {/* NEXT */}
+      <button
+        onClick={() => {
+          setDoctorPage((p) => p + 1);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        disabled={!doctorPagination.hasNextPage}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm bg-white border-2 border-gray-200 text-gray-600 shadow-sm hover:border-purple-400 hover:text-purple-600 hover:shadow-md active:scale-95 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:text-gray-600 disabled:hover:shadow-sm"
+      >
+        Next
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
     </div>
-  )}
+  </div>
+)}
 
       </div>
     </div>
