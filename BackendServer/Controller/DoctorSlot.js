@@ -153,16 +153,8 @@ getAll: async (req, res) => {
 
     let doctorIds = null;
 
-    // =====================================================
-    // SEARCH BY DOCTOR NAME OR SPECIALTIES
-    // =====================================================
-
     if (search) {
       const searchRegex = new RegExp(search, "i");
-
-      // ---------------------------------------------------
-      // 1. Search doctor NAME from User collection
-      // ---------------------------------------------------
 
       const users = await Users.find({
         name: {
@@ -172,9 +164,6 @@ getAll: async (req, res) => {
 
       const userDoctorIds = users.map((user) => user._id);
 
-      // ---------------------------------------------------
-      // 2. Search SPECIALTIES from doctorprofiles collection
-      // ---------------------------------------------------
 
       const profiles = await DoctorProfile
         .find({
@@ -188,9 +177,6 @@ getAll: async (req, res) => {
         (profile) => profile.doctorId
       );
 
-      // ---------------------------------------------------
-      // 3. Combine both results
-      // ---------------------------------------------------
 
       doctorIds = [
         ...new Set([
@@ -204,9 +190,6 @@ getAll: async (req, res) => {
         (id) => new mongoose.Types.ObjectId(id)
       );
 
-      // ---------------------------------------------------
-      // No doctor found
-      // ---------------------------------------------------
 
       if (doctorIds.length === 0) {
         return res.status(200).json({
@@ -225,9 +208,6 @@ getAll: async (req, res) => {
       }
     }
 
-    // =====================================================
-    // BUILD SCHEDULE QUERY
-    // =====================================================
 
     const query = doctorIds
       ? {
@@ -237,18 +217,10 @@ getAll: async (req, res) => {
         }
       : {};
 
-    // =====================================================
-    // TOTAL COUNT
-    // =====================================================
-
     const totalSchedules =
       await DoctorSchedule.countDocuments(query);
 
     const totalPages = Math.ceil(totalSchedules / limit);
-
-    // =====================================================
-    // FETCH SCHEDULES
-    // =====================================================
 
     const data = await DoctorSchedule.find(query)
       .populate("doctorId", "name email role")
@@ -257,9 +229,6 @@ getAll: async (req, res) => {
       .limit(limit)
       .lean();
 
-    // =====================================================
-    // NO SCHEDULE FOUND
-    // =====================================================
 
     if (data.length === 0) {
       return res.status(200).json({

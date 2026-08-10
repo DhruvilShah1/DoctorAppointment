@@ -95,7 +95,6 @@ const UserAppointmentShow = () => {
         throw new Error(data.message || "Failed to fetch doctors");
       }
 
-      console.log("Doctors API:", data);
 
       setDoctors(data.data || []);
 
@@ -226,8 +225,6 @@ const UserAppointmentShow = () => {
       );
 
       const data = await res.json();
-
-      console.log("Appointments:", data);
 
       setUpcomingAppointments(data.data || []);
 
