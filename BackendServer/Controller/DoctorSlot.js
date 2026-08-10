@@ -1,4 +1,5 @@
 import { Rewind } from "lucide-react";
+import mongoose from "mongoose";
 import Appointment from "../Model/Appointment.js";
 import DoctorProfile from "../Model/DoctorProfile.js";
 import DoctorSchedule from "../Model/DoctorSchedule.js";
@@ -421,7 +422,7 @@ queueNumber : async (req, res) => {
 
 upcomingAppointments: async (req, res) => {
   try {
-    const patientId = req.user.id;
+    const patientId = new mongoose.Types.ObjectId(req.user.id);
 
     // =========================
     // Pagination
