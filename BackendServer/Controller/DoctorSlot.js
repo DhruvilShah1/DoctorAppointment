@@ -144,22 +144,20 @@ const DoctorControllerSchedule = {
 
  getAll: async (req, res) => {
   try {
-    const data = await DoctorSchedule.find()
-      .populate("doctorId", "name email role")
-      .lean();
+    const page = Math.max( parseInt(req.query.page) || 1, 1 ); 
+    const limit = Math.max( parseInt(req.query.limit) || 10, 1 );
+    const skip = (page - 1) * limit;
+    const totalSchedules = await DoctorSchedule.countDocuments();
+    const totalPages = Math.ceil( totalSchedules / limit );
 
-    return res.status(200).json({
-      success: true,
-      data,
-    });
+   const data = await DoctorSchedule.find() .populate("doctorId", "name email role") .sort({ date: 1 }) .skip(skip) .limit(limit) .lean();
+
+    return res.status(200).json({ success: true, data, pagination: { currentPage: page, limit: limit, totalSchedules: totalSchedules, totalPages: totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1, }})
 
   } catch (error) {
     console.error("🔥 GET ALL ERROR:", error);
 
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+   return res.status(500).json({ success: false, message: error.message, });
   }
 },
 
@@ -480,6 +478,6 @@ message: "Server error",
 });
 }
 } 
-};
+}
 
 export default DoctorControllerSchedule;
