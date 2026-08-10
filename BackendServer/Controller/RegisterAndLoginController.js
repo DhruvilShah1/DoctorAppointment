@@ -2,6 +2,8 @@ import Users from "../Model/Users.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+import "dotenv/config";
+
 import passport from "passport";
 import { use } from "react";
 
@@ -139,7 +141,7 @@ googleAuthCallback : (req, res , next) => {
     { session: false },
     async (err, user) => {
       if (err || !user) {
-        return res.redirect("https://doctor-appointment-kohl-phi.vercel.app/login");
+        return res.redirect(`${process.env.FRONTEND_URL}/login`);
       }
       const accessToken = jwt.sign(
         {
@@ -180,7 +182,7 @@ googleAuthCallback : (req, res , next) => {
       });
       
 
-      return res.redirect("https://doctor-appointment-kohl-phi.vercel.app/dashboard");
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
     }
   )(req, res ,next);
 },

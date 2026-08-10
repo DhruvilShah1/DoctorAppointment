@@ -28,9 +28,6 @@ const UserAppointmentShow = () => {
     hasPreviousPage: false,
   });
 
-  // =========================================================
-  // SEARCH
-  // =========================================================
 
   const [search, setSearch] = useState("");
 
@@ -66,10 +63,6 @@ const UserAppointmentShow = () => {
     useState([]);
 
   const [currentPage, setCurrentPage] = useState(1);
-
-  // =========================================================
-  // FETCH DOCTORS
-  // =========================================================
 
   const fetchDoctors = async (
     page = doctorPage,
