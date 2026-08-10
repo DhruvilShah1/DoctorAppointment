@@ -28,6 +28,9 @@ const [slotQueueData, setslotQueueData] = useState({});
       const data = await res.json();
       
       setDoctors(data.data || []);
+      console.log(data);
+    
+
     } catch (err) {
       toast.error("Failed to fetch doctors");
     } finally {
@@ -84,7 +87,7 @@ useEffect(() => {
     }
 
     const res = await fetch(
-      `${BASE_URL}/api/take/appointments?page=${page}&limit=2`,
+      `${BASE_URL}/api/take/appointments`,
       {
         method: "GET",
         headers: {
@@ -98,7 +101,6 @@ useEffect(() => {
     console.log(data);
 
     SetupcomingAppointments(data.data || []);
-    setPagination(data.pagination || null);
 
     const appointment = data?.data?.[0];
 
