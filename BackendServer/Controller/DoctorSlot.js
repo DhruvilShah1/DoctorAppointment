@@ -144,87 +144,179 @@ const DoctorControllerSchedule = {
 
 getAll: async (req, res) => {
   try {
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    // =====================================================
+    // PAGINATION
+    // =====================================================
 
-    const search = req.query.search?.trim() || "";
-    const date = req.query.date?.trim() || "";
+    const page = Math.max(
+      parseInt(req.query.page) || 1,
+      1
+    );
+
+    const limit = Math.max(
+      parseInt(req.query.limit) || 10,
+      1
+    );
 
     const skip = (page - 1) * limit;
+
+    // =====================================================
+    // SEARCH / DATE
+    // =====================================================
+
+    const search =
+      req.query.search?.trim() || "";
+
+    const date =
+      req.query.date?.trim() || "";
 
     let doctorIds = null;
 
     // =====================================================
-    // SEARCH BY NAME OR SPECIALTY
+    // ESCAPE REGEX
+    // =====================================================
+
+    const escapeRegex = (value) => {
+      return value.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        "\\$&"
+      );
+    };
+
+    // =====================================================
+    // SEARCH BY DOCTOR NAME OR SPECIALTY
     // =====================================================
 
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      const safeSearch = escapeRegex(search);
 
-      // ---------------------------------------------------
-      // 1. Search NAME from Users collection
-      // ---------------------------------------------------
+      const searchRegex = new RegExp(
+        safeSearch,
+        "i"
+      );
+
+      // ===================================================
+      // 1. SEARCH DOCTOR NAME
+      // ===================================================
 
       const users = await Users.find({
         name: {
           $regex: searchRegex,
         },
-      }).select("_id");
+      })
+        .select("_id")
+        .lean();
 
-      // ---------------------------------------------------
-      // 2. Search SPECIALTY from doctorprofiles
-      // ---------------------------------------------------
+      // ===================================================
+      // 2. SEARCH SPECIALTY
+      // ===================================================
 
-      const profiles = await DoctorProfile
-        .find({
+      const profiles =
+        await DoctorProfile.find({
           specialties: {
             $regex: searchRegex,
           },
         })
-        .select("doctorId");
+          .select("doctorId")
+          .lean();
 
-      // ---------------------------------------------------
-      // Combine IDs
-      // ---------------------------------------------------
+      // ===================================================
+      // 3. GET DOCTOR IDS FROM USER NAME
+      // ===================================================
 
-      const nameDoctorIds = Users.map((user) => user._id);
+      // IMPORTANT:
+      // Use users.map(), NOT Users.map()
+      //
+      // users = array returned by Users.find()
+      // Users = Mongoose model
 
-      const specialtyDoctorIds = profiles.map(
-        (profile) => profile.doctorId
+      const nameDoctorIds = users.map(
+        (user) => user._id
       );
+
+      // ===================================================
+      // 4. GET DOCTOR IDS FROM SPECIALTY
+      // ===================================================
+
+      const specialtyDoctorIds =
+        profiles
+          .map(
+            (profile) =>
+              profile.doctorId
+          )
+          .filter(Boolean);
+
+      // ===================================================
+      // 5. COMBINE + REMOVE DUPLICATES
+      // ===================================================
 
       doctorIds = [
         ...new Map(
-          [...nameDoctorIds, ...specialtyDoctorIds].map((id) => [
+          [
+            ...nameDoctorIds,
+            ...specialtyDoctorIds,
+          ].map((id) => [
             id.toString(),
             id,
           ])
         ).values(),
       ];
 
-      // Search entered but no doctor found
+      console.log(
+        "Search:",
+        search
+      );
+
+      console.log(
+        "Name Doctor IDs:",
+        nameDoctorIds
+      );
+
+      console.log(
+        "Specialty Doctor IDs:",
+        specialtyDoctorIds
+      );
+
+      console.log(
+        "Combined Doctor IDs:",
+        doctorIds
+      );
+
+      // ===================================================
+      // NO DOCTORS FOUND
+      // ===================================================
+
       if (doctorIds.length === 0) {
         return res.status(200).json({
           success: true,
+
           data: [],
-          message: "No doctors found",
+
+          message:
+            "No doctors found",
+
           pagination: {
             currentPage: page,
             limit,
             totalSchedules: 0,
             totalPages: 0,
             hasNextPage: false,
-            hasPreviousPage: page > 1,
+            hasPreviousPage:
+              page > 1,
           },
         });
       }
     }
 
     // =====================================================
-    // BUILD QUERY
+    // BUILD DOCTOR SCHEDULE QUERY
     // =====================================================
 
     const query = {};
+
+    // =====================================================
+    // FILTER BY DOCTOR IDS
+    // =====================================================
 
     if (doctorIds !== null) {
       query.doctorId = {
@@ -233,24 +325,38 @@ getAll: async (req, res) => {
     }
 
     // =====================================================
-    // DATE FILTER
+    // FILTER BY DATE
     // =====================================================
 
     if (date) {
-      // Example:
-      // date = 2026-08-10
+      // Expected:
+      // 2026-08-10
 
-      const startDate = new Date(`${date}T00:00:00.000Z`);
+      const startDate = new Date(
+        `${date}T00:00:00.000Z`
+      );
 
-      const endDate = new Date(`${date}T23:59:59.999Z`);
+      const endDate = new Date(
+        `${date}T23:59:59.999Z`
+      );
+
+      // ===================================================
+      // INVALID DATE
+      // ===================================================
 
       if (
-        Number.isNaN(startDate.getTime()) ||
-        Number.isNaN(endDate.getTime())
+        Number.isNaN(
+          startDate.getTime()
+        ) ||
+        Number.isNaN(
+          endDate.getTime()
+        )
       ) {
         return res.status(400).json({
           success: false,
-          message: "Invalid date format. Use YYYY-MM-DD",
+
+          message:
+            "Invalid date format. Use YYYY-MM-DD",
         });
       }
 
@@ -261,118 +367,171 @@ getAll: async (req, res) => {
     }
 
     // =====================================================
-    // TOTAL
+    // TOTAL SCHEDULES
     // =====================================================
 
     const totalSchedules =
-      await DoctorSchedule.countDocuments(query);
+      await DoctorSchedule.countDocuments(
+        query
+      );
+
+    // =====================================================
+    // TOTAL PAGES
+    // =====================================================
 
     const totalPages =
-      Math.ceil(totalSchedules / limit);
+      Math.ceil(
+        totalSchedules / limit
+      );
 
     // =====================================================
-    // FETCH SCHEDULES
+    // FETCH PAGINATED SCHEDULES
     // =====================================================
 
-    const data = await DoctorSchedule.find(query)
-      .populate(
-        "doctorId",
-        "name email role"
-      )
-      .sort({
-        date: 1,
-      })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const data =
+      await DoctorSchedule.find(query)
+        .populate(
+          "doctorId",
+          "name email role"
+        )
+        .sort({
+          date: 1,
+        })
+        .skip(skip)
+        .limit(limit)
+        .lean();
 
     // =====================================================
-    // ADD DOCTOR PROFILE DATA
+    // GET DOCTOR IDS FROM CURRENT PAGE
     // =====================================================
 
-    const doctorIdsFromData = data
-      .map((item) => item.doctorId?._id)
-      .filter(Boolean);
+    const doctorIdsFromData =
+      data
+        .map(
+          (item) =>
+            item.doctorId?._id
+        )
+        .filter(Boolean);
 
-    const profiles = await DoctorProfile
-      .find({
+    // =====================================================
+    // FETCH PROFILES
+    // =====================================================
+
+    const profiles =
+      await DoctorProfile.find({
         doctorId: {
           $in: doctorIdsFromData,
         },
       })
-      .select(
-        "doctorId specialties title experience bio"
-      )
-      .lean();
+        .select(
+          "doctorId specialties title experience bio"
+        )
+        .lean();
 
-    const profileMap = new Map();
+    // =====================================================
+    // CREATE PROFILE MAP
+    // =====================================================
 
-    profiles.forEach((profile) => {
-      profileMap.set(
-        profile.doctorId.toString(),
-        profile
+    const profileMap =
+      new Map();
+
+    profiles.forEach(
+      (profile) => {
+        if (profile.doctorId) {
+          profileMap.set(
+            profile.doctorId.toString(),
+            profile
+          );
+        }
+      }
+    );
+
+    // =====================================================
+    // MERGE SCHEDULE + PROFILE
+    // =====================================================
+
+    const finalData =
+      data.map(
+        (schedule) => {
+          const doctorId =
+            schedule.doctorId?._id?.toString();
+
+          const profile =
+            profileMap.get(
+              doctorId
+            );
+
+          return {
+            ...schedule,
+
+            doctorProfile:
+              profile || null,
+          };
+        }
       );
-    });
-
-    // =====================================================
-    // MERGE USER + PROFILE
-    // =====================================================
-
-    const finalData = data.map((schedule) => {
-      const doctorId =
-        schedule.doctorId?._id?.toString();
-
-      const profile =
-        profileMap.get(doctorId);
-
-      return {
-        ...schedule,
-
-        doctorProfile: profile || null,
-      };
-    });
 
     // =====================================================
     // NO RESULTS
     // =====================================================
 
-    if (finalData.length === 0) {
+    if (
+      finalData.length === 0
+    ) {
       return res.status(200).json({
         success: true,
+
         data: [],
-        message: search || date
-          ? "No doctors or schedules found"
-          : "No doctor schedules found",
+
+        message:
+          search || date
+            ? "No doctors or schedules found"
+            : "No doctor schedules found",
 
         pagination: {
           currentPage: page,
           limit,
           totalSchedules,
           totalPages,
-          hasNextPage: false,
-          hasPreviousPage: page > 1,
+
+          hasNextPage:
+            page < totalPages,
+
+          hasPreviousPage:
+            page > 1,
         },
       });
     }
 
     // =====================================================
-    // SUCCESS
+    // SUCCESS RESPONSE
     // =====================================================
 
     return res.status(200).json({
       success: true,
+
       data: finalData,
 
       pagination: {
         currentPage: page,
+
         limit,
+
         totalSchedules,
+
         totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
+
+        hasNextPage:
+          page < totalPages,
+
+        hasPreviousPage:
+          page > 1,
       },
     });
   } catch (error) {
+    // =====================================================
+    // ERROR
+    // =====================================================
+
     console.error(
       "🔥 GET ALL ERROR:",
       error
@@ -380,7 +539,10 @@ getAll: async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      message: error.message,
+
+      message:
+        error.message ||
+        "Failed to fetch doctor schedules",
     });
   }
 },
