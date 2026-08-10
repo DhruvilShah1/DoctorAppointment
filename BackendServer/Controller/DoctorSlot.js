@@ -165,7 +165,7 @@ getAll: async (req, res) => {
       // 1. Search NAME from Users collection
       // ---------------------------------------------------
 
-      const users = await User.find({
+      const users = await Users.find({
         name: {
           $regex: searchRegex,
         },
@@ -175,7 +175,7 @@ getAll: async (req, res) => {
       // 2. Search SPECIALTY from doctorprofiles
       // ---------------------------------------------------
 
-      const profiles = await doctorprofiles
+      const profiles = await DoctorProfile
         .find({
           specialties: {
             $regex: searchRegex,
