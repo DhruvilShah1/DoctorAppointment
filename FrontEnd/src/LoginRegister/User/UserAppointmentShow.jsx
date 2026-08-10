@@ -95,6 +95,8 @@ useEffect(()=>{
     );
 
     const data = await res.json();
+    console.log(data);
+    
 
     const appointment = data?.data?.[0];
 

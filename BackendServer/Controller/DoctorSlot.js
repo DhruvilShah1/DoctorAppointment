@@ -423,6 +423,12 @@ upcomingAppointments: async (req, res) => {
   try {
     const patientId = req.user.id;
 
+    // =========================
+    // Pagination
+    // =========================
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+
     const schedules = await Appointment.find({
       "slots.patientList.patientId": patientId,
     })
@@ -431,10 +437,13 @@ upcomingAppointments: async (req, res) => {
 
     const result = [];
 
+    // =========================
+    // Get Patient Appointments
+    // =========================
     schedules.forEach((doc) => {
       (doc.slots || []).forEach((slot) => {
         (slot.patientList || []).forEach((p) => {
-          if (p.patientId.toString() === patientId) {
+          if (p.patientId.toString() === patientId.toString()) {
             result.push({
               doctorId: doc.doctorId?._id,
               doctorName: doc.doctorId?.name,
@@ -452,33 +461,113 @@ upcomingAppointments: async (req, res) => {
       });
     });
 
+    // =========================
+    // No Appointments
+    // =========================
     if (result.length === 0) {
       return res.json({
+        success: true,
         message: "No Upcoming Appointments",
+        count: 0,
+        data: [],
+        pagination: {
+          currentPage: page,
+          limit: limit,
+          totalAppointments: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
       });
     }
 
-    // optional sorting
+    // =========================
+    // Sort
+    // =========================
     result.sort((a, b) => {
-      if (new Date(a.date) - new Date(b.date) !== 0) {
-        return new Date(a.date) - new Date(b.date);
+      const dateDifference =
+        new Date(a.date) - new Date(b.date);
+
+      if (dateDifference !== 0) {
+        return dateDifference;
       }
+
       return a.slotStart.localeCompare(b.slotStart);
     });
 
+    // =========================
+    // Total Count
+    // =========================
+    const totalAppointments = result.length;
+
+    const totalPages = Math.ceil(
+      totalAppointments / limit
+    );
+
+    // =========================
+    // Prevent page > totalPages
+    // =========================
+    if (page > totalPages && totalPages > 0) {
+      return res.json({
+        success: true,
+        message: "Page not found",
+        count: 0,
+        data: [],
+        pagination: {
+          currentPage: page,
+          limit: limit,
+          totalAppointments,
+          totalPages,
+          hasNextPage: false,
+          hasPreviousPage: page > 1,
+        },
+      });
+    }
+
+    // =========================
+    // Pagination
+    // =========================
+    const skip = (page - 1) * limit;
+
+    const paginatedResult = result.slice(
+      skip,
+      skip + limit
+    );
+
+    // =========================
+    // Response
+    // =========================
     res.json({
       success: true,
-      count: result.length,
-      data: result,
+
+      count: paginatedResult.length,
+
+      data: paginatedResult,
+
+      pagination: {
+        currentPage: page,
+        limit: limit,
+
+        totalAppointments: totalAppointments,
+
+        totalPages: totalPages,
+
+        hasNextPage: page < totalPages,
+
+        hasPreviousPage: page > 1,
+      },
     });
 
   } catch (err) {
     console.error(err);
+
     res.status(500).json({
+      success: false,
       message: "Server error",
     });
   }
-}
+},
+
 };
 
 export default DoctorControllerSchedule;
