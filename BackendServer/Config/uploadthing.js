@@ -12,13 +12,11 @@ export const uploadSignature = async (file) => {
 
     const response = await utapi.uploadFiles(utFile);
 
-    console.log("Signature upload response:", JSON.stringify(response));
-
     if (response.error) {
       throw new Error(response.error.message || "Upload failed");
     }
 
-    return response.data.ufsUrl || response.data.url;
+    return response.data.ufsUrl;
   } catch (error) {
     console.error("Signature upload error:", error);
     throw new Error("Signature upload failed: " + error.message);
@@ -33,13 +31,11 @@ export const uploadPdf = async (buffer, fileName) => {
 
     const response = await utapi.uploadFiles(utFile);
 
-    console.log("HTML upload response:", JSON.stringify(response));
-
     if (response.error) {
       throw new Error(response.error.message || "Upload failed");
     }
 
-    return response.data.ufsUrl || response.data.url;
+    return response.data.ufsUrl;
   } catch (error) {
     console.error("HTML upload error:", error);
     throw new Error("HTML upload failed: " + error.message);
