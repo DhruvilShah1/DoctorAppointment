@@ -10,7 +10,6 @@ import './Auth/google.js'
 import router from "../BackendServer/Routes/api.js";
 import { initSocket } from "./socket/socket.js";
 import { connectDB } from "../BackendServer/Config/Connection.js";
-import worker from "./workers/prescriptionWorker.js";
 
 
 const app = express();
