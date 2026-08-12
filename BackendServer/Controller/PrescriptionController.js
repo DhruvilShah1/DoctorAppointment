@@ -33,7 +33,6 @@ const PrescriptionController = {
       }
 
       // Qr Code Section 
-      const qrCode = await generatePrescriptionQR(prescriptionId);
 
       const token = jwt.sign({ prescriptionId }, "VITECARE APPOINTMENT");
       const qrCode = await QRCode.toDataURL(JSON.stringify({ token }));
@@ -472,32 +471,6 @@ tbody tr:nth-child(even){
         status: "issued",
       });
 
-// await prescriptionQueue.add(
-//     "generate-prescription-pdf",
-//     {
-//         prescriptionId,
-//         patientId,
-//         doctorId,
-//         doctorName,
-//         patientName,
-//         medicines: parsedMedicines,
-//         instructions,
-//         date,
-//         slot,
-//         signatureUrl,
-//         qrCode
-//     },
-//     {
-//         jobId: `prescription-${prescriptionId}`,
-//         attempts: 3,
-//         backoff: {
-//             type: "exponential",
-//             delay: 5000
-//         },
-//         removeOnComplete: 100,
-//         removeOnFail: false
-//     }
-// );
       return res.status(201).json({
         success: true,
         message: "Prescription created successfully",
