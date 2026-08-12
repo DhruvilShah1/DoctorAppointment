@@ -466,7 +466,7 @@ tbody tr:nth-child(even){
         date,
         slot, 
         qrCode,
-        pdfUrl : null,
+        pdfUrl,
         verificationStatus: "pending",
         status: "issued",
       });
