@@ -215,8 +215,6 @@ const worker = new Worker(
 
         connection: redis,
 
-        // One PDF at a time
-        concurrency: 1,
 
     }
 
@@ -283,4 +281,3 @@ console.log(
     "👷 Prescription Worker Started"
 );
 
-export default worker;
