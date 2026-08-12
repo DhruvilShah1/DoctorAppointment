@@ -1,4 +1,3 @@
-import { Rewind } from "lucide-react";
 import mongoose from "mongoose";
 import Appointment from "../Model/Appointment.js";
 import DoctorProfile from "../Model/DoctorProfile.js";
