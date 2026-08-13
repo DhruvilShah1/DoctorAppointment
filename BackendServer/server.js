@@ -11,7 +11,7 @@ import router from "../BackendServer/Routes/api.js";
 import { initSocket } from "./socket/socket.js";
 import { connectDB } from "../BackendServer/Config/Connection.js";
 import redis from "./Config/redis.js";
-import { startPrescriptionSubscriber } from "./Service/prescriptionSubscriber.js";
+import  startPrescriptionSubscriber  from "./Service/prescriptionSubscriber.js";
 
 
 

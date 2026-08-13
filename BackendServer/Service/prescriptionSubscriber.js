@@ -3,8 +3,7 @@
 import redis from "../Config/redis.js";
 
 const prescriptionSubscriber = redis.duplicate();
-
-export const startPrescriptionSubscriber = async (io) => {
+const startPrescriptionSubscriber = async (io) => {
 
     await prescriptionSubscriber.psubscribe(
         "prescription:*"
@@ -61,3 +60,5 @@ export const startPrescriptionSubscriber = async (io) => {
         "📡 Prescription Redis subscriber started"
     );
 };
+
+export default startPrescriptionSubscriber;

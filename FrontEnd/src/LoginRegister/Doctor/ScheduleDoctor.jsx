@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import PrescriptionPopup from "./PrescriptionPopup";
 
-const socket = io(import.meta.env.VITE_SOCKETIO_URL);
+const socket = io(import.meta.env.APP_URL);
 
 const ScheduleDoctor = () => {
   const { user } = useAuth();
@@ -79,6 +79,7 @@ const ScheduleDoctor = () => {
           const token = refreshData.newAccessToken;
 
       const [totalRes, slotRes] = await Promise.all([
+
         fetch(`${BASE_URL}/api/total/patient/day`, {
           method: "POST",
           headers: {
@@ -122,19 +123,6 @@ const ScheduleDoctor = () => {
   useEffect(() => {
     loadTodayData();
   }, []);
-
-  socket.on(
-    "prescription:progress",
-    (data) => {
-
-        console.log(
-            "Prescription Progress:",
-            data
-        );
-
-    }
-);
-
 
 
   const loadPatients = async (slot) => {
@@ -222,6 +210,11 @@ const ScheduleDoctor = () => {
         date: today,
         slot: selectedSlot.start,
       });
+
+
+      console.log("Slot");
+      console.log(`${user.id}_${today}_${selectedSlot.start}`);
+      
 
       if (pendingPatients.length > 0) {
         setCurrentPatient(pendingPatients[0]);
