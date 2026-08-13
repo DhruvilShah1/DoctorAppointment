@@ -12,7 +12,7 @@ import generatePrescriptionPdf from "../createPrescription/prescriptionPdfGenrat
 import { uploadPdf } from "../Config/uploadthing.js";
 
 const prescriptionWorker = new Worker(
-  "generate-prescription",
+  "prescriptionQueue",
 
   async (job) => {
     const {
