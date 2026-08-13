@@ -10,6 +10,9 @@ import './Auth/google.js'
 import router from "../BackendServer/Routes/api.js";
 import { initSocket } from "./socket/socket.js";
 import { connectDB } from "../BackendServer/Config/Connection.js";
+import redis from "./Config/redis.js";
+import { startPrescriptionSubscriber } from "./Service/prescriptionSubscriber.js";
+
 
 
 const app = express();
@@ -26,6 +29,8 @@ app.use(cookieParser());
 app.set("trust proxy", 1);
 
 connectDB();
+
+
 
 const allowedOrigins =
   process.env.ALLOWED_ORIGINS
@@ -76,6 +81,7 @@ const io =
   });
 
 initSocket(io);
+startPrescriptionSubscriber(io);
 
 io.on("connection", (socket) => {
 
@@ -99,8 +105,6 @@ io.on("connection", (socket) => {
     ({ doctorId, date, slot }) => {
       const roomId =
         `${doctorId}_${date}_${slot}`;
-
-
 
       io.to(roomId).emit(
         "queue:started",
@@ -139,3 +143,4 @@ server.listen(5000, () => {
     "Server running on port 5000"
   );
 });
+

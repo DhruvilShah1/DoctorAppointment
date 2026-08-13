@@ -121,6 +121,17 @@ const ScheduleDoctor = () => {
 
   useEffect(() => {
     loadTodayData();
+socket.on(
+    "prescription:progress",
+    (data) => {
+
+        console.log(
+            "Prescription Progress:",
+            data
+        );
+
+    }
+);
   }, []);
 
 

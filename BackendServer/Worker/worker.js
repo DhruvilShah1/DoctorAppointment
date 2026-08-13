@@ -12,7 +12,39 @@ import generatePrescriptionPdf from "../createPrescription/prescriptionPdfGenrat
 import { uploadPdf } from "../Config/uploadthing.js";
 import { connectDB } from "../Config/Connection.js";
 
+
 connectDB()
+
+const publishPrescriptionProgress = async ({
+    prescriptionId,
+    doctorId,
+    patientId,
+    step,
+    status,
+    message,
+    progress,
+}) => {
+
+    const data = {
+        prescriptionId,
+        doctorId,
+        patientId,
+        patientName,
+        step,
+        status,
+        message,
+        progress,
+        timestamp: new Date().toISOString(),
+    };
+
+    await redis.publish(
+        `prescription:${prescriptionId}`,
+        JSON.stringify(data)
+    );
+
+    console.log("📡 Published:", data);
+};
+
 
 const prescriptionWorker = new Worker(
   "prescriptionQueue",
@@ -37,9 +69,20 @@ const prescriptionWorker = new Worker(
       
         console.log("🔳 Generating QR Code...");
 
-      const qrCode = await QrCodeSection(prescriptionId);
+      const qrCode = await QrCodeSection(prescriptionId);   
 
-      console.log("✅ QR Code generated");
+      await publishPrescriptionProgress({
+          prescriptionId,
+          doctorId,
+          patientId,
+          patientName ,
+          step: 1,
+          status: "success",
+          message: "QR Code generated",
+          progress: 30,
+        });
+
+
 
       // =====================================
       // 2. Generate HTML
@@ -67,7 +110,6 @@ const prescriptionWorker = new Worker(
         qrCode,
       });
 
-      console.log("✅ HTML generated");
 
       // =====================================
       // 3. Generate PDF
@@ -76,8 +118,18 @@ const prescriptionWorker = new Worker(
       console.log("📄 Generating PDF...");
 
       const pdfBuffer = await generatePrescriptionPdf(htmlTemplate);
+      
+      await publishPrescriptionProgress({
+          prescriptionId,
+          doctorId,
+          patientId,
+          patientName,
+          step: 2,
+          status: "success",
+          message: "PDF Generated",
+          progress: 60,
+        });
 
-      console.log("✅ PDF generated");
 
       // =====================================
       // 4. Upload PDF
@@ -87,7 +139,18 @@ const prescriptionWorker = new Worker(
 
       const pdfUrl = await uploadPdf(pdfBuffer, `${prescriptionId}.pdf`);
 
-      console.log("✅ PDF uploaded:", pdfUrl);
+      await publishPrescriptionProgress({
+          prescriptionId,
+          doctorId,
+          patientId,
+          patientName,
+          step: 3,
+          status: "success",
+          message: "PDF Uploaded",
+          progress: 100,
+        });
+
+      
 
       // =====================================
       // 5. Update Existing Prescription
@@ -125,14 +188,6 @@ const prescriptionWorker = new Worker(
 
       console.log("✅ Prescription updated successfully");
 
-      console.log("QR Code:", prescription.qrCode);
-
-      console.log("PDF URL:", prescription.pdfUrl);
-
-      // =====================================
-      // 7. Return Worker Result
-      // =====================================
-
       return {
         success: true,
 
@@ -165,7 +220,7 @@ const prescriptionWorker = new Worker(
 prescriptionWorker.on("completed", (job, result) => {
   console.log(`✅ Job ${job.id} completed`);
 
-  console.log("Result:", result);
+  console.log("Result:", result);   
 });
 
 // ==========================================
