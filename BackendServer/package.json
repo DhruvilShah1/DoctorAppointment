@@ -8,8 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview" , 
-    "start": "node server.js"
-
+    "start": "concurrently \"node server.js\" \"node Config/redis.js\""
   },
   "dependencies": {
     "@sparticuz/chromium": "^147.0.0",
