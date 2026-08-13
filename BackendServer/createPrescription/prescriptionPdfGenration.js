@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 
-const generatePrescriptionPdf = async (html) => {
+const generatePrescriptionPdf = async (htmlTemplate) => {
 
     const browser = await puppeteer.launch({
           args: chromium.args,
