@@ -1,3 +1,4 @@
+// Service/prescriptionSubscriber.js
 
 import redis from "../Config/redis.js";
 
@@ -5,37 +6,54 @@ const prescriptionSubscriber = redis.duplicate();
 
 export const startPrescriptionSubscriber = async (io) => {
 
-    if (!prescriptionSubscriber.isOpen) {
-        await prescriptionSubscriber.connect();
-    }
+    await prescriptionSubscriber.psubscribe(
+        "prescription:*"
+    );
 
-    await prescriptionSubscriber.pSubscribe(
-        "prescription:*",
-        (message, channel) => {
+    prescriptionSubscriber.on(
+        "pmessage",
+        (pattern, channel, message) => {
 
             console.log("📡 Redis message received");
+
             console.log("Channel:", channel);
             console.log("Message:", message);
 
-            const data = JSON.parse(message);
+            try {
 
-            const {
-                doctorId,
-                date,
-                slot
-            } = data;
+                const data = JSON.parse(message);
 
-            const roomId =
-                `${doctorId}_${date}_${slot}`;
+                const {
+                    doctorId,
+                    date,
+                    slot,
+                } = data;
 
-            io.to(roomId).emit(
-                "prescription:progress",
-                data
-            );
+                const roomId =
+                    `${doctorId}_${date}_${slot}`;
 
-            console.log(
-                `📤 Prescription update sent to room: ${roomId}`
-            );
+                console.log(
+                    "🏠 Socket Room:",
+                    roomId
+                );
+
+                io.to(roomId).emit(
+                    "prescription:progress",
+                    data
+                );
+
+                console.log(
+                    "📤 Prescription update sent"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "❌ Redis message parse error:",
+                    error
+                );
+
+            }
         }
     );
 
