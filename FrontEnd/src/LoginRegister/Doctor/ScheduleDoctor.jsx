@@ -65,15 +65,18 @@ const ScheduleDoctor = () => {
     });
   };
 
-  const loadTodayData = async (retries = 3) => {
+  const loadTodayData = async () => {
     try {
-      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      const refreshData = await refreshRes.json();
-      const token = refreshData.newAccessToken;
+      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`,
+            {
+              method: "POST",
+              credentials: "include",
+            }
+          );
+      
+      
+          const refreshData = await refreshRes.json();
+          const token = refreshData.newAccessToken;
 
       const [totalRes, slotRes] = await Promise.all([
         fetch(`${BASE_URL}/api/total/patient/day`, {
@@ -82,53 +85,56 @@ const ScheduleDoctor = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ date: today }),
+          body: JSON.stringify({
+            date: today,
+          }),
         }),
+
         fetch(`${BASE_URL}/api/get/slots`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ date: today }),
+          body: JSON.stringify({
+            date: today,
+          }),
         }),
       ]);
 
-      if (!totalRes.ok || !slotRes.ok) {
-        if (retries > 0) {
-          setTimeout(() => loadTodayData(retries - 1), 3000);
-          return;
-        }
-        throw new Error(`Server error: ${totalRes.status}`);
-      }
-
       const totalData = await totalRes.json();
+
       const slotData = await slotRes.json();
 
       setSlots(slotData?.slots || []);
+
       setTotalPatients(totalData?.totalPatients || 0);
+
     } catch (err) {
       console.error(err);
+
       setError("Failed to load slots");
     } finally {
       setLoadingSlots(false);
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     loadTodayData();
+  }, []);
 
-    const handlePrescriptionProgress = (data) => {
-      console.log("🟢 Prescription Progress:", data);
-      toast.info(`Prescription: ${data.message} (${data.progress}%)`);
-    };
+  socket.on(
+    "prescription:progress",
+    (data) => {
 
-    socket.on("prescription:progress", handlePrescriptionProgress);
+        console.log(
+            "Prescription Progress:",
+            data
+        );
 
-    return () => {
-      socket.off("prescription:progress", handlePrescriptionProgress);
-    };
-}, []);
+    }
+);
+
 
 
   const loadPatients = async (slot) => {
