@@ -21,6 +21,8 @@ const startPrescriptionSubscriber = async (io) => {
             try {
 
                 const data = JSON.parse(message);
+                
+                const { doctorId, date, slot } = data;
 
                 const roomId =
                     `${doctorId}_${date}_${slot}`;
