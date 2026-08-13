@@ -65,18 +65,15 @@ const ScheduleDoctor = () => {
     });
   };
 
-  const loadTodayData = async () => {
+  const loadTodayData = async (retries = 3) => {
     try {
-      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`,
-            {
-              method: "POST",
-              credentials: "include",
-            }
-          );
-      
-      
-          const refreshData = await refreshRes.json();
-          const token = refreshData.newAccessToken;
+      const refreshRes = await fetch(`${BASE_URL}/api/refresh-token`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const refreshData = await refreshRes.json();
+      const token = refreshData.newAccessToken;
 
       const [totalRes, slotRes] = await Promise.all([
         fetch(`${BASE_URL}/api/total/patient/day`, {
@@ -85,34 +82,33 @@ const ScheduleDoctor = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            date: today,
-          }),
+          body: JSON.stringify({ date: today }),
         }),
-
         fetch(`${BASE_URL}/api/get/slots`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            date: today,
-          }),
+          body: JSON.stringify({ date: today }),
         }),
       ]);
 
-      const totalData = await totalRes.json();
+      if (!totalRes.ok || !slotRes.ok) {
+        if (retries > 0) {
+          setTimeout(() => loadTodayData(retries - 1), 3000);
+          return;
+        }
+        throw new Error(`Server error: ${totalRes.status}`);
+      }
 
+      const totalData = await totalRes.json();
       const slotData = await slotRes.json();
 
       setSlots(slotData?.slots || []);
-
       setTotalPatients(totalData?.totalPatients || 0);
-
     } catch (err) {
       console.error(err);
-
       setError("Failed to load slots");
     } finally {
       setLoadingSlots(false);
@@ -120,38 +116,18 @@ const ScheduleDoctor = () => {
   };
 
 useEffect(() => {
-
-    console.log("🟡 Prescription listener registered");
-
     loadTodayData();
 
     const handlePrescriptionProgress = (data) => {
-
-        console.log(
-            "🟢 Prescription Progress:",
-            data
-        );
-
+      console.log("🟢 Prescription Progress:", data);
+      toast.info(`Prescription: ${data.message} (${data.progress}%)`);
     };
 
-    socket.on(
-        "prescription:progress",
-        handlePrescriptionProgress
-    );
+    socket.on("prescription:progress", handlePrescriptionProgress);
 
     return () => {
-
-        console.log(
-            "🔴 Removing prescription listener"
-        );
-
-        socket.off(
-            "prescription:progress",
-            handlePrescriptionProgress
-        );
-
+      socket.off("prescription:progress", handlePrescriptionProgress);
     };
-
 }, []);
 
 
