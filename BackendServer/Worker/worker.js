@@ -9,7 +9,7 @@ import generatePrescriptionHtml from "../createPrescription/prescriptionPdfTempl
 import generatePrescriptionPdf from "../createPrescription/prescriptionPdfGenration.js";
 
 import { uploadPdf } from "../Config/uploadthing.js";
-import redis from "../Config/redis.js";
+import redis from "../Config/redis";
 
 const prescriptionWorker = new Worker(
   "generate-prescription",
@@ -31,11 +31,8 @@ const prescriptionWorker = new Worker(
     console.log("🚀 prescriptionWorker started for job:", job.id);
 
     try {
-      // =====================================
-      // 1. Generate QR Code
-      // =====================================
-
-      console.log("🔳 Generating QR Code...");
+      
+        console.log("🔳 Generating QR Code...");
 
       const qrCode = await QrCodeSection(prescriptionId);
 

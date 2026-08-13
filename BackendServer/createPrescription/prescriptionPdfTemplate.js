@@ -24,16 +24,6 @@ const generatePrescriptionHtml = ({
         ? parsedMedicines
         : [];
 
-    console.log("========== PDF HTML SERVICE ==========");
-    console.log("Prescription ID:", prescriptionId);
-    console.log("Doctor:", doctorName);
-    console.log("Patient:", patientName);
-    console.log("Medicines:", medicines);
-    console.log("Is Array:", Array.isArray(medicines));
-    console.log("Medicine Count:", medicines.length);
-    console.log("=======================================");
-
-
     return `
 <!DOCTYPE html>
 

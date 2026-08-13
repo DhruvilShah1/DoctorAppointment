@@ -80,9 +80,9 @@ console.log(
         date,
         slot,
         signatureUrl,
-      } )
-
-
+      });
+      console.log("Added to Queue");
+      
 
 
       // Qr Code Section 
