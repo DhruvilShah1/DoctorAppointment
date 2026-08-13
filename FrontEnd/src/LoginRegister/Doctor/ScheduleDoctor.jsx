@@ -19,10 +19,11 @@ import {
 } from "lucide-react";
 import PrescriptionPopup from "./PrescriptionPopup";
 
-const socket = io(import.meta.env.VITE_SOCKETIO_URL);
 
 const ScheduleDoctor = () => {
   const { user } = useAuth();
+  const socket = io(import.meta.env.VITE_SOCKETIO_URL);
+
 
   const [slots, setSlots] = useState([]);
   const [patients, setPatients] = useState([]);
