@@ -1,6 +1,6 @@
 import BASE_URL from "../config/api.js";
 import React, { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { socket } from "../../socket/FrontendSocketConnection.js";
 import { useAuth } from "../../AuthProvider";
 import { toast } from "react-toastify";
 
@@ -22,7 +22,6 @@ import PrescriptionPopup from "./PrescriptionPopup";
 
 const ScheduleDoctor = () => {
   const { user } = useAuth();
-  const socket = io(import.meta.env.VITE_SOCKETIO_URL);
 
 
   const [slots, setSlots] = useState([]);
