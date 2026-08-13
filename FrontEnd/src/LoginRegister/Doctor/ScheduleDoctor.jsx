@@ -46,6 +46,8 @@ const ScheduleDoctor = () => {
   const today = new Date().toISOString().split("T")[0];
 
 
+
+
   const authFetch = async (url, options = {}) => {
 
         const res = await fetch(`${BASE_URL}/api/refresh-token`, {
@@ -64,6 +66,20 @@ const ScheduleDoctor = () => {
       },
     });
   };
+
+    useEffect(()=>{
+    console.log("Socket prescription:progress Working");
+    
+    const handleProgress = (data) => {
+      console.log("🟢 Prescription Progress:", data);
+    };
+
+    socket.on("prescription:progress", handleProgress);
+
+    return () => {
+      socket.off("prescription:progress", handleProgress);
+    };
+  }, [])
 
   const loadTodayData = async () => {
     try {
