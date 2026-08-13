@@ -1,6 +1,6 @@
 import BASE_URL from "../config/api.js";
 import React, { useEffect, useState } from "react";
-import {socket} from "../../socket/FrontendSocketConnection";
+import socket from "../../socket/FrontendSocketConnection";
 import { useAuth } from "../../AuthProvider";
 import { toast } from "react-toastify";
 
