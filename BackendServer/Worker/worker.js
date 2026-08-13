@@ -10,6 +10,9 @@ import generatePrescriptionHtml from "../createPrescription/prescriptionPdfTempl
 import generatePrescriptionPdf from "../createPrescription/prescriptionPdfGenration.js";
 
 import { uploadPdf } from "../Config/uploadthing.js";
+import { connectDB } from "../Config/Connection.js";
+
+connectDB()
 
 const prescriptionWorker = new Worker(
   "prescriptionQueue",
