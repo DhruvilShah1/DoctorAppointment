@@ -1,4 +1,4 @@
-import redis from "../Config/redis";
+import redis from "../Config/redis.js";
 import { Queue } from "bullmq";
 
 const prescriptionQueue = new Queue(
