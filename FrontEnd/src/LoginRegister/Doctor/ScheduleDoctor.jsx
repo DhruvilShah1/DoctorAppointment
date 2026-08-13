@@ -124,34 +124,7 @@ const ScheduleDoctor = () => {
     loadTodayData();
   }, []);
 
-useEffect(() => {
 
-    console.log("Socket:", socket);
-
-    const handleProgress = (data) => {
-
-        console.log(
-            "🟢 Prescription Progress:",
-            data
-        );
-
-    };
-
-    socket.on(
-        "prescription:progress",
-        handleProgress
-    );
-
-    return () => {
-
-        socket.off(
-            "prescription:progress",
-            handleProgress
-        );
-
-    };
-
-}, []);
   const loadPatients = async (slot) => {
     try {
       const res = await authFetch(`${BASE_URL}/api/take/patient`,

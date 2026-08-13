@@ -2,6 +2,7 @@ import BASE_URL from "../config/api.js";
 import React, { useEffect, useRef, useState } from "react";
 import { X, Plus, Trash2, Save, Printer, Sparkles } from "lucide-react";
 import SignatureCanvas from "react-signature-canvas";
+import { socket } from "../../socket/FrontendSocketConnection.js";
 
 export default function PrescriptionPopup({
   isOpen = true,
@@ -25,6 +26,24 @@ morning: false, afternoon: false, night: false
       }
        },
   ]);
+
+  useEffect(() => {
+    if (!isOpen || !doctorData?.id || !date || !slot) return;
+
+    const slotValue = slot?.start || slot;
+
+    socket.emit("doctor:join", { doctorId: doctorData.id, date, slot: slotValue });
+
+    const handleProgress = (data) => {
+      console.log("🟢 Prescription Progress:", data);
+    };
+
+    socket.on("prescription:progress", handleProgress);
+
+    return () => {
+      socket.off("prescription:progress", handleProgress);
+    };
+  }, [isOpen, doctorData?.id, date, slot]);
 
   if (!isOpen) return null;
 
