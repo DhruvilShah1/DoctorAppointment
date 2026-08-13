@@ -234,6 +234,10 @@ const ScheduleDoctor = () => {
     }
   };
 
+  socket.on('prescription:progress' , (data) => {
+    console.log("📡 Prescription Progress:", data);
+})
+
   const moveNext = (type = "") => {
     let updatedPending = [...pendingPatients];
     updatedPending.shift();
