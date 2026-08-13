@@ -2,7 +2,16 @@ import BASE_URL from "../config/api.js";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../AuthProvider";
 import { toast } from "react-toastify";
-import { socket } from "../../socket/FrontendSocketConnection";
+import { io } from "socket.io-client";
+
+const socket = io(
+    import.meta.env.VITE_BACKEND_URL,
+    {
+        withCredentials: true,
+        transports: ["websocket", "polling"],
+    }
+);
+
 
 import {
   CalendarDays,
