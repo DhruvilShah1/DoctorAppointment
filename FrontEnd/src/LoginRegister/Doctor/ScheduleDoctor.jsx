@@ -21,591 +21,90 @@ import {
   Loader2,
   CircleCheck,
   Eye,
+  ClipboardCheck,
 } from "lucide-react";
 
 import PrescriptionPopup from "./PrescriptionPopup";
 
+
 const ScheduleDoctor = () => {
+
   const { user } = useAuth();
 
   const [slots, setSlots] = useState([]);
+
   const [patients, setPatients] = useState([]);
-  const [pendingPatients, setPendingPatients] = useState([]);
 
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [pendingPatients, setPendingPatients] =
+    useState([]);
 
-  const [queueStarted, setQueueStarted] = useState(false);
+  const [selectedSlot, setSelectedSlot] =
+    useState(null);
 
-  const [currentPatient, setCurrentPatient] = useState(null);
+  const [queueStarted, setQueueStarted] =
+    useState(false);
 
-  const [totalPatients, setTotalPatients] = useState(0);
+  const [currentPatient, setCurrentPatient] =
+    useState(null);
 
-  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [totalPatients, setTotalPatients] =
+    useState(0);
+
+  const [loadingSlots, setLoadingSlots] =
+    useState(false);
 
   const [error, setError] = useState("");
 
-  const [callDone, setCallDone] = useState(false);
+  const [callDone, setCallDone] =
+    useState(false);
+
 
   /*
-   * ==========================================
-   * PRESCRIPTION PROGRESS STATE
-   * ==========================================
-   */
+  =================================================
+  PRESCRIPTION PROGRESS
+  =================================================
 
-  const [prescriptionProgress, setPrescriptionProgress] = useState(null);
+  Object structure:
 
-  const [showProgressPopup, setShowProgressPopup] = useState(false);
-
-  const today = new Date().toISOString().split("T")[0];
-
-  /*
-   * ==========================================
-   * AUTH FETCH
-   * ==========================================
-   */
-
-  const authFetch = async (url, options = {}) => {
-    const refreshRes = await fetch(
-      `${BASE_URL}/api/refresh-token`,
-      {
-        method: "POST",
-        credentials: "include",
+  {
+      patientId: {
+          patientName,
+          progress,
+          status,
+          step,
+          message,
+          prescriptionId,
+          doctorId,
+          date,
+          slot
       }
-    );
+  }
 
-    const data = await refreshRes.json();
+  */
 
-    const token =
-      data.newAccessToken || data.accessToken;
+  const [
+    prescriptionProgress,
+    setPrescriptionProgress
+  ] = useState({});
 
-    return fetch(url, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...options.headers,
-      },
-    });
-  };
 
   /*
-   * ==========================================
-   * SOCKET.IO
-   * ==========================================
-   */
+  =================================================
+  SELECTED REPORT
+  =================================================
+  */
 
-  useEffect(() => {
-    if (!user?.id) {
-      console.log("❌ doctorId not available");
-      return;
-    }
+  const [
+    selectedProgressPatient,
+    setSelectedProgressPatient
+  ] = useState(null);
 
-    console.log(
-      "👨‍⚕️ Joining personal doctor room:",
-      user.id
-    );
-
-    /*
-     * Join personal doctor room
-     */
-    socket.emit("personalData", {
-      doctorId: String(user.id),
-    });
-
-    console.log(
-      "📡 personalData emitted:",
-      user.id
-    );
-
-    /*
-     * Prescription progress listener
-     */
-    const handlePrescriptionProgress = (data) => {
-      console.log(
-        "💊 Prescription progress received:"
-      );
-
-      console.log(data);
-
-      /*
-       * Example:
-       *
-       * {
-       *   date: "2026-08-13",
-       *   doctorId: "6a7603fdef16962086f1cf94",
-       *   message: "PDF Uploaded",
-       *   patientId: "6a678b80b12875af24f40ced",
-       *   patientName: "dhruvil shah",
-       *   prescriptionId: "512704063840578",
-       *   progress: 100,
-       *   slot: "09:00",
-       *   status: "success",
-       *   step: 3
-       * }
-       */
-
-      setPrescriptionProgress(data);
-
-      /*
-       * Automatically open popup when
-       * prescription progress arrives.
-       *
-       * If you don't want automatic popup,
-       * remove this line.
-       */
-      setShowProgressPopup(true);
-
-      /*
-       * Success notification
-       */
-      if (data.status === "success") {
-        toast.success(
-          data.message || "Prescription completed"
-        );
-      }
-    };
-
-    socket.on(
-      "prescription:progress",
-      handlePrescriptionProgress
-    );
-
-    /*
-     * Cleanup
-     */
-    return () => {
-      socket.off(
-        "prescription:progress",
-        handlePrescriptionProgress
-      );
-    };
-  }, [user?.id]);
 
   /*
-   * ==========================================
-   * LOAD TODAY DATA
-   * ==========================================
-   */
-
-  const loadTodayData = async () => {
-    try {
-      setLoadingSlots(true);
-
-      const refreshRes = await fetch(
-        `${BASE_URL}/api/refresh-token`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-
-      const refreshData =
-        await refreshRes.json();
-
-      const token =
-        refreshData.newAccessToken;
-
-      const [totalRes, slotRes] =
-        await Promise.all([
-          fetch(
-            `${BASE_URL}/api/total/patient/day`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-                Authorization:
-                  `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                date: today,
-              }),
-            }
-          ),
-
-          fetch(
-            `${BASE_URL}/api/get/slots`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-                Authorization:
-                  `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                date: today,
-              }),
-            }
-          ),
-        ]);
-
-      const totalData =
-        await totalRes.json();
-
-      const slotData =
-        await slotRes.json();
-
-      setSlots(slotData?.slots || []);
-
-      setTotalPatients(
-        totalData?.totalPatients || 0
-      );
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        "Failed to load slots"
-      );
-    } finally {
-      setLoadingSlots(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTodayData();
-  }, []);
-
-  /*
-   * ==========================================
-   * LOAD PATIENTS
-   * ==========================================
-   */
-
-  const loadPatients = async (slot) => {
-    try {
-      const res = await authFetch(
-        `${BASE_URL}/api/take/patient`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            date: today,
-            slot,
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      const list =
-        data?.patients || [];
-
-      setPatients(list);
-
-      setPendingPatients(list);
-
-      setCurrentPatient(null);
-
-      setCallDone(false);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  /*
-   * ==========================================
-   * SELECT SLOT
-   * ==========================================
-   */
-
-  const handleSlotSelect = (slot) => {
-    setSelectedSlot(slot);
-
-    setQueueStarted(false);
-
-    setPatients([]);
-
-    setPendingPatients([]);
-
-    setCurrentPatient(null);
-
-    setCallDone(false);
-
-    /*
-     * Clear previous prescription progress
-     */
-    setPrescriptionProgress(null);
-
-    setShowProgressPopup(false);
-
-    loadPatients(slot.start);
-  };
-
-  /*
-   * ==========================================
-   * START QUEUE
-   * ==========================================
-   */
-
-  const startQueue = async () => {
-    if (!selectedSlot) {
-      toast.error(
-        "Please select slot first"
-      );
-
-      return;
-    }
-
-    if (patients.length === 0) {
-      toast.error(
-        "No patients in this slot"
-      );
-
-      return;
-    }
-
-    try {
-      const res = await authFetch(
-        `${BASE_URL}/api/start/queue`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            date: today,
-            slot: selectedSlot.start,
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!data.success) {
-        toast.error(data.message);
-
-        return;
-      }
-
-      setQueueStarted(true);
-
-      /*
-       * Join queue-specific room
-       */
-      socket.emit("doctor:join", {
-        doctorId: user.id,
-        date: today,
-        slot: selectedSlot.start,
-      });
-
-      console.log(
-        "👨‍⚕️ Doctor joined queue room",
-        {
-          doctorId: user.id,
-          date: today,
-          slot: selectedSlot.start,
-        }
-      );
-
-      if (pendingPatients.length > 0) {
-        setCurrentPatient(
-          pendingPatients[0]
-        );
-      }
-
-      toast.success(
-        "Queue Started"
-      );
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  /*
-   * ==========================================
-   * OPEN PROGRESS POPUP
-   * ==========================================
-   */
-
-  const openProgressPopup = () => {
-    if (!prescriptionProgress) {
-      toast.info(
-        "No prescription progress available yet"
-      );
-
-      return;
-    }
-
-    setShowProgressPopup(true);
-  };
-
-  /*
-   * ==========================================
-   * MOVE NEXT
-   * ==========================================
-   */
-
-  const moveNext = (type = "") => {
-    let updatedPending =
-      [...pendingPatients];
-
-    updatedPending.shift();
-
-    if (
-      type === "skipped" ||
-      type === "next"
-    ) {
-      updatedPending.push(
-        currentPatient
-      );
-    }
-
-    setPendingPatients(
-      updatedPending
-    );
-
-    if (updatedPending.length > 0) {
-      setCurrentPatient(
-        updatedPending[0]
-      );
-
-      setCallDone(false);
-
-      return;
-    }
-
-    /*
-     * ALL COMPLETED
-     */
-
-    setCurrentPatient({
-      completed: true,
-    });
-
-    setCallDone(false);
-
-    toast.info(
-      "All patients completed. Click Finish Slot."
-    );
-  };
-
-  /*
-   * ==========================================
-   * UPDATE PATIENT STATUS
-   * ==========================================
-   */
-
-  const updatePatientStatus =
-    async (status) => {
-      if (!currentPatient) return;
-
-      try {
-        const res = await authFetch(
-          `${BASE_URL}/api/update/patient/status`,
-          {
-            method: "PATCH",
-            body: JSON.stringify({
-              date: today,
-              slot: selectedSlot.start,
-              patientId:
-                currentPatient
-                  .patientId._id,
-              status,
-            }),
-          }
-        );
-
-        const data =
-          await res.json();
-
-        toast.success(
-          data.message
-        );
-
-        setPatients((prev) =>
-          prev.map((p) =>
-            p.patientId._id ===
-            currentPatient.patientId._id
-              ? {
-                  ...p,
-                  status,
-                }
-              : p
-          )
-        );
-
-        /*
-         * CALL
-         */
-        if (status === "called") {
-          setCallDone(true);
-
-          return;
-        }
-
-        /*
-         * SKIPPED
-         */
-        if (status === "skipped") {
-          moveNext("skipped");
-
-          return;
-        }
-
-        /*
-         * NEXT
-         */
-        if (status === "next") {
-          moveNext("next");
-
-          return;
-        }
-
-        /*
-         * DONE / NOT COME
-         */
-        moveNext();
-      } catch (err) {
-        setError(err.message);
-      }
-    };
-
-  /*
-   * ==========================================
-   * FINISH SLOT
-   * ==========================================
-   */
-
-  const finishSlot = async () => {
-    try {
-      const res = await authFetch(
-        `${BASE_URL}/api/finsh/slot`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            date: today,
-            slot: selectedSlot.start,
-          }),
-        }
-      );
-
-      const data =
-        await res.json();
-
-      toast.success(
-        data.message
-      );
-
-      setQueueStarted(false);
-
-      setCurrentPatient(null);
-
-      setPendingPatients([]);
-
-      setCallDone(false);
-
-      setPrescriptionProgress(null);
-
-      setShowProgressPopup(false);
-
-      loadTodayData();
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
-
-  /*
-   * ==========================================
-   * MEDICINE POPUP
-   * ==========================================
-   */
+  =================================================
+  MEDICINE POPUP
+  =================================================
+  */
 
   const [showPopup, setShowPopup] =
     useState(false);
@@ -613,65 +112,816 @@ const ScheduleDoctor = () => {
   const [selectedPatient, setSelectedPatient] =
     useState(null);
 
+
+  const today =
+    new Date().toISOString().split("T")[0];
+
+
   /*
-   * ==========================================
-   * SKIPPED LIST
-   * ==========================================
-   */
+  =================================================
+  AUTH FETCH
+  =================================================
+  */
+
+  const authFetch = async (
+    url,
+    options = {}
+  ) => {
+
+    const refreshRes =
+      await fetch(
+        `${BASE_URL}/api/refresh-token`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+    const refreshData =
+      await refreshRes.json();
+
+    const token =
+      refreshData.newAccessToken ||
+      refreshData.accessToken;
+
+
+    return fetch(url, {
+
+      ...options,
+
+      headers: {
+
+        "Content-Type":
+          "application/json",
+
+        Authorization:
+          `Bearer ${token}`,
+
+        ...options.headers,
+      },
+
+    });
+
+  };
+
+
+  /*
+  =================================================
+  SOCKET.IO
+  =================================================
+  */
+
+  useEffect(() => {
+
+    if (!user?.id) {
+
+      console.log(
+        "❌ Doctor ID not available"
+      );
+
+      return;
+    }
+
+
+    console.log(
+      "👨‍⚕️ Joining doctor room:",
+      user.id
+    );
+
+
+    /*
+    Join personal doctor room
+    */
+
+    socket.emit(
+      "personalData",
+      {
+        doctorId:
+          String(user.id),
+      }
+    );
+
+
+    /*
+    =================================================
+    PRESCRIPTION PROGRESS
+    =================================================
+    */
+
+    const handlePrescriptionProgress =
+      (data) => {
+
+        console.log(
+          "💊 Prescription progress received:",
+          data
+        );
+
+
+        if (!data?.patientId) {
+
+          console.log(
+            "❌ patientId missing"
+          );
+
+          return;
+        }
+
+
+        const patientId =
+          String(data.patientId);
+
+
+        /*
+        Store progress patient-wise
+        */
+
+        setPrescriptionProgress(
+          (previous) => ({
+
+            ...previous,
+
+            [patientId]: {
+
+              ...previous[patientId],
+
+              ...data,
+
+            },
+
+          })
+        );
+
+      };
+
+
+    socket.on(
+      "prescription:progress",
+      handlePrescriptionProgress
+    );
+
+
+    /*
+    Cleanup
+    */
+
+    return () => {
+
+      socket.off(
+        "prescription:progress",
+        handlePrescriptionProgress
+      );
+
+    };
+
+  }, [user?.id]);
+
+
+  /*
+  =================================================
+  LOAD TODAY DATA
+  =================================================
+  */
+
+  const loadTodayData =
+    async () => {
+
+      try {
+
+        setLoadingSlots(true);
+
+
+        const refreshRes =
+          await fetch(
+            `${BASE_URL}/api/refresh-token`,
+            {
+              method: "POST",
+              credentials: "include",
+            }
+          );
+
+
+        const refreshData =
+          await refreshRes.json();
+
+
+        const token =
+          refreshData.newAccessToken ||
+          refreshData.accessToken;
+
+
+        const [
+          totalRes,
+          slotRes
+        ] = await Promise.all([
+
+          fetch(
+            `${BASE_URL}/api/total/patient/day`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                date: today,
+              }),
+            }
+          ),
+
+
+          fetch(
+            `${BASE_URL}/api/get/slots`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                Authorization:
+                  `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                date: today,
+              }),
+            }
+          ),
+
+        ]);
+
+
+        const totalData =
+          await totalRes.json();
+
+
+        const slotData =
+          await slotRes.json();
+
+
+        setSlots(
+          slotData?.slots || []
+        );
+
+
+        setTotalPatients(
+          totalData?.totalPatients || 0
+        );
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        setError(
+          "Failed to load slots"
+        );
+
+      } finally {
+
+        setLoadingSlots(false);
+
+      }
+
+    };
+
+
+  useEffect(() => {
+
+    loadTodayData();
+
+  }, []);
+
+
+  /*
+  =================================================
+  LOAD PATIENTS
+  =================================================
+  */
+
+  const loadPatients =
+    async (slot) => {
+
+      try {
+
+        const res =
+          await authFetch(
+            `${BASE_URL}/api/take/patient`,
+            {
+              method: "POST",
+
+              body: JSON.stringify({
+                date: today,
+                slot,
+              }),
+            }
+          );
+
+
+        const data =
+          await res.json();
+
+
+        const list =
+          data?.patients || [];
+
+
+        setPatients(list);
+
+        setPendingPatients(list);
+
+        setCurrentPatient(null);
+
+        setCallDone(false);
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        setError(err.message);
+
+      }
+
+    };
+
+
+  /*
+  =================================================
+  SELECT SLOT
+  =================================================
+  */
+
+  const handleSlotSelect =
+    (slot) => {
+
+      setSelectedSlot(slot);
+
+      setQueueStarted(false);
+
+      setPatients([]);
+
+      setPendingPatients([]);
+
+      setCurrentPatient(null);
+
+      setCallDone(false);
+
+
+      /*
+      Clear old reports
+      */
+
+      setPrescriptionProgress({});
+
+      setSelectedProgressPatient(null);
+
+
+      loadPatients(slot.start);
+
+    };
+
+
+  /*
+  =================================================
+  START QUEUE
+  =================================================
+  */
+
+  const startQueue =
+    async () => {
+
+      if (!selectedSlot) {
+
+        toast.error(
+          "Please select slot first"
+        );
+
+        return;
+      }
+
+
+      if (patients.length === 0) {
+
+        toast.error(
+          "No patients in this slot"
+        );
+
+        return;
+      }
+
+
+      try {
+
+        const res =
+          await authFetch(
+            `${BASE_URL}/api/start/queue`,
+            {
+              method: "POST",
+
+              body: JSON.stringify({
+                date: today,
+                slot:
+                  selectedSlot.start,
+              }),
+            }
+          );
+
+
+        const data =
+          await res.json();
+
+
+        if (!data.success) {
+
+          toast.error(
+            data.message
+          );
+
+          return;
+        }
+
+
+        setQueueStarted(true);
+
+
+        /*
+        Join queue room
+        */
+
+        socket.emit(
+          "doctor:join",
+          {
+
+            doctorId:
+              user.id,
+
+            date:
+              today,
+
+            slot:
+              selectedSlot.start,
+
+          }
+        );
+
+
+        console.log(
+          "👨‍⚕️ Doctor joined queue room"
+        );
+
+
+        if (
+          pendingPatients.length > 0
+        ) {
+
+          setCurrentPatient(
+            pendingPatients[0]
+          );
+
+        }
+
+
+        toast.success(
+          "Queue Started"
+        );
+
+
+      } catch (err) {
+
+        setError(
+          err.message
+        );
+
+      }
+
+    };
+
+
+  /*
+  =================================================
+  OPEN PATIENT REPORT
+  =================================================
+  */
+
+  const openPatientReport =
+    (patientId) => {
+
+      const report =
+        prescriptionProgress[
+          String(patientId)
+        ];
+
+
+      if (!report) {
+
+        toast.info(
+          "No prescription progress available for this patient"
+        );
+
+        return;
+      }
+
+
+      setSelectedProgressPatient(
+        report
+      );
+
+    };
+
+
+  /*
+  =================================================
+  MOVE NEXT
+  =================================================
+  */
+
+  const moveNext =
+    (type = "") => {
+
+      let updatedPending =
+        [...pendingPatients];
+
+
+      updatedPending.shift();
+
+
+      if (
+        type === "skipped" ||
+        type === "next"
+      ) {
+
+        updatedPending.push(
+          currentPatient
+        );
+
+      }
+
+
+      setPendingPatients(
+        updatedPending
+      );
+
+
+      if (
+        updatedPending.length > 0
+      ) {
+
+        setCurrentPatient(
+          updatedPending[0]
+        );
+
+        setCallDone(false);
+
+        return;
+
+      }
+
+
+      setCurrentPatient({
+        completed: true,
+      });
+
+
+      setCallDone(false);
+
+
+      toast.info(
+        "All patients completed. Click Finish Slot."
+      );
+
+    };
+
+
+  /*
+  =================================================
+  UPDATE PATIENT STATUS
+  =================================================
+  */
+
+  const updatePatientStatus =
+    async (status) => {
+
+      if (!currentPatient)
+        return;
+
+
+      try {
+
+        const res =
+          await authFetch(
+            `${BASE_URL}/api/update/patient/status`,
+            {
+
+              method: "PATCH",
+
+              body: JSON.stringify({
+
+                date:
+                  today,
+
+                slot:
+                  selectedSlot.start,
+
+                patientId:
+                  currentPatient
+                    .patientId._id,
+
+                status,
+
+              }),
+
+            }
+          );
+
+
+        const data =
+          await res.json();
+
+
+        toast.success(
+          data.message
+        );
+
+
+        setPatients(
+          (previous) =>
+
+            previous.map(
+              (patient) =>
+
+                patient.patientId._id ===
+                currentPatient.patientId._id
+
+                  ? {
+                      ...patient,
+                      status,
+                    }
+
+                  : patient
+            )
+        );
+
+
+        if (
+          status === "called"
+        ) {
+
+          setCallDone(true);
+
+          return;
+
+        }
+
+
+        if (
+          status === "skipped"
+        ) {
+
+          moveNext("skipped");
+
+          return;
+
+        }
+
+
+        if (
+          status === "next"
+        ) {
+
+          moveNext("next");
+
+          return;
+
+        }
+
+
+        moveNext();
+
+
+      } catch (err) {
+
+        setError(
+          err.message
+        );
+
+      }
+
+    };
+
+
+  /*
+  =================================================
+  FINISH SLOT
+  =================================================
+  */
+
+  const finishSlot =
+    async () => {
+
+      try {
+
+        const res =
+          await authFetch(
+            `${BASE_URL}/api/finsh/slot`,
+            {
+
+              method: "POST",
+
+              body: JSON.stringify({
+
+                date:
+                  today,
+
+                slot:
+                  selectedSlot.start,
+
+              }),
+
+            }
+          );
+
+
+        const data =
+          await res.json();
+
+
+        toast.success(
+          data.message
+        );
+
+
+        setQueueStarted(false);
+
+        setCurrentPatient(null);
+
+        setPendingPatients([]);
+
+        setCallDone(false);
+
+        setPrescriptionProgress({});
+
+        setSelectedProgressPatient(null);
+
+
+        loadTodayData();
+
+
+      } catch (err) {
+
+        toast.error(
+          err.message
+        );
+
+      }
+
+    };
+
+
+  /*
+  =================================================
+  SKIPPED PATIENTS
+  =================================================
+  */
 
   const skippedPatients =
     patients.filter(
-      (p) =>
-        p.status === "skipped" ||
-        p.status === "next"
+      (patient) =>
+
+        patient.status ===
+          "skipped" ||
+
+        patient.status ===
+          "next"
     );
 
-  /*
-   * ==========================================
-   * PROGRESS STATUS
-   * ==========================================
-   */
-
-  const getProgressStatus = () => {
-    if (!prescriptionProgress) {
-      return "Waiting";
-    }
-
-    if (
-      prescriptionProgress.status ===
-      "success"
-    ) {
-      return "Completed";
-    }
-
-    if (
-      prescriptionProgress.status ===
-      "failed"
-    ) {
-      return "Failed";
-    }
-
-    return "Processing";
-  };
 
   /*
-   * ==========================================
-   * UI
-   * ==========================================
-   */
+  =================================================
+  RENDER
+  =================================================
+  */
 
   return (
+
     <div className="min-h-screen bg-slate-100">
 
-      {/* =====================================
+
+      {/* =========================================
           HEADER
-      ====================================== */}
+      ========================================== */}
 
       <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-8 shadow-lg">
 
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
 
           <div>
+
             <h1 className="text-4xl font-bold text-white">
               Doctor Queue Dashboard
             </h1>
@@ -679,119 +929,74 @@ const ScheduleDoctor = () => {
             <p className="text-teal-100 mt-2">
               Manage patient flow efficiently
             </p>
-          </div>
-
-
-          <div className="flex items-center gap-3">
-
-            {/* =================================
-                CHECK PROGRESS BUTTON
-            ================================== */}
-
-            {queueStarted && (
-              <button
-                onClick={
-                  openProgressPopup
-                }
-                className="px-6 py-3 rounded-2xl font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-lg transition flex items-center gap-2"
-              >
-                <Activity size={20} />
-
-                Check Progress
-
-                {prescriptionProgress && (
-                  <span className="bg-white/20 px-2 py-1 rounded-lg text-sm">
-                    {prescriptionProgress.progress || 0}%
-                  </span>
-                )}
-              </button>
-            )}
-
-
-            {/* =================================
-                START QUEUE BUTTON
-            ================================== */}
-
-            <button
-              onClick={startQueue}
-              disabled={queueStarted}
-              className={`px-6 py-3 rounded-2xl font-semibold text-white shadow-lg transition ${
-                queueStarted
-                  ? "bg-green-600 cursor-not-allowed"
-                  : "bg-black/20 hover:bg-black/30"
-              }`}
-            >
-              {queueStarted
-                ? "Queue Running"
-                : "Start Queue"}
-            </button>
 
           </div>
+
+
+          <button
+
+            onClick={startQueue}
+
+            disabled={queueStarted}
+
+            className={`px-6 py-3 rounded-2xl font-semibold text-white shadow-lg transition ${
+              queueStarted
+                ? "bg-green-600 cursor-not-allowed"
+                : "bg-black/20 hover:bg-black/30"
+            }`}
+
+          >
+
+            {queueStarted
+              ? "Queue Running"
+              : "Start Queue"}
+
+          </button>
 
         </div>
+
       </div>
 
 
-      {/* =====================================
+      {/* =========================================
           MAIN
-      ====================================== */}
+      ========================================== */}
 
       <div className="max-w-7xl mx-auto p-6">
 
-        {/* =====================================
+
+        {/* =========================================
             STATS
-        ====================================== */}
+        ========================================== */}
 
         <div className="grid md:grid-cols-3 gap-5 mb-6">
 
-          <div className="bg-white rounded-3xl p-6 shadow">
 
-            <div className="flex justify-between items-center">
-
-              <div>
-                <p className="text-gray-500">
-                  Total Patients
-                </p>
-
-                <h2 className="text-4xl font-bold text-gray-800 mt-2">
-                  {totalPatients}
-                </h2>
-              </div>
-
+          <StatCard
+            title="Total Patients"
+            value={totalPatients}
+            icon={
               <Users
                 className="text-teal-600"
                 size={40}
               />
-
-            </div>
-
-          </div>
+            }
+          />
 
 
-          <div className="bg-white rounded-3xl p-6 shadow">
-
-            <div className="flex justify-between items-center">
-
-              <div>
-                <p className="text-gray-500">
-                  Queue Status
-                </p>
-
-                <h2 className="text-2xl font-bold mt-2">
-
-                  {queueStarted ? (
-                    <span className="text-green-600">
-                      Active
-                    </span>
-                  ) : (
-                    <span className="text-red-500">
-                      Inactive
-                    </span>
-                  )}
-
-                </h2>
-              </div>
-
+          <StatCard
+            title="Queue Status"
+            value={
+              queueStarted
+                ? "Active"
+                : "Inactive"
+            }
+            valueClass={
+              queueStarted
+                ? "text-green-600"
+                : "text-red-500"
+            }
+            icon={
               <Activity
                 className={
                   queueStarted
@@ -800,60 +1005,51 @@ const ScheduleDoctor = () => {
                 }
                 size={40}
               />
-
-            </div>
-
-          </div>
+            }
+          />
 
 
-          <div className="bg-white rounded-3xl p-6 shadow">
-
-            <div className="flex justify-between items-center">
-
-              <div>
-                <p className="text-gray-500">
-                  Current Slot
-                </p>
-
-                <h2 className="text-2xl font-bold mt-2 text-gray-800">
-                  {selectedSlot?.start || "--"}
-                </h2>
-              </div>
-
+          <StatCard
+            title="Current Slot"
+            value={
+              selectedSlot?.start ||
+              "--"
+            }
+            icon={
               <Clock3
                 className="text-cyan-600"
                 size={40}
               />
-
-            </div>
-
-          </div>
+            }
+          />
 
         </div>
 
 
-        {/* =====================================
-            ERROR
-        ====================================== */}
-
         {error && (
+
           <div className="bg-red-100 border border-red-200 text-red-600 p-4 rounded-2xl mb-6">
+
             {error}
+
           </div>
+
         )}
 
 
         <div className="grid lg:grid-cols-3 gap-6">
 
-          {/* ===================================
+
+          {/* =======================================
               LEFT
-          ==================================== */}
+          ======================================== */}
 
           <div className="lg:col-span-2 space-y-6">
 
-            {/* =================================
-                SLOT SECTION
-            ================================== */}
+
+            {/* =====================================
+                SLOTS
+            ====================================== */}
 
             <div className="bg-white rounded-3xl shadow p-6">
 
@@ -864,38 +1060,48 @@ const ScheduleDoctor = () => {
                 />
 
                 <h2 className="text-2xl font-bold text-gray-800">
-                  Today Slots
+                  Today's Slots
                 </h2>
 
               </div>
 
 
               {loadingSlots ? (
+
                 <div className="text-center py-10">
                   Loading slots...
                 </div>
+
               ) : (
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
                   {slots.map(
-                    (slot, i) => (
+                    (slot, index) => (
 
                       <button
-                        key={i}
+
+                        key={index}
+
                         onClick={() =>
                           handleSlotSelect(
                             slot
                           )
                         }
+
                         className={`p-4 rounded-2xl border transition font-semibold ${
                           selectedSlot?.start ===
                           slot.start
+
                             ? "bg-teal-600 text-white border-teal-600"
+
                             : "bg-white hover:bg-teal-50"
                         }`}
+
                       >
+
                         {slot.start}
+
                       </button>
 
                     )
@@ -908,9 +1114,9 @@ const ScheduleDoctor = () => {
             </div>
 
 
-            {/* =================================
+            {/* =====================================
                 CURRENT PATIENT
-            ================================== */}
+            ====================================== */}
 
             {queueStarted &&
               currentPatient &&
@@ -918,11 +1124,14 @@ const ScheduleDoctor = () => {
 
                 <div className="bg-white rounded-3xl shadow overflow-hidden">
 
+
                   <div className="bg-gradient-to-r from-teal-600 to-cyan-600 p-5 text-white">
 
                     <div className="flex items-center gap-3">
 
-                      <Stethoscope size={30} />
+                      <Stethoscope
+                        size={30}
+                      />
 
                       <div>
 
@@ -947,9 +1156,10 @@ const ScheduleDoctor = () => {
 
                       <div className="w-28 h-28 bg-teal-100 rounded-full flex items-center justify-center mx-auto text-4xl font-bold text-teal-700">
 
-                        {currentPatient.patientId?.name?.charAt(
-                          0
-                        )}
+                        {currentPatient
+                          .patientId
+                          ?.name
+                          ?.charAt(0)}
 
                       </div>
 
@@ -958,7 +1168,8 @@ const ScheduleDoctor = () => {
 
                         {
                           currentPatient
-                            .patientId?.name
+                            .patientId
+                            ?.name
                         }
 
                       </h2>
@@ -977,42 +1188,55 @@ const ScheduleDoctor = () => {
                     </div>
 
 
-                    {/* BUTTONS */}
-
                     <div className="grid md:grid-cols-2 gap-4 mt-8">
 
+
                       <button
+
                         onClick={() =>
                           updatePatientStatus(
                             "called"
                           )
                         }
+
                         className="bg-green-600 hover:bg-green-700 text-white rounded-2xl p-4 flex items-center justify-center gap-2 font-semibold"
+
                       >
+
                         <PhoneCall />
 
                         Call Patient
+
                       </button>
 
 
                       <button
+
                         onClick={() =>
                           updatePatientStatus(
                             "skipped"
                           )
                         }
+
                         className="bg-red-500 hover:bg-red-600 text-white rounded-2xl p-4 flex items-center justify-center gap-2 font-semibold"
+
                       >
+
                         <SkipForward />
 
                         Skip
+
                       </button>
 
 
                       {callDone && (
+
                         <>
+
                           <button
+
                             onClick={() => {
+
                               setSelectedPatient(
                                 currentPatient
                               );
@@ -1020,42 +1244,59 @@ const ScheduleDoctor = () => {
                               setShowPopup(
                                 true
                               );
+
                             }}
+
                             className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl p-4 flex items-center justify-center gap-2 font-semibold"
+
                           >
+
                             <CheckCircle2 />
 
                             Finished and Add Medicine
+
                           </button>
 
 
                           <button
+
                             onClick={() =>
                               updatePatientStatus(
                                 "notcome"
                               )
                             }
+
                             className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-4 flex items-center justify-center gap-2 font-semibold"
+
                           >
+
                             <XCircle />
 
                             Not Come
+
                           </button>
+
                         </>
+
                       )}
 
 
                       <button
+
                         onClick={() =>
                           updatePatientStatus(
                             "next"
                           )
                         }
+
                         className="bg-yellow-500 hover:bg-yellow-600 text-white rounded-2xl p-4 flex items-center justify-center gap-2 font-semibold md:col-span-2"
+
                       >
+
                         <ArrowRight />
 
                         Next Patient
+
                       </button>
 
                     </div>
@@ -1063,172 +1304,167 @@ const ScheduleDoctor = () => {
                   </div>
 
                 </div>
+
               )}
 
 
-            {/* =================================
+            {/* =====================================
                 MEDICINE POPUP
-            ================================== */}
+            ====================================== */}
 
             <PrescriptionPopup
+
               isOpen={showPopup}
+
               onClose={() =>
                 setShowPopup(false)
               }
+
               date={today}
+
               patientData={
                 selectedPatient ||
                 currentPatient
               }
+
               slot={selectedSlot}
+
               doctorData={user}
+
               updatePatientStatus={
                 updatePatientStatus
               }
+
             />
 
 
-            {/* =================================
-                ALL COMPLETE
-            ================================== */}
-
-            {queueStarted &&
-              currentPatient?.completed && (
-
-                <div className="bg-white rounded-3xl shadow p-10 text-center">
-
-                  <div className="w-24 h-24 mx-auto rounded-full bg-green-100 flex items-center justify-center">
-
-                    <CheckCircle2
-                      className="text-green-600"
-                      size={50}
-                    />
-
-                  </div>
-
-
-                  <h2 className="text-3xl font-bold text-gray-800 mt-6">
-                    All Patients Completed
-                  </h2>
-
-
-                  <p className="text-gray-500 mt-2">
-                    Queue completed for this slot
-                  </p>
-
-
-                  <button
-                    onClick={finishSlot}
-                    className="mt-8 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-semibold"
-                  >
-                    Finish Slot
-                  </button>
-
-                </div>
-              )}
-
-
-            {/* =================================
-                PATIENT LIST
-            ================================== */}
+            {/* =====================================
+                PATIENT QUEUE
+            ====================================== */}
 
             <div className="bg-white rounded-3xl shadow p-6">
 
-              <div className="flex items-center gap-2 mb-5">
 
-                <Users
-                  className="text-cyan-600"
-                />
+              <div className="flex items-center justify-between mb-6">
 
-                <h2 className="text-2xl font-bold text-gray-800">
-                  Patient Queue
-                </h2>
+                <div className="flex items-center gap-2">
 
-              </div>
+                  <Users
+                    className="text-cyan-600"
+                  />
 
+                  <div>
 
-              <div className="space-y-4">
+                    <h2 className="text-2xl font-bold text-gray-800">
+                      Patient Queue
+                    </h2>
 
-                {patients.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      Live patient-wise prescription progress
+                    </p>
 
-                  <div className="text-center py-10 text-gray-500">
-                    No Patients Found
                   </div>
 
-                ) : (
-
-                  patients.map(
-                    (p, i) => (
-
-                      <div
-                        key={i}
-                        className="border border-gray-100 rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition"
-                      >
-
-                        <div className="flex items-center gap-4">
-
-                          <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xl">
-
-                            {p.patientId?.name?.charAt(
-                              0
-                            )}
-
-                          </div>
-
-
-                          <div>
-
-                            <h3 className="font-bold text-gray-800">
-                              {p.patientId?.name}
-                            </h3>
-
-                            <p className="text-sm text-gray-500">
-                              Queue #
-                              {p.queueNumber}
-                            </p>
-
-                          </div>
-
-                        </div>
-
-
-                        <span
-                          className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                            p.status === "done"
-                              ? "bg-green-100 text-green-600"
-                              : p.status === "called"
-                              ? "bg-blue-100 text-blue-600"
-                              : p.status === "skipped"
-                              ? "bg-red-100 text-red-600"
-                              : p.status === "next"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : p.status === "notcome"
-                              ? "bg-orange-100 text-orange-600"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {p.status}
-                        </span>
-
-                      </div>
-
-                    )
-                  )
-
-                )}
+                </div>
 
               </div>
 
+
+              {patients.length === 0 ? (
+
+                <div className="text-center py-10 text-gray-500">
+
+                  No Patients Found
+
+                </div>
+
+              ) : (
+
+                <div className="space-y-4">
+
+
+                  {patients.map(
+                    (patient, index) => {
+
+                      const patientId =
+                        String(
+                          patient.patientId?._id
+                        );
+
+
+                      const progress =
+                        prescriptionProgress[
+                          patientId
+                        ];
+
+
+                      const progressValue =
+                        Number(
+                          progress?.progress ||
+                          0
+                        );
+
+
+                      const status =
+                        progress?.status ||
+                        "waiting";
+
+
+                      return (
+
+                        <PatientProgressRow
+
+                          key={
+                            patientId ||
+                            index
+                          }
+
+                          patient={
+                            patient
+                          }
+
+                          progress={
+                            progress
+                          }
+
+                          progressValue={
+                            progressValue
+                          }
+
+                          status={
+                            status
+                          }
+
+                          onReport={() =>
+                            openPatientReport(
+                              patientId
+                            )
+                          }
+
+                        />
+
+                      );
+
+                    }
+
+                  )}
+
+                </div>
+
+              )}
+
             </div>
+
 
           </div>
 
 
-          {/* ===================================
-              RIGHT
-          ==================================== */}
+          {/* =======================================
+              RIGHT SIDE
+          ======================================== */}
 
           <div className="space-y-6">
+
 
             {/* ACTIVE SLOT */}
 
@@ -1249,133 +1485,23 @@ const ScheduleDoctor = () => {
             </div>
 
 
-            {/* =================================
-                PRESCRIPTION PROGRESS CARD
-            ================================== */}
+            {/* =====================================
+                PROGRESS SUMMARY
+            ====================================== */}
 
-            {queueStarted && (
-              <div className="bg-white rounded-3xl shadow p-6">
-
-                <div className="flex items-center justify-between">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="w-11 h-11 rounded-2xl bg-blue-100 flex items-center justify-center">
-
-                      <FileText
-                        className="text-blue-600"
-                        size={22}
-                      />
-
-                    </div>
-
-                    <div>
-
-                      <h2 className="font-bold text-gray-800">
-                        Prescription
-                      </h2>
-
-                      <p className="text-sm text-gray-500">
-                        Processing Status
-                      </p>
-
-                    </div>
-
-                  </div>
+            <ProgressSummary
+              patients={
+                patients
+              }
+              prescriptionProgress={
+                prescriptionProgress
+              }
+            />
 
 
-                  {prescriptionProgress ? (
-
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        prescriptionProgress.status ===
-                        "success"
-                          ? "bg-green-100 text-green-600"
-                          : prescriptionProgress.status ===
-                            "failed"
-                          ? "bg-red-100 text-red-600"
-                          : "bg-blue-100 text-blue-600"
-                      }`}
-                    >
-                      {getProgressStatus()}
-                    </span>
-
-                  ) : (
-
-                    <span className="text-gray-400 text-sm">
-                      Waiting
-                    </span>
-
-                  )}
-
-                </div>
-
-
-                {prescriptionProgress && (
-
-                  <div className="mt-5">
-
-                    <div className="flex justify-between text-sm mb-2">
-
-                      <span className="text-gray-500">
-                        Progress
-                      </span>
-
-                      <span className="font-bold text-blue-600">
-                        {
-                          prescriptionProgress.progress ||
-                          0
-                        }%
-                      </span>
-
-                    </div>
-
-
-                    <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-
-                      <div
-                        className={`h-full rounded-full transition-all duration-700 ${
-                          prescriptionProgress.status ===
-                          "success"
-                            ? "bg-green-500"
-                            : prescriptionProgress.status ===
-                              "failed"
-                            ? "bg-red-500"
-                            : "bg-blue-500"
-                        }`}
-                        style={{
-                          width: `${
-                            prescriptionProgress.progress ||
-                            0
-                          }%`,
-                        }}
-                      />
-
-                    </div>
-
-
-                    <button
-                      onClick={
-                        openProgressPopup
-                      }
-                      className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl py-3 font-semibold flex items-center justify-center gap-2 transition"
-                    >
-
-                      <Eye size={18} />
-
-                      View Details
-
-                    </button>
-
-                  </div>
-
-                )}
-
-              </div>
-            )}
-
-
-            {/* SKIPPED */}
+            {/* =====================================
+                SKIPPED
+            ====================================== */}
 
             <div className="bg-white rounded-3xl shadow p-6">
 
@@ -1403,22 +1529,28 @@ const ScheduleDoctor = () => {
                 <div className="space-y-3">
 
                   {skippedPatients.map(
-                    (p, i) => (
+                    (patient, index) => (
 
                       <div
-                        key={i}
+                        key={index}
                         className="flex items-center justify-between bg-red-50 p-3 rounded-2xl"
                       >
 
                         <div>
 
                           <p className="font-semibold">
-                            {p.patientId?.name}
+                            {
+                              patient
+                                .patientId
+                                ?.name
+                            }
                           </p>
 
                           <p className="text-xs text-gray-500">
                             Queue #
-                            {p.queueNumber}
+                            {
+                              patient.queueNumber
+                            }
                           </p>
 
                         </div>
@@ -1450,68 +1582,66 @@ const ScheduleDoctor = () => {
 
               <div className="space-y-4">
 
-                <div className="flex justify-between">
+                <SummaryRow
+                  label="Total Patients"
+                  value={
+                    patients.length
+                  }
+                />
 
-                  <span className="text-gray-500">
-                    Total Patients
-                  </span>
+                <SummaryRow
+                  label="Pending"
+                  value={
+                    pendingPatients.length
+                  }
+                  valueClass="text-yellow-600"
+                />
 
-                  <span className="font-bold">
-                    {patients.length}
-                  </span>
+                <SummaryRow
+                  label="Re-Queue"
+                  value={
+                    skippedPatients.length
+                  }
+                  valueClass="text-red-600"
+                />
 
-                </div>
-
-
-                <div className="flex justify-between">
-
-                  <span className="text-gray-500">
-                    Pending
-                  </span>
-
-                  <span className="font-bold text-yellow-600">
-                    {pendingPatients.length}
-                  </span>
-
-                </div>
-
-
-                <div className="flex justify-between">
-
-                  <span className="text-gray-500">
-                    Re-Queue
-                  </span>
-
-                  <span className="font-bold text-red-600">
-                    {skippedPatients.length}
-                  </span>
-
-                </div>
-
-
-                <div className="flex justify-between">
-
-                  <span className="text-gray-500">
-                    Queue Status
-                  </span>
-
-                  <span
-                    className={`font-bold ${
-                      queueStarted
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }`}
-                  >
-                    {queueStarted
+                <SummaryRow
+                  label="Queue Status"
+                  value={
+                    queueStarted
                       ? "Running"
-                      : "Stopped"}
-                  </span>
-
-                </div>
+                      : "Stopped"
+                  }
+                  valueClass={
+                    queueStarted
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }
+                />
 
               </div>
 
             </div>
+
+
+            {queueStarted &&
+              currentPatient?.completed && (
+
+                <button
+
+                  onClick={
+                    finishSlot
+                  }
+
+                  className="w-full bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-semibold"
+
+                >
+
+                  Finish Slot
+
+                </button>
+
+              )}
 
           </div>
 
@@ -1521,46 +1651,230 @@ const ScheduleDoctor = () => {
 
 
       {/* =========================================
-          PRESCRIPTION PROGRESS POPUP
+          PATIENT REPORT MODAL
       ========================================== */}
 
-      {showProgressPopup && (
-        <PrescriptionProgressModal
+      {selectedProgressPatient && (
+
+        <PatientProgressModal
+
           progressData={
-            prescriptionProgress
+            selectedProgressPatient
           }
+
           onClose={() =>
-            setShowProgressPopup(false)
+            setSelectedProgressPatient(
+              null
+            )
           }
+
         />
+
       )}
 
     </div>
+
   );
+
 };
 
 
 /*
- * =================================================
- * PRESCRIPTION PROGRESS MODAL
- * =================================================
- */
+=================================================
+PATIENT PROGRESS ROW
+=================================================
+*/
 
-const PrescriptionProgressModal = ({
+const PatientProgressRow = ({
+  patient,
+  progress,
+  progressValue,
+  status,
+  onReport,
+}) => {
+
+  const patientName =
+    patient.patientId?.name ||
+    progress?.patientName ||
+    "Unknown Patient";
+
+
+  const isSuccess =
+    status === "success";
+
+
+  const isFailed =
+    status === "failed";
+
+
+  return (
+
+    <div className="border border-gray-100 rounded-2xl p-4 hover:shadow-md transition">
+
+
+      <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+
+
+        {/* PATIENT */}
+
+        <div className="flex items-center gap-3 xl:w-[220px]">
+
+          <div className="w-12 h-12 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-lg shrink-0">
+
+            {patientName
+              .charAt(0)
+              .toUpperCase()}
+
+          </div>
+
+
+          <div className="min-w-0">
+
+            <h3 className="font-bold text-gray-800 truncate">
+
+              {patientName}
+
+            </h3>
+
+
+            <p className="text-xs text-gray-500">
+
+              Queue #
+              {patient.queueNumber}
+
+            </p>
+
+          </div>
+
+        </div>
+
+
+        {/* PROGRESS */}
+
+        <div className="flex-1 min-w-0">
+
+          <div className="flex justify-between items-center mb-2">
+
+            <span className="text-xs text-gray-500">
+              Prescription
+            </span>
+
+            <span className="font-bold text-sm">
+
+              {progressValue}%
+
+            </span>
+
+          </div>
+
+
+          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+
+            <div
+
+              className={`h-full rounded-full transition-all duration-700 ${
+                isSuccess
+                  ? "bg-green-500"
+                  : isFailed
+                  ? "bg-red-500"
+                  : "bg-blue-500"
+              }`}
+
+              style={{
+                width:
+                  `${progressValue}%`,
+              }}
+
+            />
+
+          </div>
+
+
+          <div className="flex justify-between mt-2">
+
+            <span className="text-xs text-gray-400">
+
+              {progress?.message ||
+                "Waiting for prescription"}
+
+            </span>
+
+
+            <span
+              className={`text-xs font-semibold ${
+                isSuccess
+                  ? "text-green-600"
+                  : isFailed
+                  ? "text-red-600"
+                  : "text-blue-600"
+              }`}
+            >
+
+              {isSuccess
+                ? "Completed"
+                : isFailed
+                ? "Failed"
+                : progress
+                ? "Processing"
+                : "Waiting"}
+
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* REPORT */}
+
+        <button
+
+          onClick={onReport}
+
+          className={`xl:w-[120px] px-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${
+            progress
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "bg-gray-100 text-gray-400"
+          }`}
+
+        >
+
+          <Eye size={18} />
+
+          Report
+
+        </button>
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+/*
+=================================================
+PATIENT PROGRESS MODAL
+=================================================
+*/
+
+const PatientProgressModal = ({
   progressData,
   onClose,
 }) => {
 
-  if (!progressData) {
-    return null;
-  }
-
   const progress =
-    Number(progressData.progress) || 0;
+    Number(
+      progressData.progress || 0
+    );
+
 
   const isSuccess =
     progressData.status ===
     "success";
+
 
   const isFailed =
     progressData.status ===
@@ -1568,23 +1882,32 @@ const PrescriptionProgressModal = ({
 
 
   return (
+
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+
 
       {/* BACKDROP */}
 
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+
+        onClick={
+          onClose
+        }
+
       />
 
 
       {/* MODAL */}
 
-      <div className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+
 
         {/* HEADER */}
 
         <div
+
           className={`p-6 text-white ${
             isSuccess
               ? "bg-gradient-to-r from-green-600 to-emerald-500"
@@ -1592,27 +1915,36 @@ const PrescriptionProgressModal = ({
               ? "bg-gradient-to-r from-red-600 to-rose-500"
               : "bg-gradient-to-r from-blue-600 to-cyan-500"
           }`}
+
         >
 
           <div className="flex items-center justify-between">
 
-            <div className="flex items-center gap-3">
 
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+            <div className="flex items-center gap-4">
+
+
+              <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
 
                 {isSuccess ? (
+
                   <CircleCheck
-                    size={28}
+                    size={30}
                   />
+
                 ) : isFailed ? (
+
                   <XCircle
-                    size={28}
+                    size={30}
                   />
+
                 ) : (
+
                   <Loader2
-                    size={28}
+                    size={30}
                     className="animate-spin"
                   />
+
                 )}
 
               </div>
@@ -1620,24 +1952,32 @@ const PrescriptionProgressModal = ({
 
               <div>
 
-                <h2 className="text-xl font-bold">
-                  Prescription Progress
+                <h2 className="text-2xl font-bold">
+                  Patient Prescription Report
                 </h2>
 
-                <p className="text-white/80 text-sm">
-                  PDF Processing
+                <p className="text-white/80 mt-1">
+                  Live prescription processing details
                 </p>
 
               </div>
+
 
             </div>
 
 
             <button
-              onClick={onClose}
+
+              onClick={
+                onClose
+              }
+
               className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center"
+
             >
+
               <X size={22} />
+
             </button>
 
           </div>
@@ -1649,11 +1989,13 @@ const PrescriptionProgressModal = ({
 
         <div className="p-6">
 
-          {/* PATIENT */}
 
-          <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
+          {/* PATIENT HEADER */}
 
-            <div className="w-14 h-14 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xl font-bold">
+          <div className="bg-slate-50 rounded-2xl p-5 flex items-center gap-4">
+
+
+            <div className="w-16 h-16 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-2xl font-bold">
 
               {progressData.patientName
                 ?.charAt(0)
@@ -1664,49 +2006,76 @@ const PrescriptionProgressModal = ({
 
             <div>
 
-              <p className="text-xs text-gray-500">
+              <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
                 Patient
               </p>
 
-              <h3 className="text-lg font-bold text-gray-800">
+              <h3 className="text-2xl font-bold text-gray-800">
+
                 {
                   progressData.patientName ||
                   "Unknown Patient"
                 }
+
               </h3>
+
+
+              <p className="text-sm text-gray-500 mt-1">
+
+                Patient ID:
+                {" "}
+                {progressData.patientId}
+
+              </p>
 
             </div>
 
           </div>
 
 
-          {/* BIG PROGRESS */}
+          {/* CIRCULAR PROGRESS */}
 
-          <div className="text-center mt-7">
+          <div className="py-8 text-center">
 
-            <div className="relative w-36 h-36 mx-auto">
+
+            <div className="relative w-44 h-44 mx-auto">
+
 
               <svg
-                className="w-36 h-36 -rotate-90"
+
+                className="w-44 h-44 -rotate-90"
+
                 viewBox="0 0 120 120"
+
               >
 
                 <circle
+
                   cx="60"
                   cy="60"
                   r="50"
+
                   fill="none"
-                  strokeWidth="10"
+
+                  strokeWidth="9"
+
                   className="stroke-gray-100"
+
                 />
 
+
                 <circle
+
                   cx="60"
                   cy="60"
                   r="50"
+
                   fill="none"
-                  strokeWidth="10"
+
+                  strokeWidth="9"
+
                   strokeLinecap="round"
+
                   className={
                     isSuccess
                       ? "stroke-green-500"
@@ -1714,12 +2083,15 @@ const PrescriptionProgressModal = ({
                       ? "stroke-red-500"
                       : "stroke-blue-500"
                   }
+
                   strokeDasharray="314"
+
                   strokeDashoffset={
                     314 -
                     (314 * progress) /
                       100
                   }
+
                 />
 
               </svg>
@@ -1727,12 +2099,17 @@ const PrescriptionProgressModal = ({
 
               <div className="absolute inset-0 flex flex-col items-center justify-center">
 
-                <span className="text-3xl font-black text-gray-800">
+                <span className="text-4xl font-black text-gray-800">
+
                   {progress}%
+
                 </span>
 
+
                 <span className="text-xs text-gray-500">
+
                   Complete
+
                 </span>
 
               </div>
@@ -1741,6 +2118,7 @@ const PrescriptionProgressModal = ({
 
 
             <h3
+
               className={`text-xl font-bold mt-4 ${
                 isSuccess
                   ? "text-green-600"
@@ -1748,108 +2126,130 @@ const PrescriptionProgressModal = ({
                   ? "text-red-600"
                   : "text-blue-600"
               }`}
+
             >
+
               {isSuccess
-                ? "Completed"
+                ? "Prescription Completed"
                 : isFailed
-                ? "Failed"
-                : "Processing"}
+                ? "Prescription Failed"
+                : "Prescription Processing"}
+
             </h3>
 
           </div>
 
 
-          {/* PROGRESS BAR */}
+          {/* STATUS */}
 
-          <div className="mt-6">
-
-            <div className="flex justify-between text-sm mb-2">
-
-              <span className="text-gray-500">
-                Processing Progress
-              </span>
-
-              <span className="font-bold">
-                {progress}%
-              </span>
-
-            </div>
+          <div className="grid grid-cols-3 gap-3">
 
 
-            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+            <ReportStat
 
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  isSuccess
-                    ? "bg-green-500"
-                    : isFailed
-                    ? "bg-red-500"
-                    : "bg-blue-500"
-                }`}
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
+              label="Progress"
 
-            </div>
+              value={`${progress}%`}
+
+            />
+
+
+            <ReportStat
+
+              label="Step"
+
+              value={
+                progressData.step ||
+                "--"
+              }
+
+            />
+
+
+            <ReportStat
+
+              label="Status"
+
+              value={
+                progressData.status ||
+                "waiting"
+              }
+
+            />
 
           </div>
 
 
           {/* DETAILS */}
 
-          <div className="grid grid-cols-2 gap-3 mt-6">
+          <div className="grid md:grid-cols-2 gap-3 mt-4">
 
-            <ProgressDetail
+
+            <ReportDetail
+
               label="Prescription ID"
+
               value={
                 progressData.prescriptionId
               }
+
             />
 
-            <ProgressDetail
-              label="Step"
+
+            <ReportDetail
+
+              label="Patient ID"
+
               value={
-                progressData.step
-                  ? `${progressData.step}`
-                  : "--"
+                progressData.patientId
               }
+
             />
 
-            <ProgressDetail
-              label="Date"
-              value={
-                progressData.date ||
-                "--"
-              }
-            />
 
-            <ProgressDetail
-              label="Slot"
-              value={
-                progressData.slot ||
-                "--"
-              }
-            />
+            <ReportDetail
 
-            <ProgressDetail
-              label="Status"
-              value={
-                progressData.status ||
-                "--"
-              }
-            />
-
-            <ProgressDetail
               label="Doctor ID"
+
               value={
                 progressData.doctorId
-                  ? progressData.doctorId.slice(
-                      0,
-                      10
-                    ) + "..."
+              }
+
+            />
+
+
+            <ReportDetail
+
+              label="Date"
+
+              value={
+                progressData.date
+              }
+
+            />
+
+
+            <ReportDetail
+
+              label="Slot"
+
+              value={
+                progressData.slot
+              }
+
+            />
+
+
+            <ReportDetail
+
+              label="Current Step"
+
+              value={
+                progressData.step
+                  ? `Step ${progressData.step}`
                   : "--"
               }
+
             />
 
           </div>
@@ -1857,26 +2257,38 @@ const PrescriptionProgressModal = ({
 
           {/* MESSAGE */}
 
-          <div className="mt-4 p-4 rounded-2xl bg-blue-50 border border-blue-100">
+          <div className="mt-4 p-5 bg-blue-50 border border-blue-100 rounded-2xl">
 
-            <div className="flex items-start gap-3">
 
-              <FileText
-                className="text-blue-600 mt-0.5"
-                size={20}
-              />
+            <div className="flex gap-3">
+
+
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+
+                <FileText
+                  className="text-blue-600"
+                  size={20}
+                />
+
+              </div>
+
 
               <div>
 
-                <p className="text-xs font-semibold text-blue-600 uppercase">
+                <p className="text-xs uppercase tracking-wider font-bold text-blue-600">
+
                   Current Message
+
                 </p>
 
-                <p className="text-gray-700 font-medium mt-1">
+
+                <p className="text-gray-800 font-semibold mt-1">
+
                   {
                     progressData.message ||
-                    "Processing..."
+                    "Waiting for update..."
                   }
+
                 </p>
 
               </div>
@@ -1889,10 +2301,17 @@ const PrescriptionProgressModal = ({
           {/* CLOSE */}
 
           <button
-            onClick={onClose}
-            className="w-full mt-6 py-3.5 rounded-2xl bg-gray-900 hover:bg-gray-800 text-white font-semibold transition"
+
+            onClick={
+              onClose
+            }
+
+            className="w-full mt-6 py-4 rounded-2xl bg-gray-900 hover:bg-gray-800 text-white font-semibold"
+
           >
-            Close
+
+            Close Report
+
           </button>
 
         </div>
@@ -1900,34 +2319,312 @@ const PrescriptionProgressModal = ({
       </div>
 
     </div>
+
   );
+
 };
 
 
 /*
- * =================================================
- * SMALL DETAIL COMPONENT
- * =================================================
- */
+=================================================
+PROGRESS SUMMARY
+=================================================
+*/
 
-const ProgressDetail = ({
+const ProgressSummary = ({
+  patients,
+  prescriptionProgress,
+}) => {
+
+  const total =
+    patients.length;
+
+
+  const completed =
+    patients.filter(
+      (patient) =>
+        prescriptionProgress[
+          String(
+            patient.patientId?._id
+          )
+        ]?.status === "success"
+    ).length;
+
+
+  const processing =
+    patients.filter(
+      (patient) => {
+
+        const progress =
+          prescriptionProgress[
+            String(
+              patient.patientId?._id
+            )
+          ];
+
+
+        return (
+          progress &&
+          progress.status !==
+            "success" &&
+          progress.status !==
+            "failed"
+        );
+
+      }
+    ).length;
+
+
+  return (
+
+    <div className="bg-white rounded-3xl shadow p-6">
+
+
+      <div className="flex items-center gap-3 mb-5">
+
+
+        <div className="w-11 h-11 rounded-2xl bg-blue-100 flex items-center justify-center">
+
+          <ClipboardCheck
+            className="text-blue-600"
+            size={22}
+          />
+
+        </div>
+
+
+        <div>
+
+          <h2 className="font-bold text-gray-800">
+            Prescription Progress
+          </h2>
+
+          <p className="text-sm text-gray-500">
+            Patient-wise status
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div className="space-y-4">
+
+
+        <SummaryRow
+          label="Total Patients"
+          value={total}
+        />
+
+
+        <SummaryRow
+          label="Completed"
+          value={completed}
+          valueClass="text-green-600"
+        />
+
+
+        <SummaryRow
+          label="Processing"
+          value={processing}
+          valueClass="text-blue-600"
+        />
+
+
+      </div>
+
+
+      {total > 0 && (
+
+        <div className="mt-5">
+
+          <div className="flex justify-between text-xs text-gray-500 mb-2">
+
+            <span>
+              Overall completion
+            </span>
+
+            <span className="font-bold">
+
+              {Math.round(
+                (completed / total) *
+                  100
+              )}%
+
+            </span>
+
+          </div>
+
+
+          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+
+            <div
+
+              className="h-full bg-green-500 rounded-full transition-all duration-700"
+
+              style={{
+                width:
+                  `${Math.round(
+                    (completed / total) *
+                      100
+                  )}%`,
+              }}
+
+            />
+
+          </div>
+
+        </div>
+
+      )}
+
+    </div>
+
+  );
+
+};
+
+
+/*
+=================================================
+REPORT DETAIL
+=================================================
+*/
+
+const ReportDetail = ({
   label,
   value,
 }) => {
 
   return (
-    <div className="bg-gray-50 rounded-xl p-3">
+
+    <div className="bg-gray-50 rounded-xl p-4">
 
       <p className="text-xs text-gray-400">
         {label}
       </p>
 
-      <p className="text-sm font-semibold text-gray-800 mt-1 truncate">
+      <p className="text-sm font-semibold text-gray-800 mt-1 break-all">
+
+        {value || "--"}
+
+      </p>
+
+    </div>
+
+  );
+
+};
+
+
+/*
+=================================================
+REPORT STAT
+=================================================
+*/
+
+const ReportStat = ({
+  label,
+  value,
+}) => {
+
+  return (
+
+    <div className="bg-gray-50 rounded-2xl p-4 text-center">
+
+      <p className="text-xs text-gray-400">
+        {label}
+      </p>
+
+      <p className="text-lg font-bold text-gray-800 mt-1">
         {value}
       </p>
 
     </div>
+
   );
+
+};
+
+
+/*
+=================================================
+STAT CARD
+=================================================
+*/
+
+const StatCard = ({
+  title,
+  value,
+  icon,
+  valueClass = "text-gray-800",
+}) => {
+
+  return (
+
+    <div className="bg-white rounded-3xl p-6 shadow">
+
+      <div className="flex justify-between items-center">
+
+
+        <div>
+
+          <p className="text-gray-500">
+            {title}
+          </p>
+
+          <h2
+            className={`text-3xl font-bold mt-2 ${valueClass}`}
+          >
+
+            {value}
+
+          </h2>
+
+        </div>
+
+
+        {icon}
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+/*
+=================================================
+SUMMARY ROW
+=================================================
+*/
+
+const SummaryRow = ({
+  label,
+  value,
+  valueClass = "text-gray-800",
+}) => {
+
+  return (
+
+    <div className="flex justify-between">
+
+      <span className="text-gray-500">
+        {label}
+      </span>
+
+      <span
+        className={`font-bold ${valueClass}`}
+      >
+        {value}
+      </span>
+
+    </div>
+
+  );
+
 };
 
 
