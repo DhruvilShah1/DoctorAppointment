@@ -20,7 +20,7 @@ import QRScanner from './pharmacy-side-portal/QRScanner'
 import PharmacySidebar from './pharmacy-side-portal/PharmacySidebar'
 import PharmacyDashboard from './pharmacy-side-portal/PharmacyDashboard'
 import DoctorPrescriptionTable from './LoginRegister/Doctor/DoctorPrescriptionTable'
-import { socket } from './socket/FrontendSocketConnection';
+import  socket  from './socket/FrontendSocketConnection';
 import Unauthorized from "./Unauthorized";
 import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
 import Chatbot from "./LoginRegister/User/Chatbot";
