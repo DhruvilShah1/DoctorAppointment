@@ -474,8 +474,17 @@ console.log(
 // </body>
 // </html>
 //       `;
-const htmlTemplate = await generatePrescriptionHtml(prescriptionId, doctorName, patientName, date, slot, instructions, parsedMedicines, signatureUrl, qrCode)
-
+const htmlTemplate = generatePrescriptionHtml({
+    prescriptionId,
+    doctorName,
+    patientName,
+    date,
+    slot,
+    instructions,
+    parsedMedicines,
+    signatureUrl,
+    qrCode,
+});
       // Generate PDF using puppeteer
       // const browser = await puppeteer.launch({
       //   args: chromium.args,
