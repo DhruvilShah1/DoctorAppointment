@@ -21,6 +21,9 @@ const publishPrescriptionProgress = async ({
     patientId,
     patientName, 
     step,
+          date,
+      slot,
+
     status,
     message,
     progress,
@@ -33,6 +36,9 @@ const publishPrescriptionProgress = async ({
         patientName,
         step,
         status,
+              date,
+      slot,
+
         message,
         progress,
         timestamp: new Date().toISOString(),
@@ -77,6 +83,9 @@ const prescriptionWorker = new Worker(
           doctorId,
           patientId,
           patientName ,
+                date,
+      slot,
+
           step: 1,
           status: "success",
           message: "QR Code generated",
@@ -126,6 +135,9 @@ const prescriptionWorker = new Worker(
           patientId,
           patientName,
           step: 2,
+                date,
+      slot,
+
           status: "success",
           message: "PDF Generated",
           progress: 60,
@@ -146,6 +158,9 @@ const prescriptionWorker = new Worker(
           patientId,
           patientName,
           step: 3,
+                date,
+      slot,
+
           status: "success",
           message: "PDF Uploaded",
           progress: 100,

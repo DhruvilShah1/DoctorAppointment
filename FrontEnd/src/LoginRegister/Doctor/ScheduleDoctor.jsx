@@ -125,6 +125,13 @@ const ScheduleDoctor = () => {
   }, []);
 
 
+  socket.on("prescription:progress", (data) => {
+
+    console.log("📡 Prescription Progress:", data);
+
+});
+
+
   const loadPatients = async (slot) => {
     try {
       const res = await authFetch(`${BASE_URL}/api/take/patient`,
@@ -214,6 +221,7 @@ const ScheduleDoctor = () => {
 
       console.log("Slot");
       console.log(`${user.id}_${today}_${selectedSlot.start}`);
+
       
 
       if (pendingPatients.length > 0) {
