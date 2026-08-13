@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import PrescriptionPopup from "./PrescriptionPopup";
 
-const socket = io(import.meta.env.APP_URL);
+const socket = io(import.meta.env.VITE_SOCKETIO_URL);
 
 const ScheduleDoctor = () => {
   const { user } = useAuth();
@@ -119,20 +119,40 @@ const ScheduleDoctor = () => {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
+
+    console.log("🟡 Prescription listener registered");
+
     loadTodayData();
-socket.on(
-    "prescription:progress",
-    (data) => {
+
+    const handlePrescriptionProgress = (data) => {
 
         console.log(
-            "Prescription Progress:",
+            "🟢 Prescription Progress:",
             data
         );
 
-    }
-);
-  }, []);
+    };
+
+    socket.on(
+        "prescription:progress",
+        handlePrescriptionProgress
+    );
+
+    return () => {
+
+        console.log(
+            "🔴 Removing prescription listener"
+        );
+
+        socket.off(
+            "prescription:progress",
+            handlePrescriptionProgress
+        );
+
+    };
+
+}, []);
 
 
   const loadPatients = async (slot) => {
