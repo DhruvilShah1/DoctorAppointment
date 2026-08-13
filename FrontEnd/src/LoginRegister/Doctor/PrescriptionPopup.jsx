@@ -34,16 +34,7 @@ morning: false, afternoon: false, night: false
 
     socket.emit("doctor:join", { doctorId: doctorData.id, date, slot: slotValue });
 
-    const handleProgress = (data) => {
-      console.log("🟢 Prescription Progress:", data);
-    };
-
-    socket.on("prescription:progress", handleProgress);
-
-    return () => {
-      socket.off("prescription:progress", handleProgress);
-    };
-  }, [isOpen, doctorData?.id, date, slot]);
+  }, [isOpen, doctorData?.id, date, slot , doctorData.id]);
 
   if (!isOpen) return null;
 

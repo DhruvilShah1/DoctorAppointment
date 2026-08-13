@@ -87,6 +87,7 @@ io.on("connection", (socket) => {
 
   socket.on("PersonalAppointment", (userId) => {
     socket.join(userId);
+
   });
 
   socket.on(
@@ -100,11 +101,17 @@ io.on("connection", (socket) => {
     }
   );
 
+  socket.on('personalData' , ({doctorId})=>{
+            const roomId = String(doctorId);
+    socket.join(roomId);
+  })
+
   socket.on(
     "doctor:join",
     ({ doctorId, date, slot }) => {
       const roomId =
         `${doctorId}_${date}_${slot}`;
+        
 
       io.to(roomId).emit(
         "queue:started",
@@ -124,6 +131,8 @@ io.on("connection", (socket) => {
           message: "Queue Updated",
         }
       );
+
+
 
       io.to(roomId).emit(
         "queue:status:finished",

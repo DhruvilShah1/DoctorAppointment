@@ -67,19 +67,62 @@ const ScheduleDoctor = () => {
     });
   };
 
-    useEffect(()=>{
-    console.log("Socket prescription:progress Working");
-    
-    const handleProgress = (data) => {
-      console.log("🟢 Prescription Progress:", data);
-    };
+     useEffect(() => {
 
-    socket.on("prescription:progress", handleProgress);
+        if (!user.id) {
+            console.log("❌ doctorId not available");
+            return;
+        }
 
-    return () => {
-      socket.off("prescription:progress", handleProgress);
-    };
-  }, [])
+        console.log(
+            "👨‍⚕️ Joining doctor room:",
+            user.id
+        );
+
+        socket.emit("personalData", {
+            doctorId: String(user.id),
+        });
+
+
+        const handlePrescriptionProgress = (data) => {
+
+            console.log(
+                "💊 Prescription progress received:"
+            );
+
+            console.log(data);
+
+            /*
+                Example data:
+
+                {
+                    prescriptionId: "456",
+                    doctorId: "123",
+                    status: "processing",
+                    progress: 50
+                }
+            */
+
+        };
+
+
+        socket.on(
+            "prescription:progress",
+            handlePrescriptionProgress
+        );
+
+
+        return () => {
+
+            socket.off(
+                "prescription:progress",
+                handlePrescriptionProgress
+            );
+
+        };
+
+    }, [user.id]);
+
 
   const loadTodayData = async () => {
     try {

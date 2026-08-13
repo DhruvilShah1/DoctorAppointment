@@ -1,60 +1,147 @@
-// Service/prescriptionSubscriber.js
-
 import redis from "../Config/redis.js";
 
-const prescriptionSubscriber = redis.duplicate();
+const prescriptionSubscriber =
+    redis.duplicate();
+
+
 const startPrescriptionSubscriber = async (io) => {
+
+    console.log(
+        "🚀 Starting prescription Redis subscriber..."
+    );
+
 
     await prescriptionSubscriber.psubscribe(
         "prescription:*"
     );
 
+
+    console.log(
+        "📡 Redis subscribed to: prescription:*"
+    );
+
+
     prescriptionSubscriber.on(
         "pmessage",
         (pattern, channel, message) => {
 
-            console.log("📡 Redis message received");
+            console.log("");
+            console.log(
+                "===================================="
+            );
 
-            console.log("Channel:", channel);
-            console.log("Message:", message);
+            console.log(
+                "📡 Redis message received"
+            );
+
+            console.log(
+                "📌 Pattern:",
+                pattern
+            );
+
+            console.log(
+                "📢 Channel:",
+                channel
+            );
+
+            console.log(
+                "💬 Message:",
+                message
+            );
+
 
             try {
 
-                const data = JSON.parse(message);
-                
-                const { doctorId, date, slot } = data;
+                /*
+                 * Channel:
+                 *
+                 * prescription:123
+                 *
+                 * 123 = prescriptionId
+                 */
 
-                const roomId =
-                    `${doctorId}_${date}_${slot}`;
+                const [, prescriptionId] =
+                    channel.split(":");
+
 
                 console.log(
-                    "🏠 Socket Room:",
-                    roomId
+                    "💊 Prescription ID:",
+                    prescriptionId
                 );
 
-                io.to(roomId).emit(
-                    "prescription:progress",
+
+                const data =
+                    JSON.parse(message);
+
+
+                console.log(
+                    "📦 Parsed prescription data:",
                     data
                 );
 
+
+                const doctorId =
+                    data.doctorId;
+
+
+                if (!doctorId) {
+
+                    console.log(
+                        "❌ doctorId missing from Redis data"
+                    );
+
+                    return;
+                }
+
+
+                const roomId =
+                    String(doctorId);
+
+
                 console.log(
-                    "📤 Prescription update sent"
+                    "🏠 Target Socket.IO room:",
+                    roomId
                 );
+
+
+                io.to(roomId).emit(
+                    "prescription:progress",
+                    {
+                        prescriptionId,
+                        ...data
+                    }
+                );
+
+
+                console.log(
+                    "📤 Prescription progress emitted"
+                );
+
+                console.log(
+                    "👨‍⚕️ Sent to doctor:",
+                    doctorId
+                );
+
 
             } catch (error) {
 
                 console.error(
-                    "❌ Redis message parse error:",
+                    "❌ Redis message processing error:",
                     error
                 );
 
             }
+
+
+            console.log(
+                "===================================="
+            );
+            console.log("");
+
         }
     );
 
-    console.log(
-        "📡 Prescription Redis subscriber started"
-    );
 };
+
 
 export default startPrescriptionSubscriber;
