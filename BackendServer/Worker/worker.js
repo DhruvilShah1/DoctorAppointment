@@ -1,4 +1,5 @@
 import { Worker } from "bullmq";
+import redis from "../Config/redis.js";
 
 import Prescription from "../Model/Prescription.js";
 
@@ -9,7 +10,6 @@ import generatePrescriptionHtml from "../createPrescription/prescriptionPdfTempl
 import generatePrescriptionPdf from "../createPrescription/prescriptionPdfGenration.js";
 
 import { uploadPdf } from "../Config/uploadthing.js";
-import redis from "../Config/redis";
 
 const prescriptionWorker = new Worker(
   "generate-prescription",
