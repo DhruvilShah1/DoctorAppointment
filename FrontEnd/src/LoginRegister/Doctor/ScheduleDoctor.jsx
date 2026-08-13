@@ -1,17 +1,8 @@
 import BASE_URL from "../config/api.js";
 import React, { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 import { useAuth } from "../../AuthProvider";
 import { toast } from "react-toastify";
-import { io } from "socket.io-client";
-
-const socket = io(
-    import.meta.env.VITE_BACKEND_URL,
-    {
-        withCredentials: true,
-        transports: ["websocket", "polling"],
-    }
-);
-
 
 import {
   CalendarDays,
@@ -27,6 +18,8 @@ import {
   Stethoscope,
 } from "lucide-react";
 import PrescriptionPopup from "./PrescriptionPopup";
+
+const socket = io(import.meta.env.VITE_SOCKETIO_URL);
 
 const ScheduleDoctor = () => {
   const { user } = useAuth();
@@ -86,7 +79,6 @@ const ScheduleDoctor = () => {
           const token = refreshData.newAccessToken;
 
       const [totalRes, slotRes] = await Promise.all([
-
         fetch(`${BASE_URL}/api/total/patient/day`, {
           method: "POST",
           headers: {
@@ -131,15 +123,34 @@ const ScheduleDoctor = () => {
     loadTodayData();
   }, []);
 
+useEffect(() => {
 
-  io.on("prescription:progress", (data) => {
+    console.log("Socket:", socket);
 
-    console.log("📡 Prescription Progress:", data);
+    const handleProgress = (data) => {
 
+        console.log(
+            "🟢 Prescription Progress:",
+            data
+        );
 
-});
+    };
 
+    socket.on(
+        "prescription:progress",
+        handleProgress
+    );
 
+    return () => {
+
+        socket.off(
+            "prescription:progress",
+            handleProgress
+        );
+
+    };
+
+}, []);
   const loadPatients = async (slot) => {
     try {
       const res = await authFetch(`${BASE_URL}/api/take/patient`,
@@ -226,12 +237,6 @@ const ScheduleDoctor = () => {
         slot: selectedSlot.start,
       });
 
-
-      console.log("Slot");
-      console.log(`${user.id}_${today}_${selectedSlot.start}`);
-
-      
-
       if (pendingPatients.length > 0) {
         setCurrentPatient(pendingPatients[0]);
       }
@@ -241,10 +246,6 @@ const ScheduleDoctor = () => {
       setError(err.message);
     }
   };
-
-  socket.on('prescription:progress' , (data) => {
-    console.log("📡 Prescription Progress:", data);
-})
 
   const moveNext = (type = "") => {
     let updatedPending = [...pendingPatients];
