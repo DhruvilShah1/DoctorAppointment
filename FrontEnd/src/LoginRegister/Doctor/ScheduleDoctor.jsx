@@ -1,6 +1,6 @@
 import BASE_URL from "../config/api.js";
 import React, { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { socket } from "../../socket/FrontendSocketConnection";
 import { useAuth } from "../../AuthProvider";
 import { toast } from "react-toastify";
 
@@ -18,8 +18,6 @@ import {
   Stethoscope,
 } from "lucide-react";
 import PrescriptionPopup from "./PrescriptionPopup";
-
-const socket = io(import.meta.env.APP_URL);
 
 const ScheduleDoctor = () => {
   const { user } = useAuth();
@@ -125,12 +123,12 @@ const ScheduleDoctor = () => {
   }, []);
 
 
-  socket.on("prescription:progress", (data) => {
-
-    console.log("📡 Prescription Progress:", data);
-
-});
-
+  useEffect(() => {
+    socket.on("prescription:progress", (data) => {
+      console.log("📡 Prescription Progress:", data);
+    });
+    return () => socket.off("prescription:progress");
+  }, []);
 
   const loadPatients = async (slot) => {
     try {
