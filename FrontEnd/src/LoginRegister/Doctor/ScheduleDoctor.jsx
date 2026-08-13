@@ -1370,7 +1370,7 @@ const ScheduleDoctor = () => {
               </div>
 
 
-              {patients.length === 0 ? (
+              {patients.length === 0  ? (
 
                 <div className="text-center py-10 text-gray-500">
 
@@ -1383,71 +1383,66 @@ const ScheduleDoctor = () => {
                 <div className="space-y-4">
 
 
-                  {patients.map(
-                    (patient, index) => {
+                 {patients.map((patient, index) => {
 
-                      const patientId =
-                        String(
-                          patient.patientId?._id
-                        );
+  const patientId =
+    String(patient.patientId?._id);
 
+  const progress =
+    prescriptionProgress[patientId];
 
-                      const progress =
-                        prescriptionProgress[
-                          patientId
-                        ];
+  const progressValue =
+    Number(progress?.progress || 0);
 
-
-                      const progressValue =
-                        Number(
-                          progress?.progress ||
-                          0
-                        );
+  const status =
+    queueStarted
+      ? "done"
+      : progress?.status || "waiting";
 
 
-                      const status =
-                        progress?.status ||
-                        "waiting";
+  return (
 
+    <PatientProgressRow
 
-                      return (
+      key={
+        patientId || index
+      }
 
-                        <PatientProgressRow
+      patient={patient}
 
-                          key={
-                            patientId ||
-                            index
-                          }
+      progress={
+        queueStarted
+          ? {
+              ...progress,
+              progress: 100,
+              status: "done",
+              isDone: true,
+              message: "Queue Completed",
+            }
+          : progress
+      }
 
-                          patient={
-                            patient
-                          }
+      progressValue={
+        queueStarted
+          ? 100
+          : progressValue
+      }
 
-                          progress={
-                            progress
-                          }
+      status={
+        status
+      }
 
-                          progressValue={
-                            progressValue
-                          }
+      onReport={() =>
+        openPatientReport(
+          patientId
+        )
+      }
 
-                          status={
-                            status
-                          }
+    />
 
-                          onReport={() =>
-                            openPatientReport(
-                              patientId
-                            )
-                          }
+  );
 
-                        />
-
-                      );
-
-                    }
-
-                  )}
+})}
 
                 </div>
 
