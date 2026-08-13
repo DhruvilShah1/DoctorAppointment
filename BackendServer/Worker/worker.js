@@ -19,6 +19,7 @@ const publishPrescriptionProgress = async ({
     prescriptionId,
     doctorId,
     patientId,
+    patientName ,
     step,
     status,
     message,
