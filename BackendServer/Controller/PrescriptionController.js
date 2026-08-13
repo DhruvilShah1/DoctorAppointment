@@ -8,6 +8,7 @@ import { uploadSignature, uploadPdf } from "../Config/uploadthing.js";
 import QrCodeSection from "../createPrescription/QrCodeSection.js";
 import generatePrescriptionHtml from "../createPrescription/prescriptionPdfTemplate.js";
 import generatePrescriptionPdf from "../createPrescription/prescriptionPdfGenration.js";
+import prescriptionQueue from "../Queue/PresecpionQueue.js";
 
 const generate15DigitId = () => {
   return Math.floor(100000000000000 + Math.random() * 900000000000000).toString();
@@ -68,11 +69,27 @@ console.log(
         signatureUrl = await uploadSignature(req.file);
       }
 
+      await prescriptionQueue.add('generate-prescription' ,{
+        prescriptionId,
+        patientId,
+        doctorId,
+        medicines: parsedMedicines,
+        doctorName,
+        patientName,
+        instructions,
+        date,
+        slot,
+        signatureUrl,
+      } )
+
+
+
+
       // Qr Code Section 
 
       // const token = jwt.sign({ prescriptionId }, "VITECARE APPOINTMENT");
       // const qrCode = await QRCode.toDataURL(JSON.stringify({ token }));
-      const qrCode = await QrCodeSection(prescriptionId);
+      // const qrCode = await QrCodeSection(prescriptionId);
 
 
       // PDF Template
@@ -474,17 +491,17 @@ console.log(
 // </body>
 // </html>
 //       `;
-const htmlTemplate = generatePrescriptionHtml({
-    prescriptionId,
-    doctorName,
-    patientName,
-    date,
-    slot,
-    instructions,
-    parsedMedicines,
-    signatureUrl,
-    qrCode,
-});
+// const htmlTemplate = generatePrescriptionHtml({
+//     prescriptionId,
+//     doctorName,
+//     patientName,
+//     date,
+//     slot,
+//     instructions,
+//     parsedMedicines,
+//     signatureUrl,
+//     qrCode,
+// });
       // Generate PDF using puppeteer
       // const browser = await puppeteer.launch({
       //   args: chromium.args,
@@ -496,11 +513,11 @@ const htmlTemplate = generatePrescriptionHtml({
       // await page.setContent(htmlTemplate, { waitUntil: "networkidle0" });
       // const pdfBuffer = await page.pdf({ format: "A4", printBackground: true });
       // await browser.close();
-      const pdfBuffer = await generatePrescriptionPdf(htmlTemplate)
+      // const pdfBuffer = await generatePrescriptionPdf(htmlTemplate)
 
 
 // Uploading Pdf
-      const pdfUrl = await uploadPdf(pdfBuffer, `${prescriptionId}.pdf`);
+      // const pdfUrl = await uploadPdf(pdfBuffer, `${prescriptionId}.pdf`);
 
       const newPrescription = await Prescription.create({
         prescriptionId,
@@ -511,8 +528,8 @@ const htmlTemplate = generatePrescriptionHtml({
         signature: signatureUrl,
         date,
         slot, 
-        qrCode,
-        pdfUrl,
+        qrCode : null,
+        pdfUrl : null,
         verificationStatus: "pending",
         status: "issued",
       });
