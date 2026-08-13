@@ -1,8 +1,9 @@
 import BASE_URL from "../config/api.js";
 import React, { useEffect, useState } from "react";
-import { socket } from "../../socket/FrontendSocketConnection";
+import { io } from "socket.io-client";
 import { useAuth } from "../../AuthProvider";
 import { toast } from "react-toastify";
+import { socket } from "../../socket/FrontendSocketConnection";
 
 import {
   CalendarDays,
@@ -123,12 +124,13 @@ const ScheduleDoctor = () => {
   }, []);
 
 
-  useEffect(() => {
-    socket.on("prescription:progress", (data) => {
-      console.log("📡 Prescription Progress:", data);
-    });
-    return () => socket.off("prescription:progress");
-  }, []);
+  io.on("prescription:progress", (data) => {
+
+    console.log("📡 Prescription Progress:", data);
+
+
+});
+
 
   const loadPatients = async (slot) => {
     try {
