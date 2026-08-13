@@ -21,12 +21,45 @@ const PrescriptionController = {
 
       const prescriptionId = generate15DigitId();
 
-      let parsedMedicines = [];
-      try {
-        parsedMedicines = typeof medicines === "string" ? JSON.parse(medicines) : medicines || [];
-      } catch {
-        parsedMedicines = [];
-      }
+   let parsedMedicines = [];
+
+try {
+
+    if (typeof medicines === "string") {
+
+        parsedMedicines = JSON.parse(medicines);
+
+    } else if (Array.isArray(medicines)) {
+
+        parsedMedicines = medicines;
+
+    }
+
+} catch (error) {
+
+    console.error(
+        "❌ Failed to parse medicines:",
+        error
+    );
+
+    parsedMedicines = [];
+
+}
+
+
+if (!Array.isArray(parsedMedicines)) {
+    parsedMedicines = [];
+}
+
+console.log(
+    "✅ parsedMedicines:",
+    parsedMedicines
+);
+
+console.log(
+    "✅ isArray:",
+    Array.isArray(parsedMedicines)
+);
 
 
      // Signature Section 
