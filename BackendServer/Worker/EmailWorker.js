@@ -87,5 +87,7 @@ const EmailWorker = new Worker(
     }
 );
 
+console.log("Email Stated Working Here ");
+
 
 export default EmailWorker;
