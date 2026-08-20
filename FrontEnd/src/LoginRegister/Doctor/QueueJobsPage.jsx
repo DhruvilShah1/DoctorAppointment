@@ -1,319 +1,365 @@
-import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 
 const QueueJobs = () => {
   const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [queueFilter, setQueueFilter] = useState("all");
 
-  const fetchJobs = async () => {
+  const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState("");
+
+  const [retryingJob, setRetryingJob] = useState(null);
+
+  // ==========================================
+  // Fetch Queue Jobs
+  // ==========================================
+
+  const fetchQueueJobs = async () => {
     try {
       setLoading(true);
+      setError("");
 
-      const response = await axios.get(
-        "/api/queue/prescription",
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/queue/prescription`,
         {
-          withCredentials: true,
+          method: "GET",
+
+          credentials: "include",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
-      if (response.data.success) {
-        setJobs(response.data.jobs);
+      if (!response.ok) {
+        throw new Error(
+          `HTTP Error: ${response.status}`
+        );
       }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(
+          data.message || "Failed to fetch queue"
+        );
+      }
+
+      setJobs(data.jobs || []);
 
     } catch (error) {
       console.error(
-        "Failed to fetch queue jobs:",
+        "❌ Queue Fetch Error:",
         error
+      );
+
+      setError(
+        error.message ||
+          "Failed to load queue jobs"
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // ==========================================
+  // Initial Load
+  // ==========================================
+
   useEffect(() => {
-    fetchJobs();
+    fetchQueueJobs();
   }, []);
 
   // ==========================================
-  // Statistics
+  // Retry Job
   // ==========================================
 
-  const stats = useMemo(() => {
-    return {
-      total: jobs.length,
+  const handleRetry = async (jobId) => {
+    try {
+      setRetryingJob(jobId);
 
-      waiting: jobs.filter(
-        (job) => job.status === "waiting"
-      ).length,
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/queue/retry/${jobId}`,
+        {
+          method: "POST",
 
-      running: jobs.filter(
-        (job) =>
-          job.status === "active" ||
-          job.status === "processing"
-      ).length,
+          credentials: "include",
 
-      completed: jobs.filter(
-        (job) => job.status === "completed"
-      ).length,
-
-      failed: jobs.filter(
-        (job) => job.status === "failed"
-      ).length,
-    };
-  }, [jobs]);
-
-  // ==========================================
-  // Filters
-  // ==========================================
-
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-
-      const patientName =
-        job.patient?.name?.toLowerCase() || "";
-
-      const jobType =
-        job.jobType?.toLowerCase() || "";
-
-      const jobId =
-        job.jobId?.toString().toLowerCase() || "";
-
-      const searchText =
-        search.toLowerCase();
-
-      const matchesSearch =
-        patientName.includes(searchText) ||
-        jobType.includes(searchText) ||
-        jobId.includes(searchText);
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        job.status === statusFilter;
-
-      const matchesQueue =
-        queueFilter === "all" ||
-        job.queueName === queueFilter;
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesQueue
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
-    });
-  }, [
-    jobs,
-    search,
-    statusFilter,
-    queueFilter,
-  ]);
 
-  const queueNames = [
-    ...new Set(
-      jobs.map((job) => job.queueName)
-    ),
-  ];
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Retry failed"
+        );
+      }
+
+      // Refresh queue
+      await fetchQueueJobs();
+
+    } catch (error) {
+      console.error(
+        "❌ Retry Error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Failed to retry job"
+      );
+    } finally {
+      setRetryingJob(null);
+    }
+  };
+
+  // ==========================================
+  // Status Color
+  // ==========================================
+
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case "completed":
+        return {
+          background: "#dcfce7",
+          color: "#15803d",
+        };
+
+      case "failed":
+        return {
+          background: "#fee2e2",
+          color: "#dc2626",
+        };
+
+      case "waiting":
+        return {
+          background: "#fef3c7",
+          color: "#d97706",
+        };
+
+      case "active":
+        return {
+          background: "#dbeafe",
+          color: "#2563eb",
+        };
+
+      case "delayed":
+        return {
+          background: "#f3e8ff",
+          color: "#9333ea",
+        };
+
+      default:
+        return {
+          background: "#f3f4f6",
+          color: "#374151",
+        };
+    }
+  };
+
+  // ==========================================
+  // Format Date
+  // ==========================================
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+
+    return new Date(date).toLocaleString(
+      "en-IN",
+      {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }
+    );
+  };
+
+  // ==========================================
+  // Loading
+  // ==========================================
+
+  if (loading) {
+    return (
+      <div style={styles.center}>
+        <div style={styles.loader}></div>
+
+        <p style={styles.loadingText}>
+          Loading Queue Jobs...
+        </p>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // Error
+  // ==========================================
+
+  if (error) {
+    return (
+      <div style={styles.center}>
+        <div style={styles.errorBox}>
+          <h3>Something went wrong</h3>
+
+          <p>{error}</p>
+
+          <button
+            onClick={fetchQueueJobs}
+            style={styles.refreshButton}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // Main UI
+  // ==========================================
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div style={styles.page}>
 
-      {/* ==========================================
+      {/* ======================================
           Header
-      ========================================== */}
+      ====================================== */}
 
-      <div className="flex items-center justify-between mb-8">
+      <div style={styles.header}>
 
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 style={styles.title}>
             Queue Jobs
           </h1>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Monitor and manage background jobs
+          <p style={styles.subtitle}>
+            Monitor and manage your background jobs
           </p>
         </div>
 
         <button
-          onClick={fetchJobs}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
+          onClick={fetchQueueJobs}
+          style={styles.refreshButton}
         >
-          <span>↻</span>
-          Refresh
+          ↻ Refresh
         </button>
 
       </div>
 
-
-      {/* ==========================================
+      {/* ======================================
           Statistics
-      ========================================== */}
+      ====================================== */}
 
-      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-5">
+      <div style={styles.stats}>
 
         <StatCard
           title="Total Jobs"
-          value={stats.total}
-          icon="▦"
-        />
-
-        <StatCard
-          title="Waiting"
-          value={stats.waiting}
-          icon="◷"
-        />
-
-        <StatCard
-          title="Running"
-          value={stats.running}
-          icon="⚡"
+          value={jobs.length}
+          icon="📋"
         />
 
         <StatCard
           title="Completed"
-          value={stats.completed}
+          value={
+            jobs.filter(
+              (job) =>
+                job.status === "completed"
+            ).length
+          }
           icon="✓"
         />
 
         <StatCard
+          title="Processing"
+          value={
+            jobs.filter(
+              (job) =>
+                job.status === "active" ||
+                job.status === "waiting"
+            ).length
+          }
+          icon="⚡"
+        />
+
+        <StatCard
           title="Failed"
-          value={stats.failed}
+          value={
+            jobs.filter(
+              (job) =>
+                job.status === "failed"
+            ).length
+          }
           icon="!"
         />
 
       </div>
 
+      {/* ======================================
+          Empty State
+      ====================================== */}
 
-      {/* ==========================================
-          Filters
-      ========================================== */}
-
-      <div className="p-4 mb-6 bg-white border border-gray-200 rounded-2xl">
-
-        <div className="flex flex-col gap-3 md:flex-row">
-
-          {/* Search */}
-
-          <div className="relative flex-1">
-
-            <span className="absolute text-gray-400 left-3 top-2.5">
-              🔍
-            </span>
-
-            <input
-              type="text"
-              placeholder="Search patient, job type or job ID..."
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              className="w-full py-2.5 pl-10 pr-4 text-sm border border-gray-200 rounded-xl outline-none focus:border-gray-400"
-            />
-
+      {jobs.length === 0 ? (
+        <div style={styles.empty}>
+          <div style={styles.emptyIcon}>
+            📭
           </div>
 
+          <h2>No Queue Jobs</h2>
 
-          {/* Status */}
-
-          <select
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value)
-            }
-            className="px-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none"
-          >
-            <option value="all">
-              All Status
-            </option>
-
-            <option value="waiting">
-              Waiting
-            </option>
-
-            <option value="active">
-              Running
-            </option>
-
-            <option value="completed">
-              Completed
-            </option>
-
-            <option value="failed">
-              Failed
-            </option>
-          </select>
-
-
-          {/* Queue */}
-
-          <select
-            value={queueFilter}
-            onChange={(e) =>
-              setQueueFilter(e.target.value)
-            }
-            className="px-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none"
-          >
-
-            <option value="all">
-              All Queues
-            </option>
-
-            {queueNames.map((queue) => (
-              <option
-                key={queue}
-                value={queue}
-              >
-                {queue}
-              </option>
-            ))}
-
-          </select>
-
+          <p>
+            There are currently no jobs
+            in your queue.
+          </p>
         </div>
+      ) : (
 
-      </div>
+        /* ====================================
+           Jobs Table
+        ==================================== */
 
+        <div style={styles.tableContainer}>
 
-      {/* ==========================================
-          Table
-      ========================================== */}
+          <table style={styles.table}>
 
-      <div className="overflow-hidden bg-white border border-gray-200 rounded-2xl">
-
-        <div className="overflow-x-auto">
-
-          <table className="w-full">
-
-            <thead className="border-b bg-gray-50">
+            <thead>
 
               <tr>
 
-                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
+                <th style={styles.th}>
                   Job
                 </th>
 
-                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
+                <th style={styles.th}>
                   Patient
                 </th>
 
-                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
-                  Queue
+                <th style={styles.th}>
+                  Type
                 </th>
 
-                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
-                  Schedule
+                <th style={styles.th}>
+                  Date
                 </th>
 
-                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
+                <th style={styles.th}>
+                  Slot
+                </th>
+
+                <th style={styles.th}>
                   Status
                 </th>
 
-                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
+                <th style={styles.th}>
                   Attempts
                 </th>
 
-                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
+                <th style={styles.th}>
+                  Created
+                </th>
+
+                <th style={styles.th}>
                   Action
                 </th>
 
@@ -321,56 +367,238 @@ const QueueJobs = () => {
 
             </thead>
 
+            <tbody>
 
-            <tbody className="divide-y divide-gray-100">
+              {jobs.map((job) => {
 
-              {loading ? (
+                const statusStyle =
+                  getStatusStyle(
+                    job.status
+                  );
 
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="px-6 py-16 text-center"
-                  >
-                    <div className="text-sm text-gray-500">
-                      Loading queue jobs...
-                    </div>
-                  </td>
-                </tr>
+                return (
 
-              ) : filteredJobs.length === 0 ? (
-
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="px-6 py-16 text-center"
-                  >
-                    <div className="text-3xl">
-                      📭
-                    </div>
-
-                    <p className="mt-2 text-sm font-medium text-gray-700">
-                      No queue jobs found
-                    </p>
-
-                    <p className="mt-1 text-xs text-gray-400">
-                      Try changing your filters
-                    </p>
-                  </td>
-                </tr>
-
-              ) : (
-
-                filteredJobs.map((job) => (
-
-                  <QueueRow
+                  <tr
                     key={job._id}
-                    job={job}
-                    onRefresh={fetchJobs}
-                  />
+                    style={styles.tr}
+                  >
 
-                ))
+                    {/* Job */}
 
-              )}
+                    <td style={styles.td}>
+
+                      <div style={styles.jobId}>
+                        #{job.jobId}
+                      </div>
+
+                      <div style={styles.queueName}>
+                        {job.queueName}
+                      </div>
+
+                    </td>
+
+                    {/* Patient */}
+
+                    <td style={styles.td}>
+
+                      <div style={styles.patient}>
+
+                        <div
+                          style={
+                            styles.avatar
+                          }
+                        >
+                          {job.patientName
+                            ?.charAt(0)
+                            ?.toUpperCase() ||
+                            "P"}
+                        </div>
+
+                        <div>
+
+                          <div
+                            style={
+                              styles.patientName
+                            }
+                          >
+                            {job.patientName ||
+                              "Unknown Patient"}
+                          </div>
+
+                          <div
+                            style={
+                              styles.patientEmail
+                            }
+                          >
+                            {job.patientEmail ||
+                              "-"}
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </td>
+
+                    {/* Job Type */}
+
+                    <td style={styles.td}>
+
+                      <span
+                        style={
+                          styles.typeBadge
+                        }
+                      >
+                        {job.jobType}
+                      </span>
+
+                    </td>
+
+                    {/* Date */}
+
+                    <td style={styles.td}>
+
+                      {job.date || "-"}
+
+                    </td>
+
+                    {/* Slot */}
+
+                    <td style={styles.td}>
+
+                      <span
+                        style={
+                          styles.slot
+                        }
+                      >
+                        {job.slot || "-"}
+                      </span>
+
+                    </td>
+
+                    {/* Status */}
+
+                    <td style={styles.td}>
+
+                      <span
+                        style={{
+                          ...styles.status,
+                          background:
+                            statusStyle.background,
+                          color:
+                            statusStyle.color,
+                        }}
+                      >
+
+                        <span
+                          style={{
+                            ...styles.statusDot,
+                            background:
+                              statusStyle.color,
+                          }}
+                        />
+
+                        {job.status}
+
+                      </span>
+
+                    </td>
+
+                    {/* Attempts */}
+
+                    <td style={styles.td}>
+
+                      <div
+                        style={
+                          styles.attempts
+                        }
+                      >
+
+                        <strong>
+                          {job.attemptsMade ||
+                            0}
+                        </strong>
+
+                        <span>
+                          /
+                          {job.maxAttempts ||
+                            3}
+                        </span>
+
+                      </div>
+
+                    </td>
+
+                    {/* Created */}
+
+                    <td style={styles.td}>
+
+                      <span
+                        style={
+                          styles.created
+                        }
+                      >
+                        {formatDate(
+                          job.createdAt
+                        )}
+                      </span>
+
+                    </td>
+
+                    {/* Action */}
+
+                    <td style={styles.td}>
+
+                      {job.status ===
+                        "failed" ? (
+
+                        <button
+                          onClick={() =>
+                            handleRetry(
+                              job.jobId
+                            )
+                          }
+                          disabled={
+                            retryingJob ===
+                            job.jobId
+                          }
+                          style={
+                            styles.retryButton
+                          }
+                        >
+
+                          {retryingJob ===
+                          job.jobId
+                            ? "Retrying..."
+                            : "↻ Retry"}
+
+                        </button>
+
+                      ) : (
+
+                        <button
+                          style={
+                            styles.viewButton
+                          }
+                          onClick={() =>
+                            console.log(
+                              "Job:",
+                              job
+                            )
+                          }
+                        >
+                          View
+                        </button>
+
+                      )}
+
+                    </td>
+
+                  </tr>
+
+                );
+
+              })}
 
             </tbody>
 
@@ -378,16 +606,16 @@ const QueueJobs = () => {
 
         </div>
 
-      </div>
+      )}
 
     </div>
   );
 };
 
 
-// =================================================
-// Statistic Card
-// =================================================
+// ==========================================
+// Stat Card
+// ==========================================
 
 const StatCard = ({
   title,
@@ -396,263 +624,319 @@ const StatCard = ({
 }) => {
 
   return (
-    <div className="p-5 bg-white border border-gray-200 rounded-2xl">
 
-      <div className="flex items-center justify-between">
+    <div style={styles.statCard}>
 
-        <div>
+      <div style={styles.statIcon}>
+        {icon}
+      </div>
 
-          <p className="text-sm text-gray-500">
-            {title}
-          </p>
+      <div>
 
-          <p className="mt-2 text-2xl font-semibold text-gray-900">
-            {value}
-          </p>
+        <p style={styles.statTitle}>
+          {title}
+        </p>
 
-        </div>
-
-        <div className="flex items-center justify-center w-10 h-10 text-lg bg-gray-100 rounded-xl">
-          {icon}
-        </div>
+        <h2 style={styles.statValue}>
+          {value}
+        </h2>
 
       </div>
 
     </div>
+
   );
 };
 
 
-// =================================================
-// Queue Row
-// =================================================
-
-const QueueRow = ({
-  job,
-  onRefresh,
-}) => {
-
-  const isFailed =
-    job.status === "failed";
-
-  return (
-    <tr className="transition hover:bg-gray-50">
-
-      {/* Job */}
-
-      <td className="px-6 py-5">
-
-        <div>
-
-          <p className="text-sm font-semibold text-gray-900">
-            #{job.jobId}
-          </p>
-
-          <p className="mt-1 text-xs text-gray-400">
-            {job.jobType}
-          </p>
-
-        </div>
-
-      </td>
-
-
-      {/* Patient */}
-
-      <td className="px-6 py-5">
-
-        <div className="flex items-center gap-3">
-
-          <div className="flex items-center justify-center w-9 h-9 text-xs font-semibold text-gray-600 bg-gray-100 rounded-full">
-            {getInitials(
-              job.patient?.name
-            )}
-          </div>
-
-          <div>
-
-            <p className="text-sm font-medium text-gray-900">
-              {job.patient?.name ||
-                "Unknown Patient"}
-            </p>
-
-            <p className="text-xs text-gray-400">
-              {job.patient?.email || "-"}
-            </p>
-
-          </div>
-
-        </div>
-
-      </td>
-
-
-      {/* Queue */}
-
-      <td className="px-6 py-5">
-
-        <span className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg">
-          {job.queueName}
-        </span>
-
-      </td>
-
-
-      {/* Schedule */}
-
-      <td className="px-6 py-5">
-
-        <p className="text-sm font-medium text-gray-700">
-          {job.payload?.date || "-"}
-        </p>
-
-        <p className="mt-1 text-xs text-gray-400">
-          {job.payload?.slot || "-"}
-        </p>
-
-      </td>
-
-
-      {/* Status */}
-
-      <td className="px-6 py-5">
-
-        <StatusBadge
-          status={job.status}
-        />
-
-      </td>
-
-
-      {/* Attempts */}
-
-      <td className="px-6 py-5">
-
-        <span className="text-sm font-medium text-gray-700">
-          {job.attemptsMade || 0}
-        </span>
-
-        <span className="text-sm text-gray-400">
-          {" / "}
-          {job.maxAttempts || 1}
-        </span>
-
-      </td>
-
-
-      {/* Action */}
-
-      <td className="px-6 py-5">
-
-        {isFailed ? (
-
-          <button
-            onClick={() => {
-              // call retry API here
-            }}
-            className="px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
-          >
-            ↻ Retry
-          </button>
-
-        ) : (
-
-          <button
-            className="px-3 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-          >
-            View
-          </button>
-
-        )}
-
-      </td>
-
-    </tr>
-  );
-};
-
-
-// =================================================
-// Status Badge
-// =================================================
-
-const StatusBadge = ({
-  status,
-}) => {
-
-  const config = {
-
-    waiting: {
-      label: "Waiting",
-      className:
-        "bg-gray-100 text-gray-600",
-    },
-
-    active: {
-      label: "Running",
-      className:
-        "bg-blue-50 text-blue-600",
-    },
-
-    processing: {
-      label: "Running",
-      className:
-        "bg-blue-50 text-blue-600",
-    },
-
-    completed: {
-      label: "Completed",
-      className:
-        "bg-green-50 text-green-600",
-    },
-
-    failed: {
-      label: "Failed",
-      className:
-        "bg-red-50 text-red-600",
-    },
-
-    delayed: {
-      label: "Retrying",
-      className:
-        "bg-yellow-50 text-yellow-600",
-    },
-
-  };
-
-  const current =
-    config[status] || {
-      label: status,
-      className:
-        "bg-gray-100 text-gray-600",
-    };
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg ${current.className}`}
-    >
-
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
-
-      {current.label}
-
-    </span>
-  );
-};
-
-
-// =================================================
-// Initials
-// =================================================
-
-const getInitials = (name = "") => {
-
-  return name
-    .split(" ")
-    .map((word) => word[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+// ==========================================
+// Styles
+// ==========================================
+
+const styles = {
+
+  page: {
+    minHeight: "100vh",
+    background: "#f8fafc",
+    padding: "32px",
+    fontFamily:
+      "Inter, Arial, sans-serif",
+  },
+
+  header: {
+    display: "flex",
+    justifyContent:
+      "space-between",
+    alignItems: "center",
+    marginBottom: "30px",
+  },
+
+  title: {
+    margin: 0,
+    fontSize: "30px",
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+
+  subtitle: {
+    marginTop: "6px",
+    color: "#64748b",
+    fontSize: "14px",
+  },
+
+  refreshButton: {
+    border: "none",
+    background: "#0f172a",
+    color: "#fff",
+    padding: "11px 18px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontWeight: "600",
+  },
+
+  stats: {
+    display: "grid",
+    gridTemplateColumns:
+      "repeat(4, 1fr)",
+    gap: "18px",
+    marginBottom: "28px",
+  },
+
+  statCard: {
+    background: "#fff",
+    borderRadius: "16px",
+    padding: "20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    border:
+      "1px solid #e2e8f0",
+    boxShadow:
+      "0 4px 15px rgba(15,23,42,0.04)",
+  },
+
+  statIcon: {
+    width: "44px",
+    height: "44px",
+    borderRadius: "12px",
+    background: "#f1f5f9",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "20px",
+  },
+
+  statTitle: {
+    margin: 0,
+    color: "#64748b",
+    fontSize: "13px",
+  },
+
+  statValue: {
+    margin: "3px 0 0",
+    color: "#0f172a",
+    fontSize: "24px",
+  },
+
+  tableContainer: {
+    background: "#fff",
+    borderRadius: "18px",
+    overflowX: "auto",
+    border:
+      "1px solid #e2e8f0",
+    boxShadow:
+      "0 5px 20px rgba(15,23,42,0.05)",
+  },
+
+  table: {
+    width: "100%",
+    borderCollapse:
+      "collapse",
+    minWidth: "1200px",
+  },
+
+  th: {
+    textAlign: "left",
+    padding: "16px",
+    fontSize: "12px",
+    textTransform:
+      "uppercase",
+    color: "#64748b",
+    background: "#f8fafc",
+    borderBottom:
+      "1px solid #e2e8f0",
+  },
+
+  td: {
+    padding: "17px 16px",
+    borderBottom:
+      "1px solid #f1f5f9",
+    fontSize: "13px",
+    color: "#334155",
+  },
+
+  tr: {
+    transition:
+      "background 0.2s",
+  },
+
+  jobId: {
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+
+  queueName: {
+    marginTop: "4px",
+    color: "#94a3b8",
+    fontSize: "11px",
+  },
+
+  patient: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+
+  avatar: {
+    width: "38px",
+    height: "38px",
+    borderRadius: "50%",
+    background: "#e2e8f0",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "700",
+    color: "#475569",
+  },
+
+  patientName: {
+    fontWeight: "600",
+    color: "#0f172a",
+  },
+
+  patientEmail: {
+    fontSize: "11px",
+    color: "#94a3b8",
+    marginTop: "3px",
+  },
+
+  typeBadge: {
+    padding: "6px 9px",
+    borderRadius: "7px",
+    background: "#f1f5f9",
+    color: "#475569",
+    fontSize: "11px",
+    fontWeight: "600",
+  },
+
+  slot: {
+    background: "#f8fafc",
+    border:
+      "1px solid #e2e8f0",
+    padding: "6px 9px",
+    borderRadius: "7px",
+    fontWeight: "600",
+  },
+
+  status: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "6px 10px",
+    borderRadius: "20px",
+    fontSize: "11px",
+    fontWeight: "700",
+    textTransform:
+      "capitalize",
+  },
+
+  statusDot: {
+    width: "6px",
+    height: "6px",
+    borderRadius: "50%",
+  },
+
+  attempts: {
+    display: "flex",
+    gap: "3px",
+    alignItems: "center",
+  },
+
+  created: {
+    color: "#64748b",
+    fontSize: "12px",
+  },
+
+  retryButton: {
+    border: "none",
+    background: "#fee2e2",
+    color: "#dc2626",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "700",
+    fontSize: "12px",
+  },
+
+  viewButton: {
+    border:
+      "1px solid #e2e8f0",
+    background: "#fff",
+    color: "#334155",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "600",
+    fontSize: "12px",
+  },
+
+  center: {
+    minHeight: "70vh",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  loader: {
+    width: "35px",
+    height: "35px",
+    border:
+      "4px solid #e2e8f0",
+    borderTop:
+      "4px solid #0f172a",
+    borderRadius: "50%",
+    animation:
+      "spin 1s linear infinite",
+  },
+
+  loadingText: {
+    color: "#64748b",
+    marginTop: "12px",
+  },
+
+  errorBox: {
+    background: "#fff",
+    padding: "30px",
+    borderRadius: "15px",
+    textAlign: "center",
+    border:
+      "1px solid #fecaca",
+  },
+
+  empty: {
+    background: "#fff",
+    padding: "70px",
+    textAlign: "center",
+    borderRadius: "18px",
+    border:
+      "1px solid #e2e8f0",
+  },
+
+  emptyIcon: {
+    fontSize: "45px",
+    marginBottom: "15px",
+  },
 };
 
 export default QueueJobs;
