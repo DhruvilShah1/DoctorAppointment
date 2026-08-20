@@ -7,6 +7,7 @@ import AppointmentController from "../Controller/AppointmentController.js";
 import DoctorController from "../Controller/DoctorController.js";
 import PrescriptionController from "../Controller/PrescriptionController.js";
 import upload from "../Config/uploads.js";
+import QueueController from "../Controller/QueueController.js";
 
 const router = express.Router();
 
@@ -68,9 +69,9 @@ router.post('/finsh/slot',
 
 
 // Doctor Profile 
-
 router.post('/create/doctor/profile', verifyToken , authorizeRoles("doctor") , DoctorController.createProfile)
 router.get('/get/doctor/profile', verifyToken , authorizeRoles("doctor") , DoctorController.getMyProfile)
+router.get('/queue-jobs' ,verifyToken , authorizeRoles("doctor") , QueueController.getPrescptionQueue )
 
 
 // create Prescription

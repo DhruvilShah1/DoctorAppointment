@@ -26,6 +26,7 @@ import PharmacyProfile from "./pharmacy-side-portal/PharmacyProfile";
 import Chatbot from "./LoginRegister/User/Chatbot";
 import BASE_URL from "./LoginRegister/config/api.js";
 import UserSetting from "./LoginRegister/User/UserSetting";
+import QueueJobsPage from './LoginRegister/Doctor/QueueJobsPage.jsx'
 
 const App = () => {
   
@@ -205,6 +206,7 @@ useEffect(() => {
             <Route path='doctor/profile' element={<DoctorProfileEditor/>}/>
 
             <Route path='/patient/table' element={<DoctorPrescriptionTable/>}/>
+            <Route path='/queue' element={<QueueJobsPage/>}/>
             </Route>
 
 
