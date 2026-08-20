@@ -17,12 +17,13 @@ const QueueController = {
           createdAt: -1,
         });
 
-        const PatientID = queueJobs.payload.patientId ; 
+        const patientIds = [...new Set(
+          queueJobs
+            .map(job => job.payload?.patientId)
+            .filter(Boolean)
+        )];
 
-        const Patient = await Users.find({
-            _id : PatientID
-        })
-        
+        const patients = await Users.find({ _id: { $in: patientIds } });
 
       return res.status(200).json({
         success: true,
@@ -30,8 +31,8 @@ const QueueController = {
         count: queueJobs.length,
 
         jobs: queueJobs,
-        
-        patient : Patient
+
+        patients,
       });
 
 
