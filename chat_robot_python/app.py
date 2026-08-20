@@ -24,7 +24,7 @@ CORS(
     app,
     origins=[
         "https://doctor-appointment-kohl-phi.vercel.app",
-        "https://doctorappointment-lj0a.onrender.com"
+        "https://doctorappointment-1-co0d.onrender.com"
     ]
 )
 
@@ -157,7 +157,7 @@ def book_slot(
     }
 
     try:
-        response = requests.post("https://doctorappointment-lj0a.onrender.com/api/book/slot/python",
+        response = requests.post("https://doctorappointment-1-co0d.onrender.com/api/book/slot/python",
                 json=payload,
                 timeout=10
             )
