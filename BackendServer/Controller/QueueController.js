@@ -17,14 +17,6 @@ const QueueController = {
           createdAt: -1,
         });
 
-        const patientIds = [...new Set(
-          queueJobs
-            .map(job => job.payload?.patientId)
-            .filter(Boolean)
-        )];
-
-        const patients = await Users.find({ _id: { $in: patientIds } });
-
       return res.status(200).json({
         success: true,
 
@@ -32,7 +24,6 @@ const QueueController = {
 
         jobs: queueJobs,
 
-        patients,
       });
 
 
