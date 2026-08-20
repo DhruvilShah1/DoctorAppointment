@@ -91,42 +91,48 @@ const App = () => {
   };
 
   const reconnectToRoom = () => {
-    const savedRoom = localStorage.getItem("roomId");
-    const savedData = JSON.parse(localStorage.getItem("appointment"));
-  
-    if (!savedRoom || !savedData) return;
-  
-    socket.emit("patient:join", {
-      doctorId: savedData.doctorId,
-      date: savedData.date,
-      slot: savedData.slot,
-      patientId: user?.id,
-    });
-  
+    if (!user?.id) return;
+    const savedAppointments = localStorage.getItem("appointments");
+    if (!savedAppointments) return;
+    try {
+      const list = JSON.parse(savedAppointments);
+      list.forEach((savedData) => {
+        socket.emit("patient:join", {
+          doctorId: savedData.doctorId,
+          date: savedData.date,
+          slot: savedData.slot,
+          patientId: user.id,
+        });
+      });
+    } catch (e) {
+      console.error("Invalid appointments data:", e);
+    }
   };
 
 useEffect(() => {
   const handleStart = async (data) => {
     toast.success("Doctor has started appointment");
-
     await fetchAppointment(data.date, data.slot);
-
     setShowList(true);
   };
 
-  socket.on("queue:started", handleStart);
-  socket.on("queue:status:updated", async (data) => {
-  toast.success(data.message);
+  const handleUpdate = async (data) => {
+    toast.success(data.message);
+    await fetchAppointment(data.date, data.slot);
+  };
 
-  await fetchAppointment(data.date, data.slot);
-});
+  socket.on("queue:started", handleStart);
+  socket.on("queue:status:updated", handleUpdate);
 
   return () => {
     socket.off("queue:started", handleStart);
+    socket.off("queue:status:updated", handleUpdate);
   };
 }, []);
 
-reconnectToRoom();
+useEffect(() => {
+  reconnectToRoom();
+}, [user]);
 
 useEffect(() => {
   const handleFinish = (data) => {

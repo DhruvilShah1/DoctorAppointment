@@ -172,6 +172,8 @@ startQueuWithslots: async (req, res) => {
       const roomId = `${doctorId}_${formattedDate}_${slot}`;
 
       io.to(roomId).emit("queue:started", {
+        date: formattedDate,
+        slot,
         message: "Queue has started",
       });
     }

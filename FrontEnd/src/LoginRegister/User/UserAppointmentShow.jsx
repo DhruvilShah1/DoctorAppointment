@@ -194,40 +194,22 @@ const UserAppointmentShow = () => {
   // =========================================================
 
   const reconnectToRoom = () => {
-    const savedRoom =
-      localStorage.getItem("roomId");
-
-    const savedAppointment =
-      localStorage.getItem("appointment");
-
-    if (
-      !savedRoom ||
-      !savedAppointment ||
-      !user?.id
-    ) {
-      return;
-    }
-
-    let savedData;
-
+    if (!user?.id) return;
+    const savedAppointments = localStorage.getItem("appointments");
+    if (!savedAppointments) return;
     try {
-      savedData =
-        JSON.parse(savedAppointment);
-    } catch (error) {
-      console.error(
-        "Invalid appointment data:",
-        error
-      );
-
-      return;
+      const list = JSON.parse(savedAppointments);
+      list.forEach((savedData) => {
+        socket.emit("patient:join", {
+          doctorId: savedData.doctorId,
+          date: savedData.date,
+          slot: savedData.slot,
+          patientId: user.id,
+        });
+      });
+    } catch (e) {
+      console.error("Invalid appointments data:", e);
     }
-
-    socket.emit("patient:join", {
-      doctorId: savedData.doctorId,
-      date: savedData.date,
-      slot: savedData.slot,
-      patientId: user.id,
-    });
   };
 
   // =========================================================
@@ -292,54 +274,38 @@ const UserAppointmentShow = () => {
       );
 
       // =====================================================
-      // JOIN FIRST APPOINTMENT ROOM
+      // JOIN ALL APPOINTMENT ROOMS
       // =====================================================
 
-      const appointment =
-        data?.data?.[0];
+      if (!data?.data?.length || !user?.id) return;
 
-      if (
-        !appointment ||
-        !user?.id
-      ) {
-        return;
-      }
-
-      const formattedDate =
-        appointment.date?.split("T")[0];
-
-      socket.emit("patient:join", {
-        doctorId:
-          appointment.doctorId,
-
-        date: formattedDate,
-
-        slot:
-          appointment.slotStart,
-
-        patientId: user.id,
+      data.data.forEach((appointment) => {
+        const formattedDate = appointment.date?.split("T")[0];
+        socket.emit("patient:join", {
+          doctorId: appointment.doctorId,
+          date: formattedDate,
+          slot: appointment.slotStart,
+          patientId: user.id,
+        });
       });
 
-      const roomId =
-        `${appointment.doctorId}_${formattedDate}_${appointment.slotStart}`;
+      // Save all appointments for reconnect
+      const allRooms = data.data.map((a) => ({
+        doctorId: a.doctorId,
+        date: a.date?.split("T")[0],
+        slot: a.slotStart,
+      }));
+      localStorage.setItem("appointments", JSON.stringify(allRooms));
 
-      localStorage.setItem(
-        "roomId",
-        roomId
-      );
-
-      localStorage.setItem(
-        "appointment",
-        JSON.stringify({
-          doctorId:
-            appointment.doctorId,
-
-          date: formattedDate,
-
-          slot:
-            appointment.slotStart,
-        })
-      );
+      // Keep legacy keys for App.jsx reconnect
+      const latest = data.data[data.data.length - 1];
+      const latestDate = latest.date?.split("T")[0];
+      localStorage.setItem("roomId", `${latest.doctorId}_${latestDate}_${latest.slotStart}`);
+      localStorage.setItem("appointment", JSON.stringify({
+        doctorId: latest.doctorId,
+        date: latestDate,
+        slot: latest.slotStart,
+      }));
     } catch (err) {
       console.error(err);
 
