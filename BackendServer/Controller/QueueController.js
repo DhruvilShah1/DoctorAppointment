@@ -44,7 +44,6 @@ const QueueController = {
 
     }
   },
-
 };
 
 export default QueueController;
