@@ -218,7 +218,7 @@ const prescriptionWorker = new Worker(
       const patientUser = await Users.findOne({ _id: patientId }).select("email");
       const patientEmail = patientUser?.email;
 
-      await EmailQueue.add({
+      await EmailQueue.add("send-prescription-email", {
         prescriptionId,
         patientEmail,
         patientName,
@@ -226,8 +226,8 @@ const prescriptionWorker = new Worker(
         date,
         slot,
         pdfUrl,
-        instructions
-      })
+        instructions,
+      });
 
       return {
         success: true,
