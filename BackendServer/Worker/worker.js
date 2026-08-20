@@ -13,7 +13,7 @@ import { uploadPdf } from "../Config/uploadthing.js";
 import { connectDB } from "../Config/Connection.js";
 import QueueJobs from "../Model/QueueJobs.js";
 import EmailQueue from "../Queue/EmailQueue.js";
-import Users from "../../../../../../OAuth/server/Model/Users.js";
+import Users from "../Model/Users.js";
 import EmailWorker from "./EmailWorker.js";
 
 connectDB()
@@ -215,9 +215,8 @@ const prescriptionWorker = new Worker(
 
       console.log("✅ Prescription updated successfully");
 
-      const patientEmail = Users.findOne({
-        _id: patientId
-      }).select("email")
+      const patientUser = await Users.findOne({ _id: patientId }).select("email");
+      const patientEmail = patientUser?.email;
 
       await EmailQueue.add({
         prescriptionId,
