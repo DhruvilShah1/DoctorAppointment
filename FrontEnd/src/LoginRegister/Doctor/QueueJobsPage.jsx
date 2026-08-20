@@ -1,406 +1,376 @@
-import React, { useEffect, useState } from "react";
-import BASE_URL from "../config/api.js";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 
-const QueueJobsPage = () => {
+const QueueJobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [retrying, setRetrying] = useState(null);
-
-  // ==========================================
-  // Fetch Queue Jobs
-  // ==========================================
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [queueFilter, setQueueFilter] = useState("all");
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
 
-       const refreshRes = await fetch(
-      `${BASE_URL}/api/refresh-token`,
-      {
-        method: "POST",
-        credentials: "include",
-      }
-    );
-
-    const refreshData =
-      await refreshRes.json();
-
-
-      const response = await fetch(
-        `${BASE_URL}/api/queue-jobs` ,{
-            method: "GET",
-         headers : {
-          Authorization: `Bearer ${refreshData.newAccessToken}`,
-        },
-    }
+      const response = await axios.get(
+        "/api/queue/prescription",
+        {
+          withCredentials: true,
+        }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch queue jobs");
+      if (response.data.success) {
+        setJobs(response.data.jobs);
       }
 
-      const data = await response.json();
-
-      setJobs(data.jobs || []);
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Failed to fetch queue jobs:",
+        error
+      );
     } finally {
       setLoading(false);
     }
   };
 
-
-  // ==========================================
-  // Retry Job
-  // ==========================================
-
-  const retryJob = async (job) => {
-
-    try {
-
-      setRetrying(job.jobId);
-
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/queue-jobs/${job.jobId}/retry`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to retry job");
-      }
-
-      const data = await response.json();
-
-      console.log("Retry response:", data);
-
-      // Refresh jobs
-      await fetchJobs();
-
-    } catch (error) {
-
-      console.error("Retry error:", error);
-
-      alert("Failed to retry job");
-
-    } finally {
-
-      setRetrying(null);
-
-    }
-  };
-
-
   useEffect(() => {
     fetchJobs();
   }, []);
 
+  // ==========================================
+  // Statistics
+  // ==========================================
+
+  const stats = useMemo(() => {
+    return {
+      total: jobs.length,
+
+      waiting: jobs.filter(
+        (job) => job.status === "waiting"
+      ).length,
+
+      running: jobs.filter(
+        (job) =>
+          job.status === "active" ||
+          job.status === "processing"
+      ).length,
+
+      completed: jobs.filter(
+        (job) => job.status === "completed"
+      ).length,
+
+      failed: jobs.filter(
+        (job) => job.status === "failed"
+      ).length,
+    };
+  }, [jobs]);
 
   // ==========================================
-  // Loading
+  // Filters
   // ==========================================
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-500">
-          Loading queue jobs...
-        </div>
-      </div>
-    );
-  }
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
 
+      const patientName =
+        job.patient?.name?.toLowerCase() || "";
+
+      const jobType =
+        job.jobType?.toLowerCase() || "";
+
+      const jobId =
+        job.jobId?.toString().toLowerCase() || "";
+
+      const searchText =
+        search.toLowerCase();
+
+      const matchesSearch =
+        patientName.includes(searchText) ||
+        jobType.includes(searchText) ||
+        jobId.includes(searchText);
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        job.status === statusFilter;
+
+      const matchesQueue =
+        queueFilter === "all" ||
+        job.queueName === queueFilter;
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesQueue
+      );
+    });
+  }, [
+    jobs,
+    search,
+    statusFilter,
+    queueFilter,
+  ]);
+
+  const queueNames = [
+    ...new Set(
+      jobs.map((job) => job.queueName)
+    ),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
 
-      {/* ================================= */}
-      {/* Header */}
-      {/* ================================= */}
+      {/* ==========================================
+          Header
+      ========================================== */}
 
-      <div className="mb-6">
+      <div className="flex items-center justify-between mb-8">
 
-        <h1 className="text-2xl font-bold text-gray-900">
-          Queue Jobs
-        </h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Queue Jobs
+          </h1>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Monitor background jobs and retry failed jobs.
-        </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Monitor and manage background jobs
+          </p>
+        </div>
+
+        <button
+          onClick={fetchJobs}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
+        >
+          <span>↻</span>
+          Refresh
+        </button>
 
       </div>
 
 
-      {/* ================================= */}
-      {/* Stats */}
-      {/* ================================= */}
+      {/* ==========================================
+          Statistics
+      ========================================== */}
 
-      <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-5">
 
         <StatCard
-          title="Total"
-          value={jobs.length}
+          title="Total Jobs"
+          value={stats.total}
+          icon="▦"
         />
 
         <StatCard
           title="Waiting"
-          value={
-            jobs.filter(
-              (job) => job.status === "waiting"
-            ).length
-          }
+          value={stats.waiting}
+          icon="◷"
+        />
+
+        <StatCard
+          title="Running"
+          value={stats.running}
+          icon="⚡"
         />
 
         <StatCard
           title="Completed"
-          value={
-            jobs.filter(
-              (job) => job.status === "completed"
-            ).length
-          }
+          value={stats.completed}
+          icon="✓"
         />
 
         <StatCard
           title="Failed"
-          value={
-            jobs.filter(
-              (job) => job.status === "failed"
-            ).length
-          }
+          value={stats.failed}
+          icon="!"
         />
 
       </div>
 
 
-      {/* ================================= */}
-      {/* Table */}
-      {/* ================================= */}
+      {/* ==========================================
+          Filters
+      ========================================== */}
 
-      <div className="overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm">
+      <div className="p-4 mb-6 bg-white border border-gray-200 rounded-2xl">
+
+        <div className="flex flex-col gap-3 md:flex-row">
+
+          {/* Search */}
+
+          <div className="relative flex-1">
+
+            <span className="absolute text-gray-400 left-3 top-2.5">
+              🔍
+            </span>
+
+            <input
+              type="text"
+              placeholder="Search patient, job type or job ID..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              className="w-full py-2.5 pl-10 pr-4 text-sm border border-gray-200 rounded-xl outline-none focus:border-gray-400"
+            />
+
+          </div>
+
+
+          {/* Status */}
+
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value)
+            }
+            className="px-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none"
+          >
+            <option value="all">
+              All Status
+            </option>
+
+            <option value="waiting">
+              Waiting
+            </option>
+
+            <option value="active">
+              Running
+            </option>
+
+            <option value="completed">
+              Completed
+            </option>
+
+            <option value="failed">
+              Failed
+            </option>
+          </select>
+
+
+          {/* Queue */}
+
+          <select
+            value={queueFilter}
+            onChange={(e) =>
+              setQueueFilter(e.target.value)
+            }
+            className="px-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none"
+          >
+
+            <option value="all">
+              All Queues
+            </option>
+
+            {queueNames.map((queue) => (
+              <option
+                key={queue}
+                value={queue}
+              >
+                {queue}
+              </option>
+            ))}
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      {/* ==========================================
+          Table
+      ========================================== */}
+
+      <div className="overflow-hidden bg-white border border-gray-200 rounded-2xl">
 
         <div className="overflow-x-auto">
 
           <table className="w-full">
 
-            <thead className="bg-gray-50 border-b">
+            <thead className="border-b bg-gray-50">
 
               <tr>
 
-                <TableHeader>
+                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
                   Job
-                </TableHeader>
+                </th>
 
-                <TableHeader>
+                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
+                  Patient
+                </th>
+
+                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
                   Queue
-                </TableHeader>
+                </th>
 
-                <TableHeader>
-                  Reference
-                </TableHeader>
+                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
+                  Schedule
+                </th>
 
-                <TableHeader>
+                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
                   Status
-                </TableHeader>
+                </th>
 
-                <TableHeader>
+                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
                   Attempts
-                </TableHeader>
+                </th>
 
-                <TableHeader>
-                  Progress
-                </TableHeader>
-
-                <TableHeader>
-                  Created
-                </TableHeader>
-
-                <TableHeader>
+                <th className="px-6 py-4 text-xs font-medium tracking-wide text-left text-gray-500 uppercase">
                   Action
-                </TableHeader>
+                </th>
 
               </tr>
 
             </thead>
 
 
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-gray-100">
 
-              {jobs.map((job) => (
+              {loading ? (
 
-                <tr
-                  key={job._id}
-                  className="hover:bg-gray-50"
-                >
-
-                  {/* Job */}
-
-                  <td className="px-6 py-4">
-
-                    <div>
-
-                      <p className="font-medium text-gray-900">
-                        {job.jobType}
-                      </p>
-
-                      <p className="text-xs text-gray-400">
-                        Job ID: {job.jobId}
-                      </p>
-
+                <tr>
+                  <td
+                    colSpan="7"
+                    className="px-6 py-16 text-center"
+                  >
+                    <div className="text-sm text-gray-500">
+                      Loading queue jobs...
                     </div>
-
                   </td>
-
-
-                  {/* Queue */}
-
-                  <td className="px-6 py-4">
-
-                    <span className="px-2.5 py-1 text-xs font-medium bg-gray-100 rounded-md">
-                      {job.queueName}
-                    </span>
-
-                  </td>
-
-
-                  {/* Reference */}
-
-                  <td className="px-6 py-4">
-
-                    <div>
-
-                      <p className="text-sm font-medium text-gray-700">
-                        {job.referenceType}
-                      </p>
-
-                      <p className="text-xs text-gray-400">
-                        {job.referenceId}
-                      </p>
-
-                    </div>
-
-                  </td>
-
-
-                  {/* Status */}
-
-                  <td className="px-6 py-4">
-
-                    <StatusBadge
-                      status={job.status}
-                    />
-
-                  </td>
-
-
-                  {/* Attempts */}
-
-                  <td className="px-6 py-4">
-
-                    <span className="text-sm text-gray-700">
-
-                      {job.attemptsMade || 0}
-
-                      <span className="text-gray-400">
-                        {" "}
-                        / {job.maxAttempts || 1}
-                      </span>
-
-                    </span>
-
-                  </td>
-
-
-                  {/* Progress */}
-
-                  <td className="px-6 py-4">
-
-                    <div className="w-32">
-
-                      <div className="flex justify-between mb-1">
-
-                        <span className="text-xs text-gray-500">
-                          Progress
-                        </span>
-
-                        <span className="text-xs font-medium">
-                          {job.progress || 0}%
-                        </span>
-
-                      </div>
-
-                      <div className="h-2 overflow-hidden bg-gray-100 rounded-full">
-
-                        <div
-                          className="h-full bg-blue-500 rounded-full"
-                          style={{
-                            width: `${job.progress || 0}%`,
-                          }}
-                        />
-
-                      </div>
-
-                    </div>
-
-                  </td>
-
-
-                  {/* Created */}
-
-                  <td className="px-6 py-4">
-
-                    <span className="text-sm text-gray-500">
-
-                      {formatDate(job.createdAt)}
-
-                    </span>
-
-                  </td>
-
-
-                  {/* Action */}
-
-                  <td className="px-6 py-4">
-
-                    {job.status === "failed" ? (
-
-                      <button
-                        onClick={() => retryJob(job)}
-                        disabled={retrying === job.jobId}
-                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-
-                        {retrying === job.jobId ? (
-                          <>
-                            <Spinner />
-                            Retrying...
-                          </>
-                        ) : (
-                          <>
-                            <span>↻</span>
-                            Retry
-                          </>
-                        )}
-
-                      </button>
-
-                    ) : (
-
-                      <span className="text-xs text-gray-400">
-                        —
-                      </span>
-
-                    )}
-
-                  </td>
-
                 </tr>
 
-              ))}
+              ) : filteredJobs.length === 0 ? (
+
+                <tr>
+                  <td
+                    colSpan="7"
+                    className="px-6 py-16 text-center"
+                  >
+                    <div className="text-3xl">
+                      📭
+                    </div>
+
+                    <p className="mt-2 text-sm font-medium text-gray-700">
+                      No queue jobs found
+                    </p>
+
+                    <p className="mt-1 text-xs text-gray-400">
+                      Try changing your filters
+                    </p>
+                  </td>
+                </tr>
+
+              ) : (
+
+                filteredJobs.map((job) => (
+
+                  <QueueRow
+                    key={job._id}
+                    job={job}
+                    onRefresh={fetchJobs}
+                  />
+
+                ))
+
+              )}
 
             </tbody>
 
@@ -408,20 +378,43 @@ const QueueJobsPage = () => {
 
         </div>
 
+      </div>
 
-        {/* Empty */}
+    </div>
+  );
+};
 
-        {jobs.length === 0 && (
 
-          <div className="p-10 text-center">
+// =================================================
+// Statistic Card
+// =================================================
 
-            <p className="text-gray-500">
-              No queue jobs found.
-            </p>
+const StatCard = ({
+  title,
+  value,
+  icon,
+}) => {
 
-          </div>
+  return (
+    <div className="p-5 bg-white border border-gray-200 rounded-2xl">
 
-        )}
+      <div className="flex items-center justify-between">
+
+        <div>
+
+          <p className="text-sm text-gray-500">
+            {title}
+          </p>
+
+          <p className="mt-2 text-2xl font-semibold text-gray-900">
+            {value}
+          </p>
+
+        </div>
+
+        <div className="flex items-center justify-center w-10 h-10 text-lg bg-gray-100 rounded-xl">
+          {icon}
+        </div>
 
       </div>
 
@@ -430,87 +423,236 @@ const QueueJobsPage = () => {
 };
 
 
-// ==========================================
-// Components
-// ==========================================
+// =================================================
+// Queue Row
+// =================================================
 
-const TableHeader = ({ children }) => {
+const QueueRow = ({
+  job,
+  onRefresh,
+}) => {
+
+  const isFailed =
+    job.status === "failed";
 
   return (
-    <th className="px-6 py-4 text-xs font-semibold tracking-wider text-left text-gray-500 uppercase">
-      {children}
-    </th>
+    <tr className="transition hover:bg-gray-50">
+
+      {/* Job */}
+
+      <td className="px-6 py-5">
+
+        <div>
+
+          <p className="text-sm font-semibold text-gray-900">
+            #{job.jobId}
+          </p>
+
+          <p className="mt-1 text-xs text-gray-400">
+            {job.jobType}
+          </p>
+
+        </div>
+
+      </td>
+
+
+      {/* Patient */}
+
+      <td className="px-6 py-5">
+
+        <div className="flex items-center gap-3">
+
+          <div className="flex items-center justify-center w-9 h-9 text-xs font-semibold text-gray-600 bg-gray-100 rounded-full">
+            {getInitials(
+              job.patient?.name
+            )}
+          </div>
+
+          <div>
+
+            <p className="text-sm font-medium text-gray-900">
+              {job.patient?.name ||
+                "Unknown Patient"}
+            </p>
+
+            <p className="text-xs text-gray-400">
+              {job.patient?.email || "-"}
+            </p>
+
+          </div>
+
+        </div>
+
+      </td>
+
+
+      {/* Queue */}
+
+      <td className="px-6 py-5">
+
+        <span className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg">
+          {job.queueName}
+        </span>
+
+      </td>
+
+
+      {/* Schedule */}
+
+      <td className="px-6 py-5">
+
+        <p className="text-sm font-medium text-gray-700">
+          {job.payload?.date || "-"}
+        </p>
+
+        <p className="mt-1 text-xs text-gray-400">
+          {job.payload?.slot || "-"}
+        </p>
+
+      </td>
+
+
+      {/* Status */}
+
+      <td className="px-6 py-5">
+
+        <StatusBadge
+          status={job.status}
+        />
+
+      </td>
+
+
+      {/* Attempts */}
+
+      <td className="px-6 py-5">
+
+        <span className="text-sm font-medium text-gray-700">
+          {job.attemptsMade || 0}
+        </span>
+
+        <span className="text-sm text-gray-400">
+          {" / "}
+          {job.maxAttempts || 1}
+        </span>
+
+      </td>
+
+
+      {/* Action */}
+
+      <td className="px-6 py-5">
+
+        {isFailed ? (
+
+          <button
+            onClick={() => {
+              // call retry API here
+            }}
+            className="px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800"
+          >
+            ↻ Retry
+          </button>
+
+        ) : (
+
+          <button
+            className="px-3 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+          >
+            View
+          </button>
+
+        )}
+
+      </td>
+
+    </tr>
   );
 };
 
 
-const StatCard = ({ title, value }) => {
+// =================================================
+// Status Badge
+// =================================================
 
-  return (
-    <div className="p-5 bg-white border border-gray-200 rounded-xl">
+const StatusBadge = ({
+  status,
+}) => {
 
-      <p className="text-sm text-gray-500">
-        {title}
-      </p>
+  const config = {
 
-      <p className="mt-1 text-2xl font-bold text-gray-900">
-        {value}
-      </p>
+    waiting: {
+      label: "Waiting",
+      className:
+        "bg-gray-100 text-gray-600",
+    },
 
-    </div>
-  );
-};
+    active: {
+      label: "Running",
+      className:
+        "bg-blue-50 text-blue-600",
+    },
 
+    processing: {
+      label: "Running",
+      className:
+        "bg-blue-50 text-blue-600",
+    },
 
-const StatusBadge = ({ status }) => {
+    completed: {
+      label: "Completed",
+      className:
+        "bg-green-50 text-green-600",
+    },
 
-  const styles = {
+    failed: {
+      label: "Failed",
+      className:
+        "bg-red-50 text-red-600",
+    },
 
-    completed:
-      "bg-green-100 text-green-700",
-
-    failed:
-      "bg-red-100 text-red-700",
-
-    active:
-      "bg-blue-100 text-blue-700",
-
-    waiting:
-      "bg-yellow-100 text-yellow-700",
-
-    delayed:
-      "bg-orange-100 text-orange-700",
+    delayed: {
+      label: "Retrying",
+      className:
+        "bg-yellow-50 text-yellow-600",
+    },
 
   };
 
+  const current =
+    config[status] || {
+      label: status,
+      className:
+        "bg-gray-100 text-gray-600",
+    };
 
   return (
     <span
-      className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
-        styles[status] ||
-        "bg-gray-100 text-gray-600"
-      }`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg ${current.className}`}
     >
-      {status}
+
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+
+      {current.label}
+
     </span>
   );
 };
 
 
-const Spinner = () => {
+// =================================================
+// Initials
+// =================================================
 
-  return (
-    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-  );
+const getInitials = (name = "") => {
+
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 };
 
-
-const formatDate = (date) => {
-
-  if (!date) return "-";
-
-  return new Date(date).toLocaleString();
-};
-
-
-export default QueueJobsPage;
+export default QueueJobs;
