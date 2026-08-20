@@ -11,12 +11,16 @@ const QueueController = {
       const limit = Math.max(1, parseInt(req.query.limit) || 5);
       const skip = (page - 1) * limit;
 
+      const filter = { userId: doctorId };
+      if (req.query.queueName) filter.queueName = req.query.queueName;
+      if (req.query.referenceType) filter.referenceType = req.query.referenceType;
+
       const [queueJobs, total] = await Promise.all([
-        QueueJobs.find({ userId: doctorId })
+        QueueJobs.find(filter)
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
-        QueueJobs.countDocuments({ userId: doctorId }),
+        QueueJobs.countDocuments(filter),
       ]);
 
       return res.status(200).json({
