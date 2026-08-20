@@ -11,6 +11,7 @@ import generatePrescriptionPdf from "../createPrescription/prescriptionPdfGenrat
 
 import { uploadPdf } from "../Config/uploadthing.js";
 import { connectDB } from "../Config/Connection.js";
+import QueueJobs from "../Model/QueueJobs.js";
 
 
 connectDB()
@@ -92,13 +93,24 @@ const prescriptionWorker = new Worker(
           progress: 30,
         });
 
+      await QueueJobs.findOneAndUpdate(
+      {
+        jobId: job.id,
+      },
+      {
+        status: "active",
+        attemptsMade: job.attemptsMade,
+        startedAt: new Date(),
+      }
+    );
+
+
 
 
       // =====================================
       // 2. Generate HTML
       // =====================================
 
-      console.log("📝 Generating prescription HTML...");
 
       const htmlTemplate = generatePrescriptionHtml({
         prescriptionId,
@@ -125,7 +137,6 @@ const prescriptionWorker = new Worker(
       // 3. Generate PDF
       // =====================================
 
-      console.log("📄 Generating PDF...");
 
       const pdfBuffer = await generatePrescriptionPdf(htmlTemplate);
       
@@ -148,7 +159,6 @@ const prescriptionWorker = new Worker(
       // 4. Upload PDF
       // =====================================
 
-      console.log("📤 Uploading PDF...");
 
       const pdfUrl = await uploadPdf(pdfBuffer, `${prescriptionId}.pdf`);
 
@@ -172,7 +182,6 @@ const prescriptionWorker = new Worker(
       // 5. Update Existing Prescription
       // =====================================
 
-      console.log("💾 Updating prescription...");
 
       const prescription = await Prescription.findOneAndUpdate(
         {
@@ -233,8 +242,22 @@ const prescriptionWorker = new Worker(
 // Worker Completed
 // ==========================================
 
-prescriptionWorker.on("completed", (job, result) => {
+prescriptionWorker.on("completed", async(job, result) => {
   console.log(`✅ Job ${job.id} completed`);
+
+      await QueueJobs.findOneAndUpdate(
+      {
+        jobId: job.id,
+      },
+      {
+        status: "completed",
+        attemptsMade: job.attemptsMade,
+        completedAt: new Date(),
+        result : result,
+        lastError: null,
+        errorStack: null,
+      }
+    );
 
   console.log("Result:", result);   
 });
@@ -243,8 +266,44 @@ prescriptionWorker.on("completed", (job, result) => {
 // Worker Failed
 // ==========================================
 
-prescriptionWorker.on("failed", (job, error) => {
+prescriptionWorker.on("failed", async(job, error) => {
   console.error(`❌ Job ${job?.id} failed`);
+     const attemptsMade = job.attemptsMade;
+
+    const maxAttempts = job.opts.attempts || 1;
+
+    const permanentlyFailed =
+      attemptsMade >= maxAttempts;
+
+          if (!permanentlyFailed) {
+
+      await QueueJobs.findOneAndUpdate(
+        {
+          jobId: job.id,
+        },
+        {
+          status: "delayed",
+          attemptsMade,
+          lastError: error.message,
+          errorStack: error.stack,
+        }
+      );
+    }    else {
+
+      await QueueJobs.findOneAndUpdate(
+        {
+          jobId: job.id,
+        },
+        {
+          status: "failed",
+          attemptsMade,
+          maxAttempts,
+          lastError: error.message,
+          errorStack: error.stack,
+          failedAt: new Date(),
+        }
+      );
+    }
 
   console.error(error);
 });
