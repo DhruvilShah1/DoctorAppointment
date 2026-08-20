@@ -7,23 +7,24 @@ const QueueController = {
     try {
 
       const doctorId = req.user.id;
+      const page = Math.max(1, parseInt(req.query.page) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit) || 5);
+      const skip = (page - 1) * limit;
 
-
-      const queueJobs = await QueueJobs
-        .find({
-          userId: doctorId,
-        })
-        .sort({
-          createdAt: -1,
-        });
+      const [queueJobs, total] = await Promise.all([
+        QueueJobs.find({ userId: doctorId })
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit),
+        QueueJobs.countDocuments({ userId: doctorId }),
+      ]);
 
       return res.status(200).json({
         success: true,
-
-        count: queueJobs.length,
-
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
         jobs: queueJobs,
-
       });
 
 
