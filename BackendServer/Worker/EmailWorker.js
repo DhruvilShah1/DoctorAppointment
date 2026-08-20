@@ -1,8 +1,7 @@
-import EmailQueue from "../Queue/EmailQueue";
 import { Worker } from "bullmq";
 import redis from "../Config/redis.js";
 import dotenv from "dotenv";
-import EmailPrescriptionTemplate  from "../Template/EmailPrescptionTemplate";
+import EmailPrescriptionTemplate from "../Template/EmailPrescptionTemplate.js";
 import nodemailer from "nodemailer";
 dotenv.config();
 
@@ -63,12 +62,12 @@ const EmailWorker = new Worker(
             );
 
             console.log(
-                `✅ Email sent to ${to}`
+                `✅ Email sent to ${patientEmail}`
             );
 
             return {
                 success: true,
-                email: to,
+                email: patientEmail,
             };
 
         } catch (err) {
