@@ -38,7 +38,6 @@ const allowedOrigins =
     : [
         "http://localhost:5173",
         "https://doctor-appointment-kohl-phi.vercel.app",
-        "https://doctorappointment-1-co0d.onrender.com",
       ];
 
 app.use(
