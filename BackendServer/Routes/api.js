@@ -71,7 +71,7 @@ router.post('/finsh/slot',
 // Doctor Profile 
 router.post('/create/doctor/profile', verifyToken , authorizeRoles("doctor") , DoctorController.createProfile)
 router.get('/get/doctor/profile', verifyToken , authorizeRoles("doctor") , DoctorController.getMyProfile)
-router.get('/queue-jobs' ,verifyToken , authorizeRoles("doctor") , QueueController.getPrescptionQueue )
+router.get('/queue-jobs' ,verifyToken , authorizeRoles("doctor") , QueueController.getPrescriptionQueue )
 
 
 // create Prescription
