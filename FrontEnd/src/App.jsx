@@ -206,7 +206,7 @@ useEffect(() => {
             <Route path='doctor/profile' element={<DoctorProfileEditor/>}/>
 
             <Route path='/patient/table' element={<DoctorPrescriptionTable/>}/>
-            <Route path='/queue' element={<QueueJobsPage/>}/>
+            <Route path='/queue/jobs' element={<QueueJobsPage/>}/>
             </Route>
 
 

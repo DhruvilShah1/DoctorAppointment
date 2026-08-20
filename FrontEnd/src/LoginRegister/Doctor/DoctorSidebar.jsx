@@ -67,7 +67,7 @@ const DoctorSidebar = () => {
             Patient Table
           </NavLink>
           
-          <NavLink to="/queue" className={linkClass}>
+          <NavLink to="/queue/jobs" className={linkClass}>
             Queue Status
           </NavLink>
         </nav>
