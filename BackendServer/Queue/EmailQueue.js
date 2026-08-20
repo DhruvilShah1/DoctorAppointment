@@ -14,9 +14,9 @@ const EmailQueue = new Queue(
                 delay: 1000,
             },
 
-            removeOnComplete: true,
+            removeOnComplete: { count: 0 },
 
-            removeOnFail: false,
+            removeOnFail: { count: 10 },
         },
     }
 );
