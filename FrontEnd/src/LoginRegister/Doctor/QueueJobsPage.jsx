@@ -14,8 +14,25 @@ const QueueJobsPage = () => {
     try {
       setLoading(true);
 
+       const refreshRes = await fetch(
+      `${BASE_URL}/api/refresh-token`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
+
+    const refreshData =
+      await refreshRes.json();
+
+
       const response = await fetch(
-        `${BASE_URL}/api/queue-jobs`
+        `${BASE_URL}/api/queue-jobs` ,{
+            method: "GET",
+         headers : {
+          Authorization: `Bearer ${refreshData.newAccessToken}`,
+        },
+    }
       );
 
       if (!response.ok) {
