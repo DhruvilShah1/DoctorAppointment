@@ -2,40 +2,23 @@ import { Worker } from "bullmq";
 import redis from "../Config/redis.js";
 import dotenv from "dotenv";
 import EmailPrescriptionTemplate from "../Template/EmailPrescptionTemplate.js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 dotenv.config();
 
-if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    throw new Error("❌ SMTP_USER or SMTP_PASS is missing");
+if (!process.env.RESEND_API_KEY) {
+    throw new Error("❌ RESEND_API_KEY is missing");
 }
 
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    family: 4,
+if (!process.env.EMAIL_FROM) {
+    throw new Error("❌ EMAIL_FROM is missing");
+}
 
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-});
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("❌ SMTP connection failed:", error);
-    } else {
-        console.log("✅ Gmail SMTP connection is ready");
-    }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const EmailWorker = new Worker(
     "emailQueue",
+
     async (job) => {
         const {
             prescriptionId,
@@ -48,8 +31,10 @@ const EmailWorker = new Worker(
             instructions,
         } = job.data;
 
-        console.log("Email Recevied");
-        
+        console.log("📧 Email Received");
+        console.log("📋 Job ID:", job.id);
+        console.log("👤 Patient:", patientName);
+        console.log("📩 Email:", patientEmail);
 
         try {
             const subject =
@@ -63,31 +48,48 @@ const EmailWorker = new Worker(
                 instructions
             );
 
-            const mailOptions = {
-                from: process.env.SMTP_USER,
-                to: patientEmail,
+            const { data, error } = await resend.emails.send({
+                from: process.env.EMAIL_FROM,
+
+                to: [patientEmail],
+
                 subject,
+
                 html,
 
-                attachments: [
-                    {
-                        filename: "prescription.pdf",
-                        path: pdfUrl,
-                    },
-                ],
-            };
+                attachments: pdfUrl
+                    ? [
+                          {
+                              path: pdfUrl,
+                              filename: "prescription.pdf",
+                          },
+                      ]
+                    : [],
+            });
 
-            const info = await transporter.sendMail(mailOptions);
+            if (error) {
+                console.error(
+                    "❌ Resend Error:",
+                    error
+                );
+
+                throw new Error(error.message);
+            }
 
             console.log(
-                `✅ Email sent to ${patientEmail}`,
-                info.messageId
+                `✅ Email sent to ${patientEmail}`
+            );
+
+            console.log(
+                "📨 Resend Email ID:",
+                data?.id
             );
 
             return {
                 success: true,
                 email: patientEmail,
-                messageId: info.messageId,
+                messageId: data?.id,
+                prescriptionId,
             };
 
         } catch (err) {
@@ -99,6 +101,7 @@ const EmailWorker = new Worker(
             throw err;
         }
     },
+
     {
         connection: redis,
         concurrency: 2,
@@ -117,6 +120,13 @@ EmailWorker.on("failed", (job, err) => {
     console.error(
         `❌ Email job ${job?.id} failed:`,
         err.message
+    );
+});
+
+EmailWorker.on("error", (err) => {
+    console.error(
+        "❌ Email Worker Error:",
+        err
     );
 });
 
