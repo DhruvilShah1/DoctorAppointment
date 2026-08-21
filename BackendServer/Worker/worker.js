@@ -218,8 +218,11 @@ const prescriptionWorker = new Worker(
       const patientUser = await Users.findOne({ _id: patientId }).select("email");
       const patientEmail = patientUser?.email;
 
+
       await EmailQueue.add("send-prescription-email", {
         prescriptionId,
+        doctorId ,
+        patientId , 
         patientEmail,
         patientName,
         doctorName,
