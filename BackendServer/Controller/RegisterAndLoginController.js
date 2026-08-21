@@ -128,8 +128,6 @@ const RegisterAndLoginController = {
 },
 
 googleAuth: (req, res, next) => {
-  console.log("API calling");
-
   passport.authenticate("google", {
     scope: ["profile" , "email"],
     session: false,

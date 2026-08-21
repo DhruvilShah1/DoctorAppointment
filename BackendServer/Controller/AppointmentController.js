@@ -163,8 +163,6 @@ startQueuWithslots: async (req, res) => {
     try {
       io = getIO();
     } catch (err) {
-      console.error("Socket not ready, skipping emit");
-
         
     }
 
@@ -185,8 +183,6 @@ startQueuWithslots: async (req, res) => {
     });
 
   } catch (error) {
-    console.error("START QUEUE ERROR:", error);
-
     return res.status(500).json({
       message: "Server error",
       error: error.message,
@@ -309,7 +305,6 @@ getTodayAppointment: async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -460,7 +455,6 @@ const roomId = `${doctorId}_${date}_${slot}`;
     });
 
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       message: "Server error",
     });
@@ -584,8 +578,6 @@ finishAppointment: async (req, res) => {
       prescriptionId: prescription?.pdfUrl || null,
     });
   } catch (error) {
-    console.log(error);
-
     return res.status(500).json({
       success: false,
       message: "Server Error",

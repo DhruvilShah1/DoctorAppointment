@@ -26,7 +26,6 @@ const publishPrescriptionProgress = async ({
   step,
   date,
   slot,
-
   status,
   message,
   progress,
@@ -41,7 +40,6 @@ const publishPrescriptionProgress = async ({
     status,
     date,
     slot,
-
     message,
     progress,
     timestamp: new Date().toISOString(),
@@ -51,8 +49,6 @@ const publishPrescriptionProgress = async ({
     `prescription:${prescriptionId}`,
     JSON.stringify(data)
   );
-
-  console.log("📡 Published:", data);
 };
 
 
@@ -73,11 +69,7 @@ const prescriptionWorker = new Worker(
       signatureUrl,
     } = job.data;
 
-    console.log("🚀 prescriptionWorker started for job:", job.id);
-
     try {
-
-      console.log("🔳 Generating QR Code...");
 
       const qrCode = await QrCodeSection(prescriptionId);
 
@@ -88,7 +80,6 @@ const prescriptionWorker = new Worker(
         patientName,
         date,
         slot,
-
         step: 1,
         status: "success",
         message: "QR Code generated",
@@ -96,9 +87,7 @@ const prescriptionWorker = new Worker(
       });
 
       await QueueJobs.findOneAndUpdate(
-        {
-          jobId: job.id,
-        },
+        { jobId: job.id },
         {
           status: "active",
           attemptsMade: job.attemptsMade,
@@ -106,39 +95,17 @@ const prescriptionWorker = new Worker(
         }
       );
 
-
-
-
-      // =====================================
-      // 2. Generate HTML
-      // =====================================
-
-
       const htmlTemplate = generatePrescriptionHtml({
         prescriptionId,
-
         doctorName,
-
         patientName,
-
         date,
-
         slot,
-
         instructions,
-
         parsedMedicines: medicines,
-
         signatureUrl,
-
         qrCode,
       });
-
-
-      // =====================================
-      // 3. Generate PDF
-      // =====================================
-
 
       const pdfBuffer = await generatePrescriptionPdf(htmlTemplate);
 
@@ -150,17 +117,10 @@ const prescriptionWorker = new Worker(
         step: 2,
         date,
         slot,
-
         status: "success",
         message: "PDF Generated",
         progress: 60,
       });
-
-
-      // =====================================
-      // 4. Upload PDF
-      // =====================================
-
 
       const pdfUrl = await uploadPdf(pdfBuffer, `${prescriptionId}.pdf`);
 
@@ -172,57 +132,33 @@ const prescriptionWorker = new Worker(
         step: 3,
         date,
         slot,
-
         status: "success",
         message: "PDF Uploaded",
         progress: 100,
       });
 
-
-
-      // =====================================
-      // 5. Update Existing Prescription
-      // =====================================
-
-
       const prescription = await Prescription.findOneAndUpdate(
-        {
-          prescriptionId: prescriptionId,
-        },
-
+        { prescriptionId: prescriptionId },
         {
           qrCode: qrCode,
-
           pdfUrl: pdfUrl,
-
           status: "issued",
-
           verificationStatus: "pending",
         },
-
-        {
-          new: true,
-        },
+        { new: true },
       );
-
-      // =====================================
-      // 6. Check Prescription
-      // =====================================
 
       if (!prescription) {
         throw new Error(`Prescription not found: ${prescriptionId}`);
       }
 
-      console.log("✅ Prescription updated successfully");
-
       const patientUser = await Users.findOne({ _id: patientId }).select("email");
       const patientEmail = patientUser?.email;
 
-
       await EmailQueue.add("send-prescription-email", {
         prescriptionId,
-        doctorId ,
-        patientId , 
+        doctorId,
+        patientId,
         patientEmail,
         patientName,
         doctorName,
@@ -234,40 +170,24 @@ const prescriptionWorker = new Worker(
 
       return {
         success: true,
-
         prescriptionId,
-
         qrCode,
-
         pdfUrl,
       };
     } catch (error) {
-      console.error("❌ Prescription Worker Error:");
-
-      console.error(error);
-
       throw error;
     }
   },
 
   {
     connection: redis,
-
     concurrency: 2,
   },
 );
 
-// ==========================================
-// Worker Completed
-// ==========================================
-
 prescriptionWorker.on("completed", async (job, result) => {
-  console.log(`✅ Job ${job.id} completed`);
-
   await QueueJobs.findOneAndUpdate(
-    {
-      jobId: job.id,
-    },
+    { jobId: job.id },
     {
       status: "completed",
       attemptsMade: job.attemptsMade,
@@ -277,29 +197,16 @@ prescriptionWorker.on("completed", async (job, result) => {
       errorStack: null,
     }
   );
-
-  console.log("Result:", result);
 });
 
-// ==========================================
-// Worker Failed
-// ==========================================
-
 prescriptionWorker.on("failed", async (job, error) => {
-  console.error(`❌ Job ${job?.id} failed`);
   const attemptsMade = job.attemptsMade;
-
   const maxAttempts = job.opts.attempts || 1;
-
-  const permanentlyFailed =
-    attemptsMade >= maxAttempts;
+  const permanentlyFailed = attemptsMade >= maxAttempts;
 
   if (!permanentlyFailed) {
-
     await QueueJobs.findOneAndUpdate(
-      {
-        jobId: job.id,
-      },
+      { jobId: job.id },
       {
         status: "delayed",
         attemptsMade,
@@ -308,11 +215,8 @@ prescriptionWorker.on("failed", async (job, error) => {
       }
     );
   } else {
-
     await QueueJobs.findOneAndUpdate(
-      {
-        jobId: job.id,
-      },
+      { jobId: job.id },
       {
         status: "failed",
         attemptsMade,
@@ -323,16 +227,6 @@ prescriptionWorker.on("failed", async (job, error) => {
       }
     );
   }
-
-  console.error(error);
 });
 
-// ==========================================
-// Worker Error
-// ==========================================
-
-prescriptionWorker.on("error", (error) => {
-  console.error("❌ Worker error:", error);
-});
-
-console.log("👷 Prescription Worker is running...");
+prescriptionWorker.on("error", () => {});

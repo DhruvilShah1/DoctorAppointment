@@ -43,17 +43,6 @@ const EmailWorker = new Worker(
         } = job.data;
 
 
-        console.log("\n========================================");
-        console.log("📧 EMAIL JOB STARTED");
-        console.log("========================================");
-
-        console.log("📋 Job ID:", job.id);
-        console.log("👤 Patient:", patientName);
-        console.log("📩 Email:", patientEmail);
-        console.log("🧾 Prescription ID:", prescriptionId);
-        console.log("🔄 Attempt:", job.attemptsMade);
-
-
         /*
         |--------------------------------------------------------------------------
         | 1. CREATE / UPDATE QUEUE JOB AS PROCESSING
@@ -131,9 +120,6 @@ const EmailWorker = new Worker(
             |--------------------------------------------------------------------------
             */
 
-            console.log("📤 Sending email...");
-
-
             const {
                 data,
                 error,
@@ -166,11 +152,6 @@ const EmailWorker = new Worker(
 
             if (error) {
 
-                console.error(
-                    "❌ Resend Error:",
-                    error
-                );
-
                 throw new Error(
                     error.message || "Failed to send email"
                 );
@@ -180,22 +161,6 @@ const EmailWorker = new Worker(
             /*
             |--------------------------------------------------------------------------
             | 6. EMAIL SUCCESS
-            |--------------------------------------------------------------------------
-            */
-
-            console.log(
-                `✅ Email successfully sent to ${patientEmail}`
-            );
-
-            console.log(
-                "📨 Resend Email ID:",
-                data?.id
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | 7. UPDATE QUEUE JOB -> COMPLETED
             |--------------------------------------------------------------------------
             */
 
@@ -254,24 +219,6 @@ const EmailWorker = new Worker(
 
 
         } catch (err) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | EMAIL FAILED
-            |--------------------------------------------------------------------------
-            */
-
-            console.error(
-                "❌ Error sending email:",
-                err
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE QUEUE JOB -> FAILED / RETRYING
-            |--------------------------------------------------------------------------
-            */
 
             const maxAttempts =
                 job.opts.attempts || 3;
@@ -350,9 +297,6 @@ const EmailWorker = new Worker(
 |--------------------------------------------------------------------------
 */
 
-console.log("📧 Email Worker is running...");
-
-
 /*
 |--------------------------------------------------------------------------
 | COMPLETED EVENT
@@ -362,34 +306,6 @@ console.log("📧 Email Worker is running...");
 EmailWorker.on(
     "completed",
     async (job, result) => {
-
-        console.log("\n========================================");
-        console.log("✅ EMAIL JOB COMPLETED");
-        console.log("========================================");
-
-        console.log("📋 Job ID:", job.id);
-
-        console.log(
-            "📩 Email:",
-            job.data?.patientEmail
-        );
-
-        console.log(
-            "🧾 Prescription:",
-            job.data?.prescriptionId
-        );
-
-        console.log(
-            "📨 Message ID:",
-            result?.messageId
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | SAFETY UPDATE
-        |--------------------------------------------------------------------------
-        */
 
         try {
 
@@ -403,7 +319,7 @@ EmailWorker.on(
                         status: "completed",
 
                         result: result,
-
+                        attemptsMade: job.attemptsMade,
                         completedAt: new Date(),
 
                         lastError: null,
@@ -413,13 +329,7 @@ EmailWorker.on(
                 }
             );
 
-        } catch (error) {
-
-            console.error(
-                "❌ Failed to update completed QueueJob:",
-                error
-            );
-        }
+        } catch (error) {}
     }
 );
 
@@ -433,31 +343,6 @@ EmailWorker.on(
 EmailWorker.on(
     "failed",
     async (job, err) => {
-
-        console.log("\n========================================");
-        console.log("❌ EMAIL JOB FAILED");
-        console.log("========================================");
-
-        console.log(
-            "📋 Job ID:",
-            job?.id
-        );
-
-        console.log(
-            "📩 Email:",
-            job?.data?.patientEmail
-        );
-
-        console.log(
-            "🔄 Attempt:",
-            job?.attemptsMade
-        );
-
-        console.log(
-            "❌ Error:",
-            err?.message
-        );
-
 
         if (!job) {
             return;
@@ -512,13 +397,7 @@ EmailWorker.on(
             );
 
 
-        } catch (error) {
-
-            console.error(
-                "❌ Failed to update failed QueueJob:",
-                error
-            );
-        }
+        } catch (error) {}
     }
 );
 
@@ -531,13 +410,7 @@ EmailWorker.on(
 
 EmailWorker.on(
     "error",
-    (err) => {
-
-        console.error(
-            "❌ Email Worker Error:",
-            err
-        );
-    }
+    (err) => {}
 );
 
 
@@ -549,12 +422,7 @@ EmailWorker.on(
 
 EmailWorker.on(
     "stalled",
-    (jobId) => {
-
-        console.warn(
-            `⚠️ Email job ${jobId} stalled`
-        );
-    }
+    (jobId) => {}
 );
 
 

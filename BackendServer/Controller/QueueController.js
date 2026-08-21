@@ -33,18 +33,16 @@ const QueueController = {
 
 
     } catch (error) {
-
-      console.error(
-        "❌ Get Prescription Queue Error:",
-        error
-      );
-
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid doctor id",
+          error: error.message,
+      })
 
       return res.status(500).json({
         success: false,
-
         message: "Failed to get prescription queue",
-
         error: error.message,
       });
 

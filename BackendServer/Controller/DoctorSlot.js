@@ -20,10 +20,7 @@ const DoctorControllerSchedule = {
 
     const doctorId = req.user.id;
 
-    console.log("USER:", req.user);
-    console.log("BODY:", req.body);
-
-    if (!doctorId || !date) {
+if (!doctorId || !date) {
       return res.status(400).json({
         success: false,
         message: "doctorId and date are required",
@@ -90,10 +87,6 @@ const DoctorControllerSchedule = {
         newSlot
       );
     } catch (socketError) {
-      console.log(
-        "Socket emit failed:",
-        socketError.message
-      );
     }
 
     return res.status(201).json({
@@ -103,11 +96,6 @@ const DoctorControllerSchedule = {
       data: newSlot,
     });
   } catch (error) {
-    console.error(
-      "CREATE SLOT ERROR:",
-      error
-    );
-
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -261,27 +249,7 @@ getAll: async (req, res) => {
         ).values(),
       ];
 
-      console.log(
-        "Search:",
-        search
-      );
-
-      console.log(
-        "Name Doctor IDs:",
-        nameDoctorIds
-      );
-
-      console.log(
-        "Specialty Doctor IDs:",
-        specialtyDoctorIds
-      );
-
-      console.log(
-        "Combined Doctor IDs:",
-        doctorIds
-      );
-
-      // ===================================================
+// ===================================================
       // NO DOCTORS FOUND
       // ===================================================
 
@@ -527,18 +495,8 @@ getAll: async (req, res) => {
       },
     });
   } catch (error) {
-    // =====================================================
-    // ERROR
-    // =====================================================
-
-    console.error(
-      "🔥 GET ALL ERROR:",
-      error
-    );
-
     return res.status(500).json({
       success: false,
-
       message:
         error.message ||
         "Failed to fetch doctor schedules",
@@ -645,7 +603,6 @@ AddPatient: async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({
       message: "Server error",
     });
@@ -749,7 +706,6 @@ python_booking : async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({
       message: "Server error",
     });
@@ -794,7 +750,6 @@ queueNumber : async (req, res) => {
     }
 
     const totalPaitent = slot.patientList.length ; 
-    console.log(totalPaitent);
     
 
     return res.json({
@@ -857,12 +812,11 @@ res.json({
 
 
 } catch (err) {
-console.error(err);
 res.status(500).json({
 message: "Server error",
 });
 }
-} 
+}
 }
 
 export default DoctorControllerSchedule;

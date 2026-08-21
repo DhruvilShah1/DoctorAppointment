@@ -9,7 +9,7 @@ const DoctorProfileEditor = () => {
     const { user } = useAuth();
 
 
-    console.log(user);
+
     
 
 
@@ -93,7 +93,7 @@ const DoctorProfileEditor = () => {
 
     // profile not created yet
     if (createRes.status === 404) {
-      console.log(
+
         "No profile found, using defaults"
       );
       return;
@@ -129,7 +129,7 @@ const DoctorProfileEditor = () => {
     setIsDirty(false);
 
   } catch (err) {
-    console.error(err);
+
     toast.error(err.message);
   }
 };
@@ -199,7 +199,7 @@ const DoctorProfileEditor = () => {
 
     setIsDirty(false);
   } catch (err) {
-    console.error(err);
+
     toast.error(err.message);
   }
 };

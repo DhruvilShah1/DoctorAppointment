@@ -42,8 +42,6 @@ const PrescriptionController = {
           parsedMedicines = medicines;
         }
       } catch (error) {
-        console.error("❌ Failed to parse medicines:", error);
-
         parsedMedicines = [];
       }
 
@@ -51,11 +49,7 @@ const PrescriptionController = {
         parsedMedicines = [];
       }
 
-      console.log("✅ parsedMedicines:", parsedMedicines);
-
-      console.log("✅ isArray:", Array.isArray(parsedMedicines));
-
-      // Signature Section
+// Signature Section
       let signatureUrl = null;
       if (req.file) {
         signatureUrl = await uploadSignature(req.file);
@@ -88,9 +82,7 @@ const PrescriptionController = {
         referenceId: prescriptionId,
         status: "waiting",
       });
-      console.log("Added to Queue");
 
-   
       const newPrescription = await Prescription.create({
         prescriptionId,
         patientId,
@@ -112,7 +104,6 @@ const PrescriptionController = {
         data: newPrescription,
       });
     } catch (error) {
-      console.log(error);
       return res.status(500).json({ success: false, message: error.message });
     }
   },
