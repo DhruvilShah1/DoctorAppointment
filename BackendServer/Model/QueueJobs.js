@@ -57,7 +57,9 @@ const queueJobSchema = new mongoose.Schema(
       enum: [
         "waiting",
         "active",
+        "processing" , 
         "delayed",
+        "retrying",
         "completed",
         "failed",
       ],
